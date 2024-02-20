@@ -187,6 +187,10 @@ section h2 {
   text-align: center;
   text-transform: uppercase;
 }
+section h5 {
+  margin: 20px 0;
+  text-align: center;
+}
 
 /* Slider */
 .swiper {

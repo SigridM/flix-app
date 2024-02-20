@@ -79,6 +79,27 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 
 // console.log(formatter.format(2500)); /* $2,500.00 */
 
+// Display Backdrop on Details Page
+function displayBackgroundImage(path, isTV = false) {
+  const overlayDiv = document.createElement('div');
+  overlayDiv.style.backgroundImage = `url(https:/image.tmdb.org/t/p/original/${path})`; // 'original' meand original size
+  overlayDiv.style.backgroundSize = 'cover';
+  overlayDiv.style.backgroundPosition = 'center';
+  overlayDiv.style.backgroundRepeat = 'no-repeat';
+  overlayDiv.style.height = '100vh';
+  overlayDiv.style.width = '100vw';
+  overlayDiv.style.position = 'absolute';
+  overlayDiv.style.top = '0';
+  overlayDiv.style.left = '0';
+  overlayDiv.style.zIndex = '-1';
+  overlayDiv.style.opacity = '0.15';
+
+  if (isTV) {
+    document.querySelector('#tv-details').appendChild(overlayDiv);
+  } else {
+    document.querySelector('#movie-details').appendChild(overlayDiv);
+  }
+}
 // Display Movie Details
 async function displayMovieDetails() {
   const movieID = window.location.search.split('=')[1];
@@ -87,6 +108,7 @@ async function displayMovieDetails() {
   const movie = await fetchAPIData(`movie/${movieID}`);
   console.log(movie);
 
+  //Traversy's solution for genres text: ${movie.genre.map((genre) => `<li>${genre.name}</li>`).join('')}
   const genreList = document.createElement('ul');
   genreList.classList.add('list-group');
   movie.genres.forEach((genre) => {
@@ -95,8 +117,7 @@ async function displayMovieDetails() {
     genreList.appendChild(li);
   });
 
-  //Traversy's solution for genres text: ${movie.genre.map((genre) => `<li>${genre.name}</li>`).join('')}
-
+  //Traversy's solution for companies text: ${movie.production_companies.map((company) => `<span>${company.name}</span>`).join('')}
   const companies = movie.production_companies;
   let productionCompanyString = '';
   companies.forEach((company) => {
@@ -106,7 +127,7 @@ async function displayMovieDetails() {
     }
   });
 
-  //Traversy's solution for companies text: ${movie.production_companies.map((company) => `<span>${company.name}</span>`).join('')}
+  displayBackgroundImage(movie.backdrop_path);
 
   const div = document.createElement('div');
   //   const rating = Math.round(movie.vote_average);
@@ -118,6 +139,7 @@ async function displayMovieDetails() {
   </div>
   <div>
     <h2>${movie.title}</h2>
+    <h5>${movie.tagline}</h5>
     <p>
       <i class="fas fa-star text-primary"></i>
       ${rating} / 10
@@ -126,7 +148,7 @@ async function displayMovieDetails() {
     <p>
       ${movie.overview}
     </p>
-    <h5>Genres</h5>
+    <h4>Genres</h4>
     ${genreList.innerHTML}
     <a href="${
       movie.homepage
