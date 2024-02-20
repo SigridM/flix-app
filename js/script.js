@@ -27,7 +27,7 @@ function posterPath(media, isTV = false) {
 // Display the 20 most popular movies
 async function displayPopularMovies() {
   const { results } = await fetchAPIData('movie/popular'); // curly braces around the results deconstructs it to get just the array
-  console.log(results);
+  //   console.log(results);
 
   results.forEach((movie) => {
     const div = document.createElement('div');
@@ -84,16 +84,6 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 function displayBackgroundImage(path, isTV = false) {
   const overlayDiv = document.createElement('div');
   overlayDiv.style.backgroundImage = `url(https:/image.tmdb.org/t/p/original/${path})`; // 'original' meand original size
-  //   overlayDiv.style.backgroundSize = 'cover';
-  //   overlayDiv.style.backgroundPosition = 'center';
-  //   overlayDiv.style.backgroundRepeat = 'no-repeat';
-  //   overlayDiv.style.height = '100vh';
-  //   overlayDiv.style.width = '100vw';
-  //   overlayDiv.style.position = 'absolute';
-  //   overlayDiv.style.top = '0';
-  //   overlayDiv.style.left = '0';
-  //   overlayDiv.style.zIndex = '-1';
-  //   overlayDiv.style.opacity = '0.15';
   overlayDiv.classList.add('overlay');
 
   if (isTV) {
@@ -103,6 +93,52 @@ function displayBackgroundImage(path, isTV = false) {
   }
 }
 
+function initSwiper() {
+  const swiper = new Swiper('.swiper', {
+    slidesPerView: 1,
+    speed: 400,
+    spaceBetween: 30,
+    freeMode: true,
+    loop: true,
+    autoplay: {
+      delay: 4000,
+      disableOnInteraction: false,
+    },
+    breakpoints: {
+      500: {
+        slidesPerView: 2,
+      },
+      700: {
+        slidesPerView: 3,
+      },
+      1200: {
+        slidesPerView: 4,
+      },
+    },
+  });
+}
+// Display Slider Movies
+async function displaySlider() {
+  const { results } = await fetchAPIData('movie/now_playing');
+  console.log(results);
+
+  results.forEach((movie) => {
+    const div = document.createElement('div');
+    div.classList.add('swiper-slide'); // a single slide, clicking on it takes to movie details
+    div.innerHTML = `<a href="movie-details.html?id=${movie.id}">${posterPath(
+      movie
+    )}
+  </a>
+  <h4 class="swiper-rating">
+    <i class="fas fa-star text-secondary"></i> ${movie.vote_average.toFixed(
+      1
+    )} / 10
+  </h4>
+    `;
+    document.querySelector('.swiper-wrapper').appendChild(div);
+    initSwiper();
+  });
+}
 function formatDate(dateString) {
   date = new Date(dateString);
   return date.toLocaleDateString('en-us', {
@@ -307,6 +343,7 @@ function init() {
     case '/':
     case '/index.html':
       //   console.log('Home');
+      displaySlider();
       displayPopularMovies();
       break;
     case '/shows.html':
