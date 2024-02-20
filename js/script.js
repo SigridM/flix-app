@@ -4,11 +4,12 @@ const global = {
 
 console.log(global.currentPage);
 
-function noImage() {
+function noImage(isTV = false) {
+  const alt = isTV ? 'Show Title' : 'Movie Title';
   return `<img
     src="../images/no-image.jpg"
     class="card-img-top"
-    alt="Movie Title"
+    alt=${alt}
     />`;
 }
 
@@ -20,7 +21,7 @@ function posterPath(media, isTV = false) {
       class="card-img-top"
       alt="${alt}"
       />`
-    : noImage();
+    : noImage(isTV);
 }
 
 // Display the 20 most popular movies
@@ -100,6 +101,17 @@ function displayBackgroundImage(path, isTV = false) {
     document.querySelector('#movie-details').appendChild(overlayDiv);
   }
 }
+
+function formatDate(dateString) {
+  date = new Date(dateString);
+  return date.toLocaleDateString('en-us', {
+    //   weekday: 'long',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+  //   console.log(months[date.getMonth()], date.getDate(), date.getFullYear());
+}
 // Display Movie Details
 async function displayMovieDetails() {
   const movieID = window.location.search.split('=')[1];
@@ -174,6 +186,70 @@ async function displayMovieDetails() {
 </div>`;
   document.querySelector('#movie-details').appendChild(div);
 }
+// Display Movie Details
+async function displayTVShowDetails() {
+  const showID = window.location.search.split('=')[1];
+  const tvShow = await fetchAPIData(`tv/${showID}`);
+  console.log(tvShow);
+
+  displayBackgroundImage(tvShow.backdrop_path, true);
+
+  const div = document.createElement('div');
+  //   const rating = Math.round(movie.vote_average);
+  const rating = tvShow.vote_average.toFixed(1);
+
+  const fromDate = formatDate(tvShow.first_air_date);
+  const toDate = formatDate(tvShow.last_air_date);
+  const runtime = tvShow.episode_run_time[0]
+    ? `${tvShow.episode_run_time[0]} minutes`
+    : 'unavailable';
+
+  div.innerHTML = `<div class="details-top">
+  <div>
+  ${posterPath(tvShow, true)}
+  </div>
+  <div>
+    <h2>${tvShow.name}</h2>
+    <h5>${tvShow.tagline}</h5>
+    <p>
+      <i class="fas fa-star text-primary"></i>
+      ${rating} / 10
+    </p>
+    <p class="text-muted">Aired from ${fromDate} to ${toDate}</p>
+    <p>${tvShow.overview}</p>
+    <h4>Genres</h4>
+    <ul class="list-group">
+    ${tvShow.genres.map((genre) => `<li>${genre.name}</li>`).join('')}
+    </ul>
+    <a href="${
+      tvShow.homepage
+    }" target="_blank" class="btn">Visit Show Homepage</a>
+  </div>
+</div>
+<div class="details-bottom">
+  <h2>Show Info</h2>
+  <ul>
+  <li><span class="text-secondary">Number Of Episodes:</span> ${
+    tvShow.number_of_episodes
+  }</li>    
+  <li><span class="text-secondary">Number Of Seasons:</span> ${
+    tvShow.number_of_seasons
+  }</li>
+    <li>
+      <span class="text-secondary">Last Episode To Air:</span> ${
+        tvShow.last_episode_to_air.name
+      }
+    </li>
+    <li><span class="text-secondary">Status:</span> ${tvShow.status}</li>
+    <li><span class="text-secondary">Episode Runtime:</span> ${runtime} </li>
+  </ul>
+  <h4>Production Companies</h4>
+  <div class="list-group">${tvShow.production_companies
+    .map((company) => `<span>${company.name}</span>`)
+    .join('; ')}</div>
+</div>`;
+  document.querySelector('#tv-details').appendChild(div);
+}
 
 // Fetch data from TMDB API
 async function fetchAPIData(endpoint) {
@@ -242,6 +318,8 @@ function init() {
       break;
     case '/tv-details.html':
       console.log('TV Details');
+      displayTVShowDetails();
+
       break;
     case '/search.html':
       console.log('Search');
