@@ -227,7 +227,17 @@ async function displayMovieDetails() {
 async function displayTVShowDetails() {
   const showID = window.location.search.split('=')[1];
   const tvShow = await fetchAPIData(`tv/${showID}`);
+  const tvShowProviders = await fetchAPIData(`tv/${showID}/watch/providers`);
   console.log(tvShow);
+  console.log(tvShowProviders.results.US);
+  const availableToBuy = tvShowProviders.results.US.buy
+    .map((buy) => buy.provider_name)
+    .join('; ');
+  console.log(availableToBuy);
+  const availableToStream = tvShowProviders.results.US.flatrate
+    .map((stream) => stream.provider_name)
+    .join('; ');
+  console.log(availableToStream);
 
   displayBackgroundImage(tvShow.backdrop_path, true);
 
@@ -279,6 +289,9 @@ async function displayTVShowDetails() {
     </li>
     <li><span class="text-secondary">Status:</span> ${tvShow.status}</li>
     <li><span class="text-secondary">Episode Runtime:</span> ${runtime} </li>
+    <li><span class="text-secondary">Buy at:</span> ${availableToBuy} </li>
+    <li><span class="text-secondary">Stream at:</span> ${availableToStream} </li>
+    
   </ul>
   <h4>Production Companies</h4>
   <div class="list-group">${tvShow.production_companies
