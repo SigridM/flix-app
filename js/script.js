@@ -223,22 +223,37 @@ async function displayMovieDetails() {
 </div>`;
   document.querySelector('#movie-details').appendChild(div);
 }
+
+async function tvShowProviders(showID) {
+  const tvShowProviders = await fetchAPIData(`tv/${showID}/watch/providers`);
+  const providers = {
+    buy: '',
+    stream: '',
+  };
+  console.log(tvShowProviders.results);
+  if (!tvShowProviders.results.US) {
+    return providers;
+  }
+  if (tvShowProviders.results.US.buy) {
+    providers.buy = tvShowProviders.results.US.buy
+      .map((buy) => buy.provider_name)
+      .join('; ');
+  }
+  if (tvShowProviders.results.US.flatrate) {
+    providers.stream = tvShowProviders.results.US.flatrate
+      .map((stream) => stream.provider_name)
+      .join('; ');
+  }
+  return providers;
+}
 // Display Movie Details
 async function displayTVShowDetails() {
   const showID = window.location.search.split('=')[1];
   const tvShow = await fetchAPIData(`tv/${showID}`);
-  const tvShowProviders = await fetchAPIData(`tv/${showID}/watch/providers`);
   console.log(tvShow);
-  console.log(tvShowProviders.results.US);
-  const availableToBuy = tvShowProviders.results.US.buy
-    .map((buy) => buy.provider_name)
-    .join('; ');
-  console.log(availableToBuy);
-  const availableToStream = tvShowProviders.results.US.flatrate
-    .map((stream) => stream.provider_name)
-    .join('; ');
-  console.log(availableToStream);
 
+  const providers = await tvShowProviders(showID);
+  console.log(providers);
   displayBackgroundImage(tvShow.backdrop_path, true);
 
   const div = document.createElement('div');
@@ -289,8 +304,8 @@ async function displayTVShowDetails() {
     </li>
     <li><span class="text-secondary">Status:</span> ${tvShow.status}</li>
     <li><span class="text-secondary">Episode Runtime:</span> ${runtime} </li>
-    <li><span class="text-secondary">Buy at:</span> ${availableToBuy} </li>
-    <li><span class="text-secondary">Stream at:</span> ${availableToStream} </li>
+    <li><span class="text-secondary">Buy at:</span> ${providers.buy} </li>
+    <li><span class="text-secondary">Stream at:</span> ${providers.stream} </li>
     
   </ul>
   <h4>Production Companies</h4>
