@@ -50,7 +50,7 @@ async function displayPopularMovies() {
 // Display the 20 most popular tv shows
 async function displayPopularTVShows() {
   const { results } = await fetchAPIData('tv/popular');
-  console.log(results);
+  //   console.log(results);
 
   results.forEach((tvShow) => {
     const div = document.createElement('div');
@@ -93,8 +93,8 @@ function displayBackgroundImage(path, isTV = false) {
   }
 }
 
-function initSwiper() {
-  const swiper = new Swiper('.swiper', {
+function initTVSwiper() {
+  const swiper = new Swiper('.tv-swiper', {
     slidesPerView: 1,
     speed: 400,
     spaceBetween: 30,
@@ -118,15 +118,21 @@ function initSwiper() {
   });
 }
 // Display Slider Movies
-async function displaySlider() {
-  const { results } = await fetchAPIData('movie/now_playing');
-  console.log(results);
+async function displaySlider(isTV = false) {
+  debugger;
+  const { results } = isTV
+    ? await fetchAPIData('tv/top_rated')
+    : await fetchAPIData('movie/now_playing');
+
+  const detailsPage = isTV ? 'tv-details.html' : 'movie-details.html';
+  //   console.log(results);
 
   results.forEach((movie) => {
     const div = document.createElement('div');
     div.classList.add('swiper-slide'); // a single slide, clicking on it takes to movie details
-    div.innerHTML = `<a href="movie-details.html?id=${movie.id}">${posterPath(
-      movie
+    div.innerHTML = `<a href="${detailsPage}?id=${movie.id}">${posterPath(
+      movie,
+      isTV
     )}
   </a>
   <h4 class="swiper-rating">
@@ -135,8 +141,9 @@ async function displaySlider() {
     )} / 10
   </h4>
     `;
+    // console.log(div);
     document.querySelector('.swiper-wrapper').appendChild(div);
-    initSwiper();
+    isTV ? initTVSwiper() : initSwiper();
   });
 }
 function formatDate(dateString) {
@@ -248,6 +255,7 @@ async function tvShowProviders(showID) {
 }
 // Display Movie Details
 async function displayTVShowDetails() {
+  highlightActiveLink();
   const showID = window.location.search.split('=')[1];
   const tvShow = await fetchAPIData(`tv/${showID}`);
   console.log(tvShow);
@@ -376,6 +384,7 @@ function init() {
       break;
     case '/shows.html':
       console.log('Shows');
+      displaySlider(true);
       displayPopularTVShows();
       break;
     case '/movie-details.html':
