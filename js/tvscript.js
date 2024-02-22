@@ -1,6 +1,6 @@
 import { global } from './globals.js';
 import {
-  posterPath,
+  posterPathImageLink,
   displaySlider,
   displayBackgroundImage,
 } from './imageManagement.js';
@@ -17,7 +17,10 @@ export async function displayPopularTVShows() {
     div.classList.add('card');
 
     div.innerHTML = ` 
-          <a href="tv-details.html?id=${tvShow.id}">${posterPath(tvShow, true)}
+          <a href="tv-details.html?id=${tvShow.id}">${posterPathImageLink(
+      tvShow,
+      true
+    )}
           </a>
           <div class="card-body">
           <h5 class="card-title">${tvShow.name}</h5>
@@ -74,7 +77,7 @@ export async function displayTVShowDetails() {
 
   div.innerHTML = `<div class="details-top">
     <div>
-    ${posterPath(tvShow, true)}
+    ${posterPathImageLink(tvShow, true)}
     </div>
     <div>
       <h2>${tvShow.name}</h2>
