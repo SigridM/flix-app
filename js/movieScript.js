@@ -5,40 +5,14 @@ import {
 } from './imageManagement.js';
 import { fetchAPIData } from './fetchData.js';
 import { formatDate, currencyFormatter } from './formatters.js';
-import { addRatingIcon } from './commonElements.js';
+import {
+  addRatingIcon,
+  cardBodyDiv,
+  spanFor,
+  genreList,
+  mediaProviders,
+} from './commonElements.js';
 
-console.log(global.currentPage);
-
-// Create and return the card body div element for a particular movie, including a
-// caption under the title
-function cardBodyDiv(movie) {
-  const cardBodyDiv = document.createElement('div');
-  cardBodyDiv.classList.add('card-body');
-
-  const title = document.createElement('h5');
-  title.classList.add('card-title');
-  title.textContent = movie.title;
-
-  const cardCaption = document.createElement('p');
-  cardCaption.classList.add('card-text');
-
-  const releaseDate = document.createElement('small');
-  releaseDate.textContent = movie.release_date;
-  cardCaption.appendChild(releaseDate);
-
-  const rating = document.createElement('small');
-  addRatingIcon(movie, rating); // adds a star and a number to the element
-  cardCaption.appendChild(rating);
-
-  cardCaption.style.display = 'flex';
-  cardCaption.style.justifyContent = 'space-between';
-
-  cardBodyDiv.appendChild(title);
-  cardBodyDiv.appendChild(cardCaption);
-
-  // cardBodyDiv.appendChild(rating);
-  return cardBodyDiv;
-}
 // Display the 20 most popular movies
 export async function displayPopularMovies() {
   const { results } = await fetchAPIData('movie/popular'); // curly braces around the results deconstructs it to get just the array
@@ -56,18 +30,6 @@ export async function displayPopularMovies() {
 
     document.querySelector('#popular-movies').appendChild(div);
   });
-}
-
-// Create and return a ul containing all the genres of movie as lis
-function genreList(movie) {
-  const genreList = document.createElement('ul');
-  genreList.classList.add('list-group');
-  movie.genres.forEach((genre) => {
-    const li = document.createElement('li');
-    li.textContent = genre.name;
-    genreList.appendChild(li);
-  });
-  return genreList;
 }
 
 // Create and return the div that is in the top portion of the window
@@ -130,18 +92,10 @@ function detailsTopRight(movie) {
   return div;
 }
 
-// Create and return a span element containing the given text.
-function spanFor(text) {
-  const span = document.createElement('span');
-  span.textContent = text;
-  return span;
-}
-
 // Create and return the list of movie details appearing at the bottom of the
 // details page
-function detailsBottomList(movie) {
+function detailsBottomList(movie, providers) {
   const list = document.createElement('ul');
-
   const budget = {
     span: spanFor('Budget: '),
     listText: currencyFormatter.format(movie.budget),
@@ -158,7 +112,19 @@ function detailsBottomList(movie) {
     span: spanFor('Status: '),
     listText: movie.status,
   };
+  const rentFrom = {
+    span: spanFor('Rent from: '),
+    listText: providers.rentOrFree,
+  };
+  const buyFrom = {
+    span: spanFor('Buy from: '),
+    listText: providers.buy,
+  };
 
+  const streamFrom = {
+    span: spanFor('Stream from: '),
+    listText: providers.stream,
+  };
   const productionCompanies = {
     span: spanFor('Production Companies: '),
     listText: movie.production_companies
@@ -173,20 +139,28 @@ function detailsBottomList(movie) {
       .join(', '),
   };
 
-  [budget, revenue, runtime, status, productionCompanies, languages].forEach(
-    (el) => {
-      el.span.classList.add('text-secondary');
-      const li = document.createElement('li');
-      li.textContent = el.listText;
-      li.insertBefore(el.span, li.firstChild);
-      list.appendChild(li);
-    }
-  );
+  [
+    budget,
+    revenue,
+    runtime,
+    status,
+    rentFrom,
+    buyFrom,
+    streamFrom,
+    productionCompanies,
+    languages,
+  ].forEach((el) => {
+    el.span.classList.add('text-secondary');
+    const li = document.createElement('li');
+    li.textContent = el.listText;
+    li.insertBefore(el.span, li.firstChild);
+    list.appendChild(li);
+  });
   return list;
 }
 
 //Create and return the div that should appear at the bottom of the details page
-function detailsBottom(movie) {
+function detailsBottom(movie, providers) {
   const div = document.createElement('div');
   div.classList.add('details-bottom');
 
@@ -194,7 +168,7 @@ function detailsBottom(movie) {
   movieInfoTitle.textContent = 'Movie Info';
 
   div.appendChild(movieInfoTitle);
-  div.appendChild(detailsBottomList(movie));
+  div.appendChild(detailsBottomList(movie, providers));
 
   return div;
 }
@@ -204,13 +178,13 @@ export async function displayMovieDetails() {
   const movieID = window.location.search.split('=')[1];
 
   const movie = await fetchAPIData(`movie/${movieID}`);
-  console.log(movie);
+  const providers = await mediaProviders(movieID, false);
 
   displayBackgroundImage(movie.backdrop_path);
 
   const div = document.createElement('div');
   div.appendChild(detailsTop(movie));
-  div.appendChild(detailsBottom(movie));
+  div.appendChild(detailsBottom(movie, providers));
 
   document.querySelector('#movie-details').appendChild(div);
 }
