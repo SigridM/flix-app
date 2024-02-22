@@ -1,17 +1,14 @@
-import { global } from './globals.js';
 import {
   posterPathImageLink,
-  displaySlider,
   displayBackgroundImage,
 } from './imageManagement.js';
 import { fetchAPIData } from './fetchData.js';
-import { formatDate } from './formatters.js';
 import {
-  addRatingIcon,
   cardBodyDiv,
   spanFor,
-  genreList,
   mediaProviders,
+  detailsTop,
+  detailsBottom,
 } from './commonElements.js';
 
 // Display the 20 most popular tv shows
@@ -32,88 +29,9 @@ export async function displayPopularTVShows() {
   });
 }
 
-// Create and return the div that is in the top portion of the window
-// containing the movie poster image and other details
-function detailsTop(tvShow) {
-  const div = document.createElement('div');
-  div.classList.add('details-top');
-  const posterPathDiv = document.createElement('div');
-  posterPathDiv.appendChild(posterPathImageLink(tvShow, true));
-
-  div.appendChild(posterPathDiv);
-  div.appendChild(detailsTopRight(tvShow));
-  return div;
-}
-
-// Create and return the div that is to the right of the poster image and
-// contains a number of details about the movie
-function detailsTopRight(tvShow) {
-  const div = document.createElement('div');
-
-  const title = document.createElement('h2');
-  title.textContent = tvShow.name;
-
-  const tagline = document.createElement('h5');
-  tagline.textContent = tvShow.tagline;
-
-  const rating = document.createElement('p');
-  addRatingIcon(tvShow, rating);
-
-  const airedFrom = spanFor('Aired from: ');
-  airedFrom.classList.add('text-secondary-bold');
-  const fromDate = spanFor(formatDate(tvShow.first_air_date));
-  const airedTo = spanFor(' to ');
-  airedTo.classList.add('text-secondary-bold');
-  const toDate = spanFor(formatDate(tvShow.last_air_date));
-
-  const airDate = document.createElement('p');
-  [airedFrom, fromDate, airedTo, toDate].forEach((el) =>
-    airDate.appendChild(el)
-  );
-
-  const overview = document.createElement('p');
-  overview.textContent = tvShow.overview;
-
-  const genresTitle = document.createElement('h4');
-  genresTitle.classList.add('text-secondary');
-  genresTitle.textContent = 'Genres';
-
-  const anchor = document.createElement('a');
-  anchor.href = tvShow.homepage;
-  anchor.target = '_blank';
-  anchor.classList.add('btn');
-  anchor.textContent = 'Visit Show Homepage';
-  [
-    title,
-    tagline,
-    rating,
-    airDate,
-    overview,
-    genresTitle,
-    genreList(tvShow),
-    anchor,
-  ].forEach((el) => {
-    div.appendChild(el);
-  });
-  return div;
-}
-
-//Create and return the div that should appear at the bottom of the details page
-function detailsBottom(tvShow, providers) {
-  const div = document.createElement('div');
-  div.classList.add('details-bottom');
-
-  const showInfoTitle = document.createElement('h2');
-  showInfoTitle.textContent = 'Show Info';
-
-  div.appendChild(showInfoTitle);
-  div.appendChild(detailsBottomList(tvShow, providers));
-
-  return div;
-}
 // Create and return the list of movie details appearing at the bottom of the
 // details page
-function detailsBottomList(tvShow, providers) {
+const detailsBottomList = (tvShow, providers) => {
   const runtimeText = tvShow.episode_run_time[0]
     ? `${tvShow.episode_run_time[0]} minutes`
     : 'unavailable';
@@ -187,7 +105,7 @@ function detailsBottomList(tvShow, providers) {
     list.appendChild(li);
   });
   return list;
-}
+};
 
 // Display TV Details page
 export async function displayTVShowDetails() {
@@ -198,8 +116,8 @@ export async function displayTVShowDetails() {
   displayBackgroundImage(tvShow.backdrop_path, true);
 
   const div = document.createElement('div');
-  div.appendChild(detailsTop(tvShow));
-  div.appendChild(detailsBottom(tvShow, providers));
+  div.appendChild(detailsTop(tvShow, true));
+  div.appendChild(detailsBottom(tvShow, providers, detailsBottomList, true));
 
   document.querySelector('#tv-details').appendChild(div);
 }

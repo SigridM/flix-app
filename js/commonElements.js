@@ -1,4 +1,6 @@
 import { fetchAPIData } from './fetchData.js';
+import { formatDate } from './formatters.js';
+import { posterPathImageLink } from './imageManagement.js';
 
 // Add the rating icon inside the wrapper element (a paragraph or h4)
 export function addRatingIcon(media, wrapper) {
@@ -109,4 +111,100 @@ export async function mediaProviders(media, isTV = false) {
       .join('; ');
   }
   return providers;
+}
+
+function dateParagraph(media, isTV) {
+  const date = document.createElement('p');
+  if (isTV) {
+    const airedFrom = spanFor('Aired from: ');
+    airedFrom.classList.add('text-secondary-bold');
+    const fromDate = spanFor(formatDate(media.first_air_date));
+    const airedTo = spanFor(' to ');
+    airedTo.classList.add('text-secondary-bold');
+    const toDate = spanFor(formatDate(media.last_air_date));
+    [airedFrom, fromDate, airedTo, toDate].forEach((el) =>
+      date.appendChild(el)
+    );
+    return date;
+  }
+  // Movie
+  const releaseTitle = spanFor('Release Date: ');
+  releaseTitle.classList.add('text-secondary-bold');
+  const releaseDate = spanFor(formatDate(media.release_date));
+  date.appendChild(releaseTitle);
+  date.appendChild(releaseDate);
+  return date;
+}
+
+// Create and return the div that is to the right of the poster image and
+// contains a number of details about the media
+function detailsTopRight(media, isTV = false) {
+  const div = document.createElement('div');
+
+  const title = document.createElement('h2');
+  title.textContent = isTV ? media.name : media.title;
+
+  const tagline = document.createElement('h5');
+  tagline.textContent = media.tagline;
+
+  const rating = document.createElement('p');
+  addRatingIcon(media, rating);
+
+  const overview = document.createElement('p');
+  overview.textContent = media.overview;
+
+  const genresTitle = document.createElement('h4');
+  genresTitle.classList.add('text-secondary');
+  genresTitle.textContent = 'Genres';
+
+  const anchor = document.createElement('a');
+  anchor.href = media.homepage;
+  anchor.target = '_blank';
+  anchor.classList.add('btn');
+  anchor.textContent = isTV ? 'Visit Show Homepage' : 'Visit Movie Homepage';
+  [
+    title,
+    tagline,
+    rating,
+    dateParagraph(media, isTV),
+    overview,
+    genresTitle,
+    genreList(media),
+    anchor,
+  ].forEach((el) => {
+    div.appendChild(el);
+  });
+  return div;
+}
+
+// Create and return the div that is in the top portion of the window
+// containing the movie poster image and other details
+export function detailsTop(media, isTV = false) {
+  const div = document.createElement('div');
+  div.classList.add('details-top');
+  const posterPathDiv = document.createElement('div');
+  posterPathDiv.appendChild(posterPathImageLink(media, isTV));
+
+  div.appendChild(posterPathDiv);
+  div.appendChild(detailsTopRight(media, isTV));
+  return div;
+}
+
+//Create and return the div that should appear at the bottom of the details page
+export function detailsBottom(
+  media,
+  providers,
+  bottomListFunction,
+  isTV = false
+) {
+  const div = document.createElement('div');
+  div.classList.add('details-bottom');
+
+  const title = document.createElement('h2');
+  title.textContent = isTV ? 'Show Info' : 'Movie Info';
+
+  div.appendChild(title);
+  div.appendChild(bottomListFunction(media, providers));
+
+  return div;
 }

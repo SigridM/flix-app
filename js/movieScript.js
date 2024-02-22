@@ -1,16 +1,15 @@
-import { global } from './globals.js';
 import {
   posterPathImageLink,
   displayBackgroundImage,
 } from './imageManagement.js';
 import { fetchAPIData } from './fetchData.js';
-import { formatDate, currencyFormatter } from './formatters.js';
+import { currencyFormatter } from './formatters.js';
 import {
-  addRatingIcon,
   cardBodyDiv,
   spanFor,
-  genreList,
   mediaProviders,
+  detailsTop,
+  detailsBottom,
 } from './commonElements.js';
 
 // Display the 20 most popular movies
@@ -32,69 +31,9 @@ export async function displayPopularMovies() {
   });
 }
 
-// Create and return the div that is in the top portion of the window
-// containing the movie poster image and other details
-function detailsTop(movie) {
-  const div = document.createElement('div');
-  div.classList.add('details-top');
-  const posterPathDiv = document.createElement('div');
-  posterPathDiv.appendChild(posterPathImageLink(movie));
-
-  div.appendChild(posterPathDiv);
-  div.appendChild(detailsTopRight(movie));
-  return div;
-}
-
-// Create and return the div that is to the right of the poster image and
-// contains a number of details about the movie
-function detailsTopRight(movie) {
-  const div = document.createElement('div');
-
-  const title = document.createElement('h2');
-  title.textContent = movie.title;
-
-  const tagline = document.createElement('h5');
-  tagline.textContent = movie.tagline;
-
-  const rating = document.createElement('p');
-  addRatingIcon(movie, rating);
-
-  const releaseDate = document.createElement('p');
-  releaseDate.textContent = formatDate(movie.release_date);
-  const releaseTitle = spanFor('Release Date: ');
-  releaseTitle.classList.add('text-secondary-bold');
-  releaseDate.insertBefore(releaseTitle, releaseDate.firstChild);
-
-  const overview = document.createElement('p');
-  overview.textContent = movie.overview;
-
-  const genresTitle = document.createElement('h4');
-  genresTitle.classList.add('text-secondary');
-  genresTitle.textContent = 'Genres';
-
-  const anchor = document.createElement('a');
-  anchor.href = movie.homepage;
-  anchor.target = '_blank';
-  anchor.classList.add('btn');
-  anchor.textContent = 'Visit Movie Homepage';
-  [
-    title,
-    tagline,
-    rating,
-    releaseDate,
-    overview,
-    genresTitle,
-    genreList(movie),
-    anchor,
-  ].forEach((el) => {
-    div.appendChild(el);
-  });
-  return div;
-}
-
 // Create and return the list of movie details appearing at the bottom of the
 // details page
-function detailsBottomList(movie, providers) {
+const detailsBottomList = (movie, providers) => {
   const list = document.createElement('ul');
   const budget = {
     span: spanFor('Budget: '),
@@ -157,21 +96,7 @@ function detailsBottomList(movie, providers) {
     list.appendChild(li);
   });
   return list;
-}
-
-//Create and return the div that should appear at the bottom of the details page
-function detailsBottom(movie, providers) {
-  const div = document.createElement('div');
-  div.classList.add('details-bottom');
-
-  const movieInfoTitle = document.createElement('h2');
-  movieInfoTitle.textContent = 'Movie Info';
-
-  div.appendChild(movieInfoTitle);
-  div.appendChild(detailsBottomList(movie, providers));
-
-  return div;
-}
+};
 
 // Display Movie Details
 export async function displayMovieDetails() {
@@ -184,7 +109,7 @@ export async function displayMovieDetails() {
 
   const div = document.createElement('div');
   div.appendChild(detailsTop(movie));
-  div.appendChild(detailsBottom(movie, providers));
+  div.appendChild(detailsBottom(movie, providers, detailsBottomList));
 
   document.querySelector('#movie-details').appendChild(div);
 }
