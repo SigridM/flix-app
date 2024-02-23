@@ -22,21 +22,17 @@ function init() {
   ) {
     case '/':
     case '/index.html':
-      console.log('Home');
       displaySlider();
       displayPopularMovies();
       break;
     case '/shows.html':
-      console.log('Shows');
       displaySlider(true);
       displayPopularTVShows();
       break;
     case '/movie-details.html':
-      console.log('Movie Details');
       displayMovieDetails();
       break;
     case '/tv-details.html':
-      console.log('TV Details');
       displayTVShowDetails();
 
       break;

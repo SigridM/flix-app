@@ -1,5 +1,5 @@
 import { fetchAPIData } from './fetchData.js';
-import { formatDate } from './formatters.js';
+import { formatDate, currencyFormatter } from './formatters.js';
 import { posterPathImageLink } from './imageManagement.js';
 
 // Add the rating icon inside the wrapper element (a paragraph or h4)
@@ -75,9 +75,10 @@ export async function mediaProviders(media, isTV = false) {
     console.error('A fetch error occurred:', error);
   }
   const providers = {
-    rentOrFree: '',
-    buy: '',
-    stream: '',
+    rent: null,
+    free: null,
+    buy: null,
+    stream: null,
   };
   if (!mediaProviders.results) {
     return providers;
@@ -86,19 +87,15 @@ export async function mediaProviders(media, isTV = false) {
   if (!usProviders) {
     return providers;
   }
-  if (isTV) {
-    if (usProviders.free) {
-      providers.rentOrFree = usProviders.free
-        .map((provider) => provider.provider_name)
-        .join('; ');
-    }
-  } else {
-    // movie
-    if (usProviders.rent) {
-      providers.rentOrFree = usProviders.rent
-        .map((provider) => provider.provider_name)
-        .join('; ');
-    }
+  if (usProviders.free) {
+    providers.free = usProviders.free
+      .map((provider) => provider.provider_name)
+      .join('; ');
+  }
+  if (usProviders.rent) {
+    providers.rent = usProviders.rent
+      .map((provider) => provider.provider_name)
+      .join('; ');
   }
   if (usProviders.buy) {
     providers.buy = usProviders.buy
@@ -191,12 +188,7 @@ export function detailsTop(media, isTV = false) {
 }
 
 //Create and return the div that should appear at the bottom of the details page
-export function detailsBottom(
-  media,
-  providers,
-  bottomListFunction,
-  isTV = false
-) {
+export function detailsBottom(media, providers, isTV = false) {
   const div = document.createElement('div');
   div.classList.add('details-bottom');
 
@@ -204,7 +196,121 @@ export function detailsBottom(
   title.textContent = isTV ? 'Show Info' : 'Movie Info';
 
   div.appendChild(title);
-  div.appendChild(bottomListFunction(media, providers));
+  div.appendChild(detailsBottomList(media, providers));
 
   return div;
 }
+
+// Create and return the list of media details appearing at the bottom of the
+// details page
+const detailsBottomList = (media, providers) => {
+  const list = document.createElement('ul');
+  const details = [];
+  let detail = media.budget;
+  if (detail) {
+    details.push({
+      span: spanFor('Budget: '),
+      listText: currencyFormatter.format(detail),
+    });
+  }
+  detail = media.revenue;
+  if (detail) {
+    details.push({
+      span: spanFor('Revenue: '),
+      listText: currencyFormatter.format(detail),
+    });
+  }
+  detail = media.runtime;
+  if (detail) {
+    details.push({
+      span: spanFor('Runtime: '),
+      listText: detail + ' minutes',
+    });
+  }
+  detail = media.number_of_episodes;
+  if (detail) {
+    details.push({
+      span: spanFor('Number of Episodes: '),
+      listText: detail,
+    });
+  }
+  detail = media.number_of_seasons;
+  if (detail) {
+    details.push({
+      span: spanFor('Number of Seasons: '),
+      listText: detail,
+    });
+  }
+  detail = media.last_episode_to_air;
+  if (detail) {
+    details.push({
+      span: spanFor('Last Episode to Air: '),
+      listText: detail.name,
+    });
+  }
+  detail = media.episode_run_time;
+  if (detail) {
+    const runtimeText = detail[0] ? `${detail[0]} minutes` : 'unavailable';
+    details.push({
+      span: spanFor('Runtime: '),
+      listText: runtimeText,
+    });
+  }
+  detail = media.status;
+  if (detail) {
+    details.push({
+      span: spanFor('Status: '),
+      listText: detail,
+    });
+  }
+  if (providers.rent) {
+    details.push({
+      span: spanFor('Rent from: '),
+      listText: providers.rent,
+    });
+  }
+  if (providers.free) {
+    details.push({
+      span: spanFor('Free from: '),
+      listText: providers.free,
+    });
+  }
+
+  if (providers.buy) {
+    details.push({
+      span: spanFor('Buy from: '),
+      listText: providers.buy,
+    });
+  }
+
+  if (providers.stream) {
+    details.push({
+      span: spanFor('Stream from: '),
+      listText: providers.stream,
+    });
+  }
+
+  detail = media.production_companies;
+  if (detail) {
+    details.push({
+      span: spanFor('Production Companies: '),
+      listText: detail.map((company) => company.name).join('; '),
+    });
+  }
+  detail = media.spoken_languages;
+  if (detail) {
+    details.push({
+      span: spanFor('Spoken Languages: '),
+      listText: detail.map((language) => language.english_name).join(', '),
+    });
+  }
+
+  details.forEach((el) => {
+    el.span.classList.add('text-secondary');
+    const li = document.createElement('li');
+    li.textContent = el.listText;
+    li.insertBefore(el.span, li.firstChild);
+    list.appendChild(li);
+  });
+  return list;
+};
