@@ -66,11 +66,11 @@ export function genreList(media) {
 // 1) a semicolon-separated list of places where someone can either rent a movie or get a TV show free;
 // 2) a semicolon-separated list of places where someone can buy a movie or TV show; and
 // 3) a semicolon-separated list of places where someone can stream a movie or TV show
-export async function mediaProviders(media, isTV = false) {
+async function mediaProviders(mediaID, isTV = false) {
   const type = isTV ? 'tv' : 'movie';
   let mediaProviders;
   try {
-    mediaProviders = await fetchAPIData(`${type}/${media}/watch/providers`);
+    mediaProviders = await fetchAPIData(`${type}/${mediaID}/watch/providers`);
   } catch (error) {
     console.error('A fetch error occurred:', error);
   }
@@ -188,7 +188,8 @@ export function detailsTop(media, isTV = false) {
 }
 
 //Create and return the div that should appear at the bottom of the details page
-export function detailsBottom(media, providers, isTV = false) {
+export async function detailsBottom(media, mediaID, isTV = false) {
+  const theProviders = await mediaProviders(mediaID, isTV);
   const div = document.createElement('div');
   div.classList.add('details-bottom');
 
@@ -196,7 +197,9 @@ export function detailsBottom(media, providers, isTV = false) {
   title.textContent = isTV ? 'Show Info' : 'Movie Info';
 
   div.appendChild(title);
-  div.appendChild(detailsBottomList(media, providers));
+  //   debugger;
+
+  div.appendChild(detailsBottomList(media, theProviders));
 
   return div;
 }
