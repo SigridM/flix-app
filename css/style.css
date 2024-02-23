@@ -257,6 +257,10 @@ section h5 {
 }
 
 .details-bottom {
+  margin: 15px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #fff;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .details-bottom li {
