@@ -1,6 +1,9 @@
 import { fetchAPIData } from './fetchData.js';
 import { formatDate, currencyFormatter } from './formatters.js';
-import { posterPathImageLink } from './imageManagement.js';
+import {
+  posterPathImageLink,
+  displayBackgroundImage,
+} from './imageManagement.js';
 
 // Add the rating icon inside the wrapper element (a paragraph or h4)
 export function addRatingIcon(media, wrapper) {
@@ -317,3 +320,22 @@ const detailsBottomList = (media, providers) => {
   });
   return list;
 };
+
+// Display  Details page for movie or tv show
+export async function displayDetails(isTV = false) {
+  const mediaID = window.location.search.split('=')[1];
+  const endPointType = isTV ? 'tv/' : 'movie/';
+  const media = await fetchAPIData(endPointType + mediaID);
+
+  displayBackgroundImage(media.backdrop_path, isTV);
+
+  const div = document.createElement('div');
+  const bottom = await detailsBottom(media, mediaID, isTV);
+
+  div.appendChild(detailsTop(media, isTV));
+  div.appendChild(bottom);
+
+  const selector = isTV ? '#tv-details' : '#movie-details';
+
+  document.querySelector(selector).appendChild(div);
+}

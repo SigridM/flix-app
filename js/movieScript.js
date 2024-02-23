@@ -3,7 +3,12 @@ import {
   displayBackgroundImage,
 } from './imageManagement.js';
 import { fetchAPIData } from './fetchData.js';
-import { cardBodyDiv, detailsTop, detailsBottom } from './commonElements.js';
+import {
+  cardBodyDiv,
+  detailsTop,
+  detailsBottom,
+  displayDetails,
+} from './commonElements.js';
 
 // Display the 20 most popular movies
 export async function displayPopularMovies() {
@@ -24,18 +29,7 @@ export async function displayPopularMovies() {
   });
 }
 
-// Display Movie Details
+// Display Movie Details page
 export async function displayMovieDetails() {
-  const movieID = window.location.search.split('=')[1];
-  const movie = await fetchAPIData(`movie/${movieID}`);
-
-  displayBackgroundImage(movie.backdrop_path);
-
-  const div = document.createElement('div');
-  const bottom = await detailsBottom(movie, movieID);
-
-  div.appendChild(detailsTop(movie));
-  div.appendChild(bottom);
-
-  document.querySelector('#movie-details').appendChild(div);
+  await displayDetails();
 }

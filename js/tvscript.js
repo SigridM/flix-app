@@ -3,7 +3,12 @@ import {
   displayBackgroundImage,
 } from './imageManagement.js';
 import { fetchAPIData } from './fetchData.js';
-import { cardBodyDiv, detailsTop, detailsBottom } from './commonElements.js';
+import {
+  cardBodyDiv,
+  detailsTop,
+  detailsBottom,
+  displayDetails,
+} from './commonElements.js';
 
 // Display the 20 most popular tv shows
 export async function displayPopularTVShows() {
@@ -25,16 +30,5 @@ export async function displayPopularTVShows() {
 
 // Display TV Details page
 export async function displayTVShowDetails() {
-  const showID = window.location.search.split('=')[1];
-  const tvShow = await fetchAPIData(`tv/${showID}`);
-
-  displayBackgroundImage(tvShow.backdrop_path, true);
-
-  const div = document.createElement('div');
-  const bottom = await detailsBottom(tvShow, showID, true);
-
-  div.appendChild(detailsTop(tvShow, true));
-  div.appendChild(bottom);
-
-  document.querySelector('#tv-details').appendChild(div);
+  await displayDetails(true);
 }
