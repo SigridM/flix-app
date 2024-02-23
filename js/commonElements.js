@@ -255,7 +255,7 @@ const detailsBottomList = (media, providers) => {
   if (detail) {
     const runtimeText = detail[0] ? `${detail[0]} minutes` : 'unavailable';
     details.push({
-      span: spanFor('Runtime: '),
+      span: spanFor('Episode Runtime: '),
       listText: runtimeText,
     });
   }
