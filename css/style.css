@@ -151,6 +151,10 @@ ul {
   background: #020d18;
   padding: 20px 0;
   margin-top: 20px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
 }
 
 .main-footer .container {
