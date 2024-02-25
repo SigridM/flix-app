@@ -82,21 +82,7 @@ export async function displaySlider(isTV = false) {
     ? await fetchAPIData('tv/top_rated')
     : await fetchAPIData('movie/now_playing');
 
-  const detailsPage = isTV ? 'tv-details.html' : 'movie-details.html';
-  results.forEach((movie) => {
-    const div = document.createElement('div');
-    div.classList.add('swiper-slide'); // a single slide, clicking on it takes to movie details
-
-    const anchor = document.createElement('a');
-    anchor.href = detailsPage + '?id=' + movie.id;
-    anchor.appendChild(posterPathImageLink(movie, isTV));
-    div.appendChild(anchor);
-
-    div.appendChild(swiperRatingIcon(movie));
-
-    document.querySelector('.swiper-wrapper').appendChild(div);
-    initSwiper(isTV);
-  });
+  displayResults(results, 'swiper-slide', '.swiper-wrapper', isTV, true);
 }
 
 // Display Backdrop on Details Page
@@ -110,4 +96,64 @@ export function displayBackgroundImage(path, isTV = false) {
   } else {
     document.querySelector('#movie-details').appendChild(overlayDiv);
   }
+}
+export function displayResults(
+  results,
+  className,
+  parentSelector,
+  isTV,
+  isSwiper = false
+) {
+  const detailsPage = isTV ? 'tv-details.html' : 'movie-details.html';
+
+  results.forEach((media) => {
+    const div = document.createElement('div');
+    div.classList.add(className);
+
+    const anchor = document.createElement('a');
+    anchor.href = detailsPage + '?id=' + media.id;
+    anchor.appendChild(posterPathImageLink(media, isTV));
+    div.appendChild(anchor);
+    const caption = isSwiper
+      ? swiperRatingIcon(media)
+      : cardBodyDiv(media, isTV);
+
+    div.appendChild(caption);
+
+    document.querySelector(parentSelector).appendChild(div);
+    if (isSwiper) {
+      initSwiper(isTV);
+    }
+  });
+}
+
+// Create and return the card body div element for a particular movie or TV show, including a
+// caption under the title
+function cardBodyDiv(media, isTV) {
+  const cardBodyDiv = document.createElement('div');
+  cardBodyDiv.classList.add('card-body');
+
+  const title = document.createElement('h5');
+  title.classList.add('card-title');
+  title.textContent = isTV ? media.name : media.title;
+
+  const cardCaption = document.createElement('p');
+  cardCaption.classList.add('card-text');
+
+  const releaseDate = document.createElement('small');
+  releaseDate.textContent = isTV ? media.first_air_date : media.release_date;
+  cardCaption.appendChild(releaseDate);
+
+  const rating = document.createElement('small');
+  addRatingIcon(media, rating); // adds a star and a number to the element
+  cardCaption.appendChild(rating);
+
+  cardCaption.style.display = 'flex';
+  cardCaption.style.justifyContent = 'space-between';
+
+  cardBodyDiv.appendChild(title);
+  cardBodyDiv.appendChild(cardCaption);
+
+  // cardBodyDiv.appendChild(rating);
+  return cardBodyDiv;
 }

@@ -1,5 +1,5 @@
 import { global } from './globals.js';
-import { displaySlider } from './imageManagement.js';
+import { displaySlider, displayResults } from './imageManagement.js';
 import { displayDetails, displayPopular } from './commonElements.js';
 import { searchAPIData } from './fetchData.js';
 
@@ -15,6 +15,8 @@ function highlightActiveLink() {
   });
 }
 
+//
+function displaySearchResults(results) {}
 // Search Movies/Shows
 async function search() {
   const queryString = window.location.search;
@@ -25,15 +27,25 @@ async function search() {
 
   if (global.search.term !== '' && global.search.term !== null) {
     // @todo - make request and display results
-    const results = await searchAPIData();
+    const { results, total_pages, page } = await searchAPIData();
+    if (results.length === 0) {
+      showAlert('No matches', 'alert-success');
+    }
     console.log(results);
+    displayResults(
+      results,
+      'card',
+      '#search-results',
+      global.search.type == 'tv'
+    );
+    document.querySelector('#search-term').value = '';
   } else {
     showAlert('Please enter a search term');
   }
 }
 
 // Show Alert
-function showAlert(message, className) {
+function showAlert(message, className = 'alert-error') {
   const alertEl = document.createElement('div');
   alertEl.classList.add('alert', className);
   alertEl.appendChild(document.createTextNode(message));

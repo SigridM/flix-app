@@ -3,6 +3,7 @@ import { formatDate, currencyFormatter } from './formatters.js';
 import {
   posterPathImageLink,
   displayBackgroundImage,
+  displayResults,
 } from './imageManagement.js';
 
 // Add the rating icon inside the wrapper element (a paragraph or h4)
@@ -13,37 +14,6 @@ export function addRatingIcon(media, wrapper) {
   });
   wrapper.textContent = ` ${media.vote_average.toFixed(1)} / 10`;
   wrapper.insertBefore(ratingIcon, wrapper.firstChild);
-}
-
-// Create and return the card body div element for a particular movie or TV show, including a
-// caption under the title
-function cardBodyDiv(media, isTV) {
-  const cardBodyDiv = document.createElement('div');
-  cardBodyDiv.classList.add('card-body');
-
-  const title = document.createElement('h5');
-  title.classList.add('card-title');
-  title.textContent = isTV ? media.name : media.title;
-
-  const cardCaption = document.createElement('p');
-  cardCaption.classList.add('card-text');
-
-  const releaseDate = document.createElement('small');
-  releaseDate.textContent = isTV ? media.first_air_date : media.release_date;
-  cardCaption.appendChild(releaseDate);
-
-  const rating = document.createElement('small');
-  addRatingIcon(media, rating); // adds a star and a number to the element
-  cardCaption.appendChild(rating);
-
-  cardCaption.style.display = 'flex';
-  cardCaption.style.justifyContent = 'space-between';
-
-  cardBodyDiv.appendChild(title);
-  cardBodyDiv.appendChild(cardCaption);
-
-  // cardBodyDiv.appendChild(rating);
-  return cardBodyDiv;
 }
 
 // Create and return a span element containing the given text.
@@ -435,21 +405,9 @@ export async function displayDetails(isTV = false) {
 // Display the 20 most popular tv shows or movies
 export async function displayPopular(isTV = false) {
   const endPoint = isTV ? 'tv/popular' : 'movie/popular';
-  const detailsPage = isTV ? 'tv-details.html?id=' : 'movie-details.html?id=';
-  const popularPage = isTV ? '#popular-shows' : '#popular-movies';
 
   const { results } = await fetchAPIData(endPoint);
 
-  results.forEach((media) => {
-    const div = document.createElement('div');
-    div.classList.add('card');
-
-    const anchor = document.createElement('a');
-    anchor.href = detailsPage + media.id;
-    anchor.appendChild(posterPathImageLink(media, isTV));
-    div.appendChild(anchor);
-    div.appendChild(cardBodyDiv(media, isTV));
-
-    document.querySelector(popularPage).appendChild(div);
-  });
+  const popularDivID = isTV ? '#popular-shows' : '#popular-movies';
+  displayResults(results, 'card', popularDivID, isTV);
 }
