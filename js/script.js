@@ -1,7 +1,6 @@
 import { global } from './globals.js';
 import { displaySlider } from './imageManagement.js';
-import { displayPopularMovies, displayMovieDetails } from './movieScript.js';
-import { displayPopularTVShows, displayTVShowDetails } from './tvscript.js';
+import { displayDetails, displayPopular } from './commonElements.js';
 
 console.log(global.currentPage);
 
@@ -23,18 +22,17 @@ function init() {
     case '/':
     case '/index.html':
       displaySlider();
-      displayPopularMovies();
+      displayPopular();
       break;
     case '/shows.html':
       displaySlider(true);
-      displayPopularTVShows();
+      displayPopular(true);
       break;
     case '/movie-details.html':
-      displayMovieDetails();
+      displayDetails();
       break;
     case '/tv-details.html':
-      displayTVShowDetails();
-
+      displayDetails(true);
       break;
     case '/search.html':
       console.log('Search');

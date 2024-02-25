@@ -17,7 +17,7 @@ export function addRatingIcon(media, wrapper) {
 
 // Create and return the card body div element for a particular movie or TV show, including a
 // caption under the title
-export function cardBodyDiv(media, isTV = false) {
+function cardBodyDiv(media, isTV) {
   const cardBodyDiv = document.createElement('div');
   cardBodyDiv.classList.add('card-body');
 
@@ -47,14 +47,14 @@ export function cardBodyDiv(media, isTV = false) {
 }
 
 // Create and return a span element containing the given text.
-export function spanFor(text) {
+function spanFor(text) {
   const span = document.createElement('span');
   span.textContent = text;
   return span;
 }
 
 // Create and return a ul containing all the genres of movie as lis
-export function genreList(media) {
+function genreList(media) {
   const genreList = document.createElement('ul');
   genreList.classList.add('list-group');
   media.genres.forEach((genre) => {
@@ -69,7 +69,7 @@ export function genreList(media) {
 // 1) a semicolon-separated list of places where someone can either rent a movie or get a TV show free;
 // 2) a semicolon-separated list of places where someone can buy a movie or TV show; and
 // 3) a semicolon-separated list of places where someone can stream a movie or TV show
-async function mediaProviders(mediaID, isTV = false) {
+async function mediaProviders(mediaID, isTV) {
   const type = isTV ? 'tv' : 'movie';
   let mediaProviders;
   try {
@@ -138,7 +138,7 @@ function dateParagraph(media, isTV) {
 
 // Create and return the div that is to the right of the poster image and
 // contains a number of details about the media
-function detailsTopRight(media, isTV = false) {
+function detailsTopRight(media, isTV) {
   const div = document.createElement('div');
 
   const title = document.createElement('h2');
@@ -179,7 +179,7 @@ function detailsTopRight(media, isTV = false) {
 
 // Create and return the div that is in the top portion of the window
 // containing the movie poster image and other details
-export function detailsTop(media, isTV = false) {
+function detailsTop(media, isTV) {
   const div = document.createElement('div');
   div.classList.add('details-top');
   const posterPathDiv = document.createElement('div');
@@ -191,7 +191,7 @@ export function detailsTop(media, isTV = false) {
 }
 
 //Create and return the div that should appear at the bottom of the details page
-export async function detailsBottom(media, mediaID, isTV = false) {
+async function detailsBottom(media, mediaID, isTV) {
   const theProviders = await mediaProviders(mediaID, isTV);
   const div = document.createElement('div');
   div.classList.add('details-bottom');
@@ -321,7 +321,7 @@ const detailsBottomList = (media, providers) => {
   return list;
 };
 
-// Display  Details page for movie or tv show
+// Display the Details page for movie or tv show
 export async function displayDetails(isTV = false) {
   const mediaID = window.location.search.split('=')[1];
   const endPointType = isTV ? 'tv/' : 'movie/';
@@ -338,4 +338,26 @@ export async function displayDetails(isTV = false) {
   const selector = isTV ? '#tv-details' : '#movie-details';
 
   document.querySelector(selector).appendChild(div);
+}
+
+// Display the 20 most popular tv shows or movies
+export async function displayPopular(isTV = false) {
+  const endPoint = isTV ? 'tv/popular' : 'movie/popular';
+  const detailsPage = isTV ? 'tv-details.html?id=' : 'movie-details.html?id=';
+  const popularPage = isTV ? '#popular-shows' : '#popular-movies';
+
+  const { results } = await fetchAPIData(endPoint);
+
+  results.forEach((media) => {
+    const div = document.createElement('div');
+    div.classList.add('card');
+
+    const anchor = document.createElement('a');
+    anchor.href = detailsPage + media.id;
+    anchor.appendChild(posterPathImageLink(media, isTV));
+    div.appendChild(anchor);
+    div.appendChild(cardBodyDiv(media, isTV));
+
+    document.querySelector(popularPage).appendChild(div);
+  });
 }
