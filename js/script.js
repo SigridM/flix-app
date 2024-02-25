@@ -1,6 +1,7 @@
 import { global } from './globals.js';
 import { displaySlider } from './imageManagement.js';
 import { displayDetails, displayPopular } from './commonElements.js';
+import { searchAPIData } from './fetchData.js';
 
 console.log(global.currentPage);
 
@@ -12,6 +13,33 @@ function highlightActiveLink() {
       link.classList.add('active');
     }
   });
+}
+
+// Search Movies/Shows
+async function search() {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  global.search.type = urlParams.get('type');
+  global.search.term = urlParams.get('search-term');
+  console.log(global.search);
+
+  if (global.search.term !== '' && global.search.term !== null) {
+    // @todo - make request and display results
+    const results = await searchAPIData();
+    console.log(results);
+  } else {
+    showAlert('Please enter a search term');
+  }
+}
+
+// Show Alert
+function showAlert(message, className) {
+  const alertEl = document.createElement('div');
+  alertEl.classList.add('alert', className);
+  alertEl.appendChild(document.createTextNode(message));
+  document.querySelector('#alert').appendChild(alertEl);
+
+  setTimeout(() => alertEl.remove(), 3000); // remove after 3 seconds
 }
 
 // Init App - runs on every page
@@ -36,6 +64,7 @@ function init() {
       break;
     case '/search.html':
       console.log('Search');
+      search();
       break;
   }
   highlightActiveLink();
