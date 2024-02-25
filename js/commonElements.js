@@ -65,10 +65,11 @@ function genreList(media) {
   return genreList;
 }
 
-// Create and return an object containing three parts:
-// 1) a semicolon-separated list of places where someone can either rent a movie or get a TV show free;
-// 2) a semicolon-separated list of places where someone can buy a movie or TV show; and
-// 3) a semicolon-separated list of places where someone can stream a movie or TV show
+// Create and return an object containing four parts:
+// 1) a semicolon-separated list of places where someone can rent a movie
+// 2) a semicolon-separated list of places where someone can get a TV show for free;
+// 3) a semicolon-separated list of places where someone can buy a movie or TV show; and
+// 4) a semicolon-separated list of places where someone can stream a movie or TV show
 async function mediaProviders(mediaID, isTV) {
   const type = isTV ? 'tv' : 'movie';
   let mediaProviders;
@@ -77,6 +78,7 @@ async function mediaProviders(mediaID, isTV) {
   } catch (error) {
     console.error('A fetch error occurred:', error);
   }
+
   const providers = {
     rent: null,
     free: null,
@@ -113,6 +115,8 @@ async function mediaProviders(mediaID, isTV) {
   return providers;
 }
 
+// Create and return a paragraph (p) element that contains either the release date
+// (for movies) or the aired-from and aired-to dates (for TV), along with labels
 function dateParagraph(media, isTV) {
   const date = document.createElement('p');
   if (isTV) {
@@ -192,7 +196,7 @@ function detailsTop(media, isTV) {
 
 //Create and return the div that should appear at the bottom of the details page
 async function detailsBottom(media, mediaID, isTV) {
-  const theProviders = await mediaProviders(mediaID, isTV);
+  const providers = await mediaProviders(mediaID, isTV);
   const div = document.createElement('div');
   div.classList.add('details-bottom');
 
@@ -202,115 +206,203 @@ async function detailsBottom(media, mediaID, isTV) {
   div.appendChild(title);
   //   debugger;
 
-  div.appendChild(detailsBottomList(media, theProviders));
+  div.appendChild(detailsBottomList(media, providers));
 
   return div;
 }
 
-// Create and return the list of media details appearing at the bottom of the
-// details page
-const detailsBottomList = (media, providers) => {
-  const list = document.createElement('ul');
+// Add the budget to the array of details, if that detail exists
+function addBudget(media, details) {
+  const detail = media.budget;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Budget: '),
+    listText: currencyFormatter.format(detail),
+  });
+}
+
+// Add the revenue to the array of details, if that detail exists
+function addRevenue(media, details) {
+  const detail = media.revenue;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Revenue: '),
+    listText: currencyFormatter.format(detail),
+  });
+}
+
+// Add the runtime to the array of details, if that detail exists
+function addRuntime(media, details) {
+  const detail = media.runtime;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Runtime: '),
+    listText: detail + ' minutes',
+  });
+}
+
+// Add the number of episodes to the array of details, if that detail exists
+function addNumEpisodes(media, details) {
+  const detail = media.number_of_episodes;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Number of Episodes: '),
+    listText: detail,
+  });
+}
+
+// Add the number of seasons to the array of details, if that detail exists
+function addNumSeasons(media, details) {
+  const detail = media.number_of_seasons;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Number of Seasons: '),
+    listText: detail,
+  });
+}
+
+// Add the last episode to the array of details, if that detail exists
+function addLastEpisode(media, details) {
+  const detail = media.last_episode_to_air;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Last Episode to Air: '),
+    listText: detail.name,
+  });
+}
+
+// Add the episode runtime to the array of details, if that detail exists
+function addEpisodeRuntime(media, details) {
+  const detail = media.episode_run_time;
+  if (!detail) {
+    return;
+  }
+  const runtimeText = detail[0] ? `${detail[0]} minutes` : 'unavailable';
+  details.push({
+    span: spanFor('Episode Runtime: '),
+    listText: runtimeText,
+  });
+}
+
+// Add the status to the array of details, if that detail exists
+function addStatus(media, details) {
+  const detail = media.status;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Status: '),
+    listText: detail,
+  });
+}
+
+// Add the production companies list to the array of details, if that detail exists
+function addProductionCompanies(media, details) {
+  const detail = media.production_companies;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Production Companies: '),
+    listText: detail.map((company) => company.name).join('; '),
+  });
+}
+
+// Add the spoken languages list to the array of details, if that detail exists
+function addLanguages(media, details) {
+  const detail = media.spoken_languages;
+  if (!detail) {
+    return;
+  }
+  const label = detail.length > 1 ? 'Spoken Langages: ' : 'Spoken Language: ';
+  details.push({
+    span: spanFor(label),
+    listText: detail.map((language) => language.english_name).join(', '),
+  });
+}
+
+// Add the places to rent list to the array of details, if that detail exists
+function addRentFrom(providers, details) {
+  const detail = providers.rent;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Rent from: '),
+    listText: detail,
+  });
+}
+
+// Add the free places list to the array of details, if that detail exists
+function addFreeFrom(providers, details) {
+  const detail = providers.free;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Free from: '),
+    listText: detail,
+  });
+}
+
+// Add the places to buy list to the array of details, if that detail exists
+function addBuyFrom(providers, details) {
+  const detail = providers.buy;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Buy from: '),
+    listText: detail,
+  });
+}
+
+// Add the places to stream list to the array of details, if that detail exists
+function addStreamFrom(providers, details) {
+  const detail = providers.stream;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Stream from: '),
+    listText: detail,
+  });
+}
+
+// Create and return the unordered list element containing the media details to appear
+// at the bottom of the details page
+function detailsBottomList(media, providers) {
   const details = [];
-  let detail = media.budget;
-  if (detail) {
-    details.push({
-      span: spanFor('Budget: '),
-      listText: currencyFormatter.format(detail),
-    });
-  }
-  detail = media.revenue;
-  if (detail) {
-    details.push({
-      span: spanFor('Revenue: '),
-      listText: currencyFormatter.format(detail),
-    });
-  }
-  detail = media.runtime;
-  if (detail) {
-    details.push({
-      span: spanFor('Runtime: '),
-      listText: detail + ' minutes',
-    });
-  }
-  detail = media.number_of_episodes;
-  if (detail) {
-    details.push({
-      span: spanFor('Number of Episodes: '),
-      listText: detail,
-    });
-  }
-  detail = media.number_of_seasons;
-  if (detail) {
-    details.push({
-      span: spanFor('Number of Seasons: '),
-      listText: detail,
-    });
-  }
-  detail = media.last_episode_to_air;
-  if (detail) {
-    details.push({
-      span: spanFor('Last Episode to Air: '),
-      listText: detail.name,
-    });
-  }
-  detail = media.episode_run_time;
-  if (detail) {
-    const runtimeText = detail[0] ? `${detail[0]} minutes` : 'unavailable';
-    details.push({
-      span: spanFor('Episode Runtime: '),
-      listText: runtimeText,
-    });
-  }
-  detail = media.status;
-  if (detail) {
-    details.push({
-      span: spanFor('Status: '),
-      listText: detail,
-    });
-  }
-  if (providers.rent) {
-    details.push({
-      span: spanFor('Rent from: '),
-      listText: providers.rent,
-    });
-  }
-  if (providers.free) {
-    details.push({
-      span: spanFor('Free from: '),
-      listText: providers.free,
-    });
-  }
+  addBudget(media, details);
+  addRevenue(media, details);
+  addRuntime(media, details);
+  addNumEpisodes(media, details);
+  addNumSeasons(media, details);
+  addLastEpisode(media, details);
+  addEpisodeRuntime(media, details);
+  addStatus(media, details);
 
-  if (providers.buy) {
-    details.push({
-      span: spanFor('Buy from: '),
-      listText: providers.buy,
-    });
-  }
+  addRentFrom(providers, details);
+  addFreeFrom(providers, details);
+  addBuyFrom(providers, details);
+  addStreamFrom(providers, details);
 
-  if (providers.stream) {
-    details.push({
-      span: spanFor('Stream from: '),
-      listText: providers.stream,
-    });
-  }
+  addProductionCompanies(media, details);
+  addLanguages(media, details);
 
-  detail = media.production_companies;
-  if (detail) {
-    details.push({
-      span: spanFor('Production Companies: '),
-      listText: detail.map((company) => company.name).join('; '),
-    });
-  }
-  detail = media.spoken_languages;
-  if (detail) {
-    details.push({
-      span: spanFor('Spoken Languages: '),
-      listText: detail.map((language) => language.english_name).join(', '),
-    });
-  }
-
+  const list = document.createElement('ul');
   details.forEach((el) => {
     el.span.classList.add('text-secondary');
     const li = document.createElement('li');
@@ -319,7 +411,7 @@ const detailsBottomList = (media, providers) => {
     list.appendChild(li);
   });
   return list;
-};
+}
 
 // Display the Details page for movie or tv show
 export async function displayDetails(isTV = false) {
