@@ -26,7 +26,7 @@ export async function fetchAPIData(endpoint) {
 export async function searchAPIData() {
   showSpinner();
   const response = await fetch(
-    `${global.api.apiURL}search/${global.search.type}?api_key=${global.api.apiKey}&language=en-US&query=${global.search.term}` //,
+    `${global.api.apiURL}search/${global.search.type}?api_key=${global.api.apiKey}&language=en-US&query=${global.search.term}&page=${global.search.page}` //,
     // options
   );
 
