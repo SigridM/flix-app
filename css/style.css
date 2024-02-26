@@ -150,11 +150,12 @@ ul {
 .main-footer {
   background: #020d18;
   padding: 20px 0;
-  margin-top: 20px;
+  margin-top: 800px;
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
+  z-index: 0;
 }
 
 .main-footer .container {
@@ -345,11 +346,16 @@ section h5 {
 }
 
 .pagination {
-  margin-top: 20px;
+  position: absolute;
+  bottom: 0;
+  left: 20;
+  margin-bottom: -100px;
 }
 
 .page-counter {
   margin-top: 10px;
+  position: relative;
+  z-index: 1000;
 }
 
 /* Alert */
@@ -378,4 +384,9 @@ section h5 {
   left: 0;
   z-index: -1;
   opacity: 0.15;
+}
+
+#search-results-wrapper {
+  position: relative;
+  margin-bottom: 160px;
 }

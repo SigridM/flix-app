@@ -5,6 +5,7 @@ export const global = {
     type: '',
     page: 1,
     totalPages: 1,
+    totalResults: 0,
   },
   api: {
     // Registor your key at https://www.themoviedb.org/settings/api and enter here

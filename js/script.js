@@ -27,7 +27,10 @@ async function search() {
 
   if (global.search.term !== '' && global.search.term !== null) {
     // @todo - make request and display results
-    const { results, total_pages, page } = await searchAPIData();
+    const { results, total_pages, page, total_results } = await searchAPIData();
+    global.search.page = page;
+    global.search.totalPages = total_pages;
+    global.search.totalResults = total_results;
     if (results.length === 0) {
       showAlert('No matches', 'alert-success');
     }
@@ -39,6 +42,9 @@ async function search() {
       global.search.type == 'tv'
     );
     document.querySelector('#search-term').value = '';
+    document.querySelector(
+      '#search-results-heading'
+    ).innerHTML = `<h2>${results.length} of ${global.search.totalResults} results for ${global.search.term}</h2>`;
   } else {
     showAlert('Please enter a search term');
   }
