@@ -12,7 +12,8 @@ export function addRatingIcon(media, wrapper) {
   ['fas', 'fa-star', 'text-secondary'].forEach((ratingClass) => {
     ratingIcon.classList.add(ratingClass);
   });
-  wrapper.textContent = ` ${media.vote_average.toFixed(1)} / 10`;
+  const vote = media.vote_average ? media.vote_average : 0;
+  wrapper.textContent = ` ${vote.toFixed(1)} / 10`;
   wrapper.insertBefore(ratingIcon, wrapper.firstChild);
 }
 
