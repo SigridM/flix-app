@@ -17,21 +17,15 @@
     <title>Flixx | Show Details</title>
   </head>
   <body>
-    <header class="main-header">
-      <div class="container">
-        <div class="logo"><a href="/">FLIXX</a></div>
-        <nav>
-          <ul>
-            <li>
-              <a class="nav-link" href="/">Movies</a>
-            </li>
-            <li>
-              <a class="nav-link" href="/shows.html">TV Shows</a>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </header>
+    <!-- Header -->
+    <header id="main-header" class="main-header"></header>
+    <script>
+      fetch('./header.html')
+        .then((response) => response.text())
+        .then((html) => {
+          document.getElementById('main-header').innerHTML = html;
+        });
+    </script>
 
     <!-- Show Details -->
     <section class="container">
@@ -43,22 +37,14 @@
     </section>
 
     <!-- Footer -->
-    <footer class="main-footer">
-      <div class="container">
-        <div class="logo"><span>FLIXX</span></div>
-        <div class="social-links">
-          <a href="https://www.facebook.com" target="_blank"
-            ><i class="fab fa-facebook-f"></i
-          ></a>
-          <a href="https://www.twitter.com" target="_blank"
-            ><i class="fab fa-twitter"></i
-          ></a>
-          <a href="https://www.instagram.com" target="_blank"
-            ><i class="fab fa-instagram"></i
-          ></a>
-        </div>
-      </div>
-    </footer>
+    <footer id="main-footer" class="main-footer"></footer>
+    <script>
+      fetch('./footer.html')
+        .then((response) => response.text())
+        .then((html) => {
+          document.getElementById('main-footer').innerHTML = html;
+        });
+    </script>
 
     <div class="spinner"></div>
   </body>

@@ -15,10 +15,8 @@ export async function search() {
   }
   global.search.page = savedPage ? Number(savedPage) : 1;
 
-  const movieRadioButton = document.querySelector('#movie');
-  const tvRadioButton = document.querySelector('#tv');
-  movieRadioButton.checked = global.search.type == 'movie';
-  tvRadioButton.checked = global.search.type == 'tv';
+  document.querySelector('#movie').checked = global.search.type == 'movie';
+  document.querySelector('#tv').checked = global.search.type == 'tv';
 
   const { results, total_pages, page, total_results } = await searchAPIData();
   global.search.page = page;
