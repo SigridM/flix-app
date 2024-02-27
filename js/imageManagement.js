@@ -1,5 +1,6 @@
 import { fetchAPIData } from './fetchData.js';
 import { addRatingIcon } from './commonElements.js';
+import { global } from './globals.js';
 
 function noImage(isTV = false) {
   const alt = isTV ? 'Show Title' : 'Movie Title';
@@ -102,17 +103,30 @@ export function displayResults(
   className,
   parentSelector,
   isTV,
-  isSwiper = false
+  isSwiper = false,
+  isSearch = false
 ) {
   const detailsPage = isTV ? 'tv-details.html' : 'movie-details.html';
-
+  console.log(
+    'in #displayResults, isSearch: ',
+    isSearch,
+    'Global search term',
+    global.search.term
+  );
   results.forEach((media) => {
     const div = document.createElement('div');
     div.classList.add(className);
 
     const anchor = document.createElement('a');
-    anchor.href = detailsPage + '?id=' + media.id;
-    anchor.appendChild(posterPathImageLink(media, isTV));
+    anchor.href = detailsPage + '?id=' + media.id + '?search=' + isSearch;
+    if (isSearch) {
+      anchor.href +=
+        '?search-term=' + global.search.term + '?page=' + global.search.page;
+    }
+
+    const imageLink = posterPathImageLink(media, isTV);
+
+    anchor.appendChild(imageLink);
     div.appendChild(anchor);
     const caption = isSwiper
       ? swiperRatingIcon(media)

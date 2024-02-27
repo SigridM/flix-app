@@ -5,6 +5,7 @@ import {
   displayBackgroundImage,
   displayResults,
 } from './imageManagement.js';
+import { global } from './globals.js';
 
 // Add the rating icon inside the wrapper element (a paragraph or h4)
 export function addRatingIcon(media, wrapper) {
@@ -386,7 +387,13 @@ function detailsBottomList(media, providers) {
 
 // Display the Details page for movie or tv show
 export async function displayDetails(isTV = false) {
-  const mediaID = window.location.search.split('=')[1];
+  const mediaID = window.location.search.split('?')[1].split('=')[1];
+  const isSearch = window.location.search.split('?')[2].split('=')[1] == 'true';
+  const searchTerm = window.location.search.split('?')[3].split('=')[1];
+  const savedPage = window.location.search.split('?')[4].split('=')[1];
+  console.log(searchTerm);
+  const searchType = isTV ? 'tv' : 'movie';
+  console.log(mediaID, isSearch, global.search);
   const endPointType = isTV ? 'tv/' : 'movie/';
   const media = await fetchAPIData(endPointType + mediaID);
 
@@ -400,6 +407,25 @@ export async function displayDetails(isTV = false) {
 
   const selector = isTV ? '#tv-details' : '#movie-details';
 
+  const btn = document.createElement('a');
+  btn.classList.add('btn');
+  if (isSearch) {
+    // @todo figure out what makes this global.search.term go back to an empty string
+    // Answer: reloading the page to any new url resets the globals
+    btn.href =
+      'search.html?type=' +
+      searchType +
+      '&search-term=' +
+      searchTerm +
+      '&page=' +
+      savedPage;
+    btn.textContent = isTV ? 'Back to TV Show Search' : 'Back to Movie Search';
+  } else {
+    btn.href = isTV ? 'shows.html' : 'index.html';
+    btn.textContent = isTV ? 'Back to TV Shows' : 'Back to Movies';
+  }
+  document.querySelector('.back').innerHTML = '';
+  document.querySelector('.back').appendChild(btn);
   document.querySelector(selector).appendChild(div);
 }
 

@@ -21,88 +21,111 @@ async function search() {
   const urlParams = new URLSearchParams(queryString);
   global.search.type = urlParams.get('type');
   global.search.term = urlParams.get('search-term');
-  console.log(global.search);
+  const savedPage = urlParams.get('page');
 
-  if (global.search.term !== '' && global.search.term !== null) {
-    // @todo - make request and display results
-    const { results, total_pages, page, total_results } = await searchAPIData();
-    global.search.page = page;
-    global.search.totalPages = total_pages;
-    global.search.totalResults = total_results;
-    if (results.length === 0) {
-      showAlert('No matches', 'alert-success');
-    }
-    console.log(results);
-    displayResults(
-      results,
-      'card',
-      '#search-results',
-      global.search.type == 'tv'
-    );
-    document.querySelector('#search-term').value = '';
-    document.querySelector(
-      '#search-results-heading'
-    ).innerHTML = `<h2>${results.length} of ${global.search.totalResults} results for ${global.search.term}</h2>`;
-    displayPagination();
-  } else {
-    showAlert('Please enter a search term');
+  if (global.search.term === '' || global.search.term === null) {
+    return showAlert('Please enter a search term');
   }
-}
+  global.search.page = savedPage ? Number(savedPage) : 1;
 
-async function nextPage() {
-  global.search.page++;
-  const { results, total_pages } = await searchAPIData();
-  clearPreviousResults();
+  const { results, total_pages, page, total_results } = await searchAPIData();
+  global.search.page = page;
+  global.search.totalPages = total_pages;
+  global.search.totalResults = total_results;
+  if (results.length === 0) {
+    showAlert('No matches', 'alert-success');
+  }
   displayResults(
     results,
     'card',
     '#search-results',
-    global.search.type == 'tv'
+    global.search.type == 'tv',
+    false,
+    true
   );
-  displayPagination();
+  // document.querySelector('#search-term').value = ''; // This appears not to be necessary
+  //   const heading = document.querySelector('#search-results-heading');
+  //   const h2 = searchResultsHeading(results.length);
+  //   heading.appendChild(h2);
+  //   heading.innerHTML = `<h2>${results.length} of ${global.search.totalResults} results for ${global.search.term}</h2>`;
+  displayPagination(results.length);
+}
+
+function searchResultsHeading(resultsThisPage) {
+  const beforeStart = 20 * (global.search.page - 1);
+  const end = beforeStart + Math.min(resultsThisPage, 20);
+  const h2 = document.createElement('h2');
+  h2.textContent = `Showing ${beforeStart + 1} to ${end} of ${
+    global.search.totalResults
+  } results for ${global.search.term}`;
+  return h2;
+}
+async function nextPage() {
+  global.search.page++;
+  const { results, total_pages } = await searchAPIData();
+  clearPreviousPage();
+  displayResults(
+    results,
+    'card',
+    '#search-results',
+    global.search.type == 'tv',
+    false,
+    true
+  );
+  displayPagination(results.length);
 }
 
 async function previousPage() {
   global.search.page--;
   const { results, total_pages } = await searchAPIData();
-  clearPreviousResults();
+  clearPreviousPage();
   displayResults(
     results,
     'card',
     '#search-results',
-    global.search.type == 'tv'
+    global.search.type == 'tv',
+    false,
+    true
   );
-  displayPagination();
+  displayPagination(results.length);
 }
 
 async function firstPage() {
   global.search.page = 1;
   const { results, total_pages } = await searchAPIData();
-  clearPreviousResults();
+  clearPreviousPage();
   displayResults(
     results,
     'card',
     '#search-results',
-    global.search.type == 'tv'
+    global.search.type == 'tv',
+    false,
+    true
   );
-  displayPagination();
+  displayPagination(results.length);
 }
 
 async function lastPage() {
   global.search.page = global.search.totalPages;
   const { results, total_pages } = await searchAPIData();
-  clearPreviousResults();
+  clearPreviousPage();
   displayResults(
     results,
     'card',
     '#search-results',
-    global.search.type == 'tv'
+    global.search.type == 'tv',
+    false,
+    true
   );
-  displayPagination();
+  displayPagination(results.length);
 }
 
 // Create and display pagination for search
-function displayPagination() {
+function displayPagination(resultsThisPage) {
+  const heading = document.querySelector('#search-results-heading');
+  const h2 = searchResultsHeading(resultsThisPage);
+  heading.appendChild(h2);
+
   console.log('in displayPagination');
   const div = document.createElement('div');
   div.classList.add('pagination');
@@ -150,7 +173,7 @@ function displayPagination() {
 }
 
 // Clear previous results
-function clearPreviousResults() {
+function clearPreviousPage() {
   document.querySelector('#search-results').innerHTML = '';
   document.querySelector('#search-results-heading').innerHTML = '';
   document.querySelector('#pagination').innerHTML = '';
@@ -186,7 +209,7 @@ function init() {
       displayDetails(true);
       break;
     case '/search.html':
-      console.log('Search');
+      console.log('Search', global.search);
       search();
       break;
   }
