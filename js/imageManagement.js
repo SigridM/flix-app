@@ -9,11 +9,6 @@ function noImage(isTV = false) {
   img.classList.add('card-img-top');
   img.alt = alt;
   return img;
-  //   return `<img
-  //       src="../images/no-image.jpg"
-  //       class="card-img-top"
-  //       alt=${alt}
-  //       />`;
 }
 
 function initSwiper(isTV = false) {
@@ -57,16 +52,10 @@ function imageLinkFrom(media, isTV = false) {
 
 export function posterPathImageLink(media, isTV = false) {
   const alt = isTV ? media.name : media.title;
-  // console.log(imageLinkFrom(media, isTV), imageLinkFrom(media, isTV).class);
-  // console.log(imageLinkFrom(media, isTV).textContent);
+
   return media.poster_path // if not null
     ? imageLinkFrom(media, isTV)
-    : // `<img
-      //     src="${imagePaths.width500}${media.poster_path}"
-      //     class="card-img-top"
-      //     alt="${alt}"
-      //     />`
-      noImage(isTV);
+    : noImage(isTV);
 }
 
 // Create and return the h4 element that contains a rating icon
@@ -107,12 +96,7 @@ export function displayResults(
   isSearch = false
 ) {
   const detailsPage = isTV ? 'tv-details.html' : 'movie-details.html';
-  console.log(
-    'in #displayResults, isSearch: ',
-    isSearch,
-    'Global search term',
-    global.search.term
-  );
+
   results.forEach((media) => {
     const div = document.createElement('div');
     div.classList.add(className);
@@ -168,6 +152,5 @@ function cardBodyDiv(media, isTV) {
   cardBodyDiv.appendChild(title);
   cardBodyDiv.appendChild(cardCaption);
 
-  // cardBodyDiv.appendChild(rating);
   return cardBodyDiv;
 }

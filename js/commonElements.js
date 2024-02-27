@@ -391,9 +391,7 @@ export async function displayDetails(isTV = false) {
   const isSearch = window.location.search.split('?')[2].split('=')[1] == 'true';
   const searchTerm = window.location.search.split('?')[3].split('=')[1];
   const savedPage = window.location.search.split('?')[4].split('=')[1];
-  console.log(searchTerm);
   const searchType = isTV ? 'tv' : 'movie';
-  console.log(mediaID, isSearch, global.search);
   const endPointType = isTV ? 'tv/' : 'movie/';
   const media = await fetchAPIData(endPointType + mediaID);
 

@@ -3,8 +3,6 @@ import { displaySlider, displayResults } from './imageManagement.js';
 import { displayDetails, displayPopular } from './commonElements.js';
 import { searchAPIData } from './fetchData.js';
 
-console.log(global.currentPage);
-
 // Highlight active link
 function highlightActiveLink() {
   const links = document.querySelectorAll('.nav-link'); // all with class of nav-link
@@ -126,7 +124,6 @@ function displayPagination(resultsThisPage) {
   const h2 = searchResultsHeading(resultsThisPage);
   heading.appendChild(h2);
 
-  console.log('in displayPagination');
   const div = document.createElement('div');
   div.classList.add('pagination');
 
@@ -209,7 +206,6 @@ function init() {
       displayDetails(true);
       break;
     case '/search.html':
-      console.log('Search', global.search);
       search();
       break;
   }
