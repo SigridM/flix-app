@@ -102,10 +102,10 @@ export function displayResults(
     div.classList.add(className);
 
     const anchor = document.createElement('a');
-    anchor.href = detailsPage + '?id=' + media.id + '?search=' + isSearch;
+    anchor.href = detailsPage + '?id=' + media.id + '&search=' + isSearch;
     if (isSearch) {
       anchor.href +=
-        '?search-term=' + global.search.term + '?page=' + global.search.page;
+        '&search-term=' + global.search.term + '&page=' + global.search.page;
     }
 
     const imageLink = posterPathImageLink(media, isTV);

@@ -387,13 +387,17 @@ function detailsBottomList(media, providers) {
 
 // Display the Details page for movie or tv show
 export async function displayDetails(isTV = false) {
-  const mediaID = window.location.search.split('?')[1].split('=')[1];
-  const isSearch = window.location.search.split('?')[2].split('=')[1] == 'true';
-  const searchTerm = window.location.search.split('?')[3].split('=')[1];
-  const savedPage = window.location.search.split('?')[4].split('=')[1];
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+
+  const mediaID = urlParams.get('id');
+  const isSearch = urlParams.get('search') == 'true';
+  const searchTerm = urlParams.get('search-term');
+  const savedPage = urlParams.get('page');
+
   const searchType = isTV ? 'tv' : 'movie';
-  const endPointType = isTV ? 'tv/' : 'movie/';
-  const media = await fetchAPIData(endPointType + mediaID);
+  const endPoint = searchType + '/';
+  const media = await fetchAPIData(endPoint + mediaID);
 
   displayBackgroundImage(media.backdrop_path, isTV);
 

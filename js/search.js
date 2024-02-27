@@ -15,6 +15,11 @@ export async function search() {
   }
   global.search.page = savedPage ? Number(savedPage) : 1;
 
+  const movieRadioButton = document.querySelector('#movie');
+  const tvRadioButton = document.querySelector('#tv');
+  movieRadioButton.checked = global.search.type == 'movie';
+  tvRadioButton.checked = global.search.type == 'tv';
+
   const { results, total_pages, page, total_results } = await searchAPIData();
   global.search.page = page;
   global.search.totalPages = total_pages;
@@ -30,21 +35,18 @@ export async function search() {
     false, // not swiper
     true // is search
   );
-  // document.querySelector('#search-term').value = ''; // This appears not to be necessary
-  //   const heading = document.querySelector('#search-results-heading');
-  //   const h2 = searchResultsHeading(results.length);
-  //   heading.appendChild(h2);
-  //   heading.innerHTML = `<h2>${results.length} of ${global.search.totalResults} results for ${global.search.term}</h2>`;
-  displayPagination(results.length);
+  displayPagination(results.length, global.search.type == 'tv');
 }
 
-function searchResultsHeading(resultsThisPage) {
+function searchResultsHeading(resultsThisPage, isTV) {
   const beforeStart = 20 * (global.search.page - 1);
   const end = beforeStart + Math.min(resultsThisPage, 20);
   const h2 = document.createElement('h2');
   h2.textContent = `Showing ${beforeStart + 1} to ${end} of ${
     global.search.totalResults
-  } results for ${global.search.term}`;
+  } results for ${isTV ? ' TV Shows' : ' Movies'} containing ' ${
+    global.search.term
+  } '`;
   return h2;
 }
 async function nextPage() {
@@ -108,9 +110,9 @@ async function lastPage() {
 }
 
 // Create and display pagination for search
-function displayPagination(resultsThisPage) {
+function displayPagination(resultsThisPage, isTV) {
   const heading = document.querySelector('#search-results-heading');
-  const h2 = searchResultsHeading(resultsThisPage);
+  const h2 = searchResultsHeading(resultsThisPage, isTV);
   heading.appendChild(h2);
 
   const div = document.createElement('div');
