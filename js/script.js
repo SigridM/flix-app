@@ -1,7 +1,6 @@
 import { global } from './globals.js';
 import { displaySlider, displayResults } from './imageManagement.js';
 import { displayDetails, displayPopular } from './commonElements.js';
-import { searchAPIData } from './fetchData.js';
 import { search } from './search.js';
 
 // Highlight active link

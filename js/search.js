@@ -1,18 +1,7 @@
 import { global } from './globals.js';
 import { displayResults } from './imageManagement.js';
 import { searchAPIData } from './fetchData.js';
-
-function addFilterListeners() {
-  const genreFilter = document.querySelector('#genre-filter');
-  console.log(genreFilter);
-  genreFilter.addEventListener('change', function (event) {
-    if (event.target.checked) {
-      console.log('Checkbox is checked');
-    } else {
-      console.log('Checkbox is unchecked');
-    }
-  });
-}
+import { addFilterListeners } from './filter.js';
 
 // Search Movies/Shows
 export async function search() {
