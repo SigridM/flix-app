@@ -2,8 +2,22 @@ import { global } from './globals.js';
 import { displayResults } from './imageManagement.js';
 import { searchAPIData } from './fetchData.js';
 
+function addFilterListeners() {
+  const genreFilter = document.querySelector('#genre-filter');
+  console.log(genreFilter);
+  genreFilter.addEventListener('change', function (event) {
+    if (event.target.checked) {
+      console.log('Checkbox is checked');
+    } else {
+      console.log('Checkbox is unchecked');
+    }
+  });
+}
+
 // Search Movies/Shows
 export async function search() {
+  addFilterListeners();
+
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
   global.search.type = urlParams.get('type');
