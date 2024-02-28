@@ -14,17 +14,15 @@
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/spinner.css" />
     <script type="module" src="js/script.js" defer></script>
+    <script src="js/include.js"></script>
+
     <title>Flix | Movie Details</title>
   </head>
   <body>
     <!-- Header -->
     <header id="main-header" class="main-header"></header>
     <script>
-      fetch('./header.html')
-        .then((response) => response.text())
-        .then((html) => {
-          document.getElementById('main-header').innerHTML = html;
-        });
+      includeHTML('./header.html', 'main-header');
     </script>
 
     <!-- Movie Details -->
@@ -39,11 +37,7 @@
     <!-- Footer -->
     <footer id="main-footer" class="main-footer"></footer>
     <script>
-      fetch('./footer.html')
-        .then((response) => response.text())
-        .then((html) => {
-          document.getElementById('main-footer').innerHTML = html;
-        });
+      includeHTML('./footer.html', 'main-footer');
     </script>
 
     <div class="spinner"></div>

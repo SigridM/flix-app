@@ -17,26 +17,22 @@
     <script src="lib/swiper.js"></script>
     <script type="module" src="js/script.js" defer></script>
     <title>Flix | TV Shows</title>
+    <script src="js/include.js"></script>
   </head>
   <body>
     <!-- Header -->
     <header id="main-header" class="main-header"></header>
     <script>
-      fetch('./header.html')
-        .then((response) => response.text())
-        .then((html) => {
-          document.getElementById('main-header').innerHTML = html;
-        });
+      includeHTML('./header.html', 'main-header');
     </script>
 
     <div id="search-container"></div>
     <script>
-      fetch('./search-container.html')
-        .then((response) => response.text())
-        .then((html) => {
-          document.getElementById('search-container').innerHTML = html;
-          document.getElementById('tv').checked = true;
-        });
+      includeHTML(
+        './search-container.html',
+        'search-container',
+        () => (document.getElementById('tv').checked = true)
+      );
     </script>
 
     <!-- Top Rated Section -->
@@ -56,11 +52,7 @@
     <!-- Footer -->
     <footer id="main-footer" class="main-footer"></footer>
     <script>
-      fetch('./footer.html')
-        .then((response) => response.text())
-        .then((html) => {
-          document.getElementById('main-footer').innerHTML = html;
-        });
+      includeHTML('./footer.html', 'main-footer');
     </script>
 
     <div class="spinner"></div>

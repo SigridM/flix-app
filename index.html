@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -14,29 +15,26 @@
     <link rel="stylesheet" href="lib/fontawesome.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/spinner.css" />
+
     <script src="lib/swiper.js"></script>
     <script type="module" src="js/script.js" defer></script>
+    <<<<<<< Updated upstream
     <title>Flix | Movies</title>
+    =======
+    <title>Flixx | Movies</title>
+    >>>>>>> Stashed changes
   </head>
   <body>
     <!-- Header -->
     <header id="main-header" class="main-header"></header>
     <script>
-      fetch('./header.html')
-        .then((response) => response.text())
-        .then((html) => {
-          document.getElementById('main-header').innerHTML = html;
-        });
+      includeHTML('./header.html', 'main-header');
     </script>
 
     <!-- Search Section -->
     <div id="search-container"></div>
     <script>
-      fetch('./search-container.html')
-        .then((response) => response.text())
-        .then((html) => {
-          document.getElementById('search-container').innerHTML = html;
-        });
+      includeHTML('./search-container.html', 'search-container');
     </script>
 
     <!-- Now Playing Section -->
@@ -56,11 +54,7 @@
     <!-- Footer -->
     <footer id="main-footer" class="main-footer"></footer>
     <script>
-      fetch('./footer.html')
-        .then((response) => response.text())
-        .then((html) => {
-          document.getElementById('main-footer').innerHTML = html;
-        });
+      includeHTML('./footer.html', 'main-footer');
     </script>
 
     <div class="spinner"></div>
