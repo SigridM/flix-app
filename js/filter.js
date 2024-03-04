@@ -1,5 +1,8 @@
-export function addFilterListeners() {
+import { fetchAPIData } from './fetchData.js';
+
+export function addFilterListeners(isTV = false) {
   const genreFilter = document.querySelector('#genre-filter');
+  //   const genreList = await getGenres(isTV);
   genreFilter.addEventListener('change', function () {
     if (genreFilter.checked) {
       console.log('Genre checkbox is checked');
