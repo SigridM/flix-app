@@ -390,19 +390,13 @@ section h5 {
   position: relative;
   margin-bottom: 160px;
 }
-.genre-div {
-  max-width: 200px;
-  min-width: 200px;
-  display: inline;
-  float: left;
-  margin-left: 10px; /* Adjust spacing between checkboxes */
-  vertical-align: top;
+.filter-div {
+  display: block;
+  float: top; /* Align to the top of the trigger checkbox */
 }
-.genre-container {
-  max-width: 200px;
-  min-width: 200px;
+.filter-container {
   display: inline;
-  float: left;
+  float: top;
   margin-left: 10px; /* Adjust spacing between checkboxes */
   vertical-align: top; /* Align to the top of the trigger checkbox */
 }
@@ -410,6 +404,59 @@ section h5 {
   display: inline-block;
   /* float: left; */
   /* margin-left: 10px; /* Adjust spacing between checkboxes */
-  padding: 10px;
+  padding-left: 10px;
   vertical-align: top; /* Align to the top of the trigger checkbox */
+}
+
+.popup-menu {
+  display: none;
+  position: absolute;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  z-index: 1000;
+}
+
+.popup-menu ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.popup-menu ul li {
+  margin-bottom: 10px;
+}
+
+.popup-menu ul li a {
+  text-decoration: none;
+  color: #333;
+  position: relative;
+  display: inline-block;
+}
+
+.popup-menu ul li:not(.selected) {
+  margin-top: 5px; /* Adjust the margin of the unselected items */
+}
+.filter-menu-item::after {
+  content: '\2713'; /* Unicode checkmark symbol */
+  display: none;
+  position: absolute;
+  top: 0px;
+  left: -5px;
+  transform: translate(-50%);
+  color: #007bff;
+  /* width: 10px;
+  height: 10px;
+  background-color: #007bff;
+  border-radius: 70%; */
+}
+
+.filter-menu-item.selected::after {
+  display: block;
+}
+
+.separator {
+  border-top: 1px solid #ccc; /* Style the separator line */
+  margin-top: 5px; /* Add some spacing */
+  padding-top: 0px; /* Add some spacing */
 }

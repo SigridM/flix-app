@@ -8,30 +8,30 @@
   <body>
     <h2>Filter by:</h2>
     <form>
-      <div id="genre-div">
+      <div id="genre-div" class="filter-div">
         <input type="checkbox" id="genre-filter" name="filter" value="genres" />
         <label for="genre-filter"> Genre </label>
-        <span id="genre-container"></span>
+        <div id="genre-container" class="filter-container"></div>
       </div>
-      <div id="adult-div">
+      <div id="adult-div" class="filter-div">
         <input type="checkbox" id="adult-filter" name="filter" value="adult" />
         <label for="adult-filter"> Adult </label>
-        <span id="adult-container"></span>
+        <div id="adult-container" class="filter-container"></div>
       </div>
-      <div id="language-div">
+      <div id="language-div" class="filter-div">
         <input
           type="checkbox"
           id="language-filter"
           name="filter"
           value="language"
         />
-        <label for="language-filter"> Language </label>
-        <span id="language-container"></span>
+        <label for="language-filter" id="language-label"> Language </label>
+        <div id="language-container" class="filter-container"></div>
       </div>
-      <div id="sort-by-div">
+      <div id="sort-by-div" class="filter-div">
         <input type="checkbox" id="sort-by" name="filter" value="sort" />
         <label for="sort-by"> Sort </label>
-        <span id="sort-by-container"></span>
+        <div id="sort-by-container" class="filter-container"></div>
       </div>
       <input type="submit" value="Submit" />
     </form>
