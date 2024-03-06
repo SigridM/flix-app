@@ -2,52 +2,42 @@ import { fetchAPIData } from './fetchData.js';
 import { global } from './globals.js';
 
 export async function addFilterListeners(isTV = false) {
-  const genreFilter = document.querySelector('#genre-filter');
   await fillLists();
+
+  let menuInfo;
+
   const genreNames = isTV
     ? global.lists.genres.tv.map((ea) => ea.name)
     : global.lists.genres.movies.map((ea) => ea.name);
-  genreFilter.addEventListener('change', function () {
-    if (genreFilter.checked) {
-      createGenreCheckboxes(genreNames);
-    } else {
-      clearGenreCheckboxes();
-    }
-  });
 
-  const adultFilter = document.querySelector('#adult-filter');
-  adultFilter.addEventListener('change', function (event) {
-    if (event.target.checked) {
-      console.log('adult checkbox is checked');
-    } else {
-      console.log('adult checkbox is unchecked');
-    }
-  });
+  menuInfo = {
+    checkboxID: '#genre-filter-checkbox',
+    popupName: 'genre-popup-menu',
+    labelID: '#genre-label',
+    containerID: '#genre-container',
+    contents: genreNames,
+  };
+  addListenersTo(menuInfo);
 
-  const languageFilter = document.querySelector('#language-filter');
-  const languages = global.lists.languages.map((ea) => ea.english_name).sort();
-  languageFilter.addEventListener('change', function () {
-    const popupMenu = document.getElementById('language-popup-menu');
-    if (!popupMenu) {
-      createLanguagePopupMenu(languages); // also shows the menu
-    } else {
-      openPopupMenu('language-popup-menu');
-      if (!languageFilter.checked) {
-        clearSelected(languageFilter, 'language-popup-menu');
-      }
-    }
-  });
+  menuInfo = {
+    checkboxID: '#adult-filter-checkbox',
+    popupName: 'adult-popup-menu',
+    labelID: '#adult-label',
+    containerID: '#adult-container',
+    contents: ['Adult Only', 'Non-Adult Only'],
+  };
+  addListenersTo(menuInfo);
 
-  const languageLabel = document.querySelector('#language-label');
-  languageLabel.addEventListener('click', function () {
-    const popupMenu = document.getElementById('language-popup-menu');
-    if (!popupMenu) {
-      createLanguagePopupMenu(languages); // also shows the menu
-    } else {
-      togglePopupMenu('language-popup-menu');
-    }
-  });
-  const sortBy = document.querySelector('#sort-by');
+  menuInfo = {
+    checkboxID: '#language-filter-checkbox',
+    popupName: 'language-popup-menu',
+    labelID: '#language-label',
+    containerID: '#language-container',
+    contents: global.lists.languages.map((ea) => ea.english_name).sort(),
+  };
+  addListenersTo(menuInfo);
+
+  const sortBy = document.querySelector('#sort-by-checkbox');
   sortBy.addEventListener('change', function (event) {
     if (event.target.checked) {
       console.log('sort-by checkbox is checked');
@@ -55,7 +45,6 @@ export async function addFilterListeners(isTV = false) {
       console.log('sort-by checkbox is unchecked');
     }
   });
-  //@todo: put a span with flexible spacing in the filter.html with a space for a menu element
 }
 
 async function fillLists() {
@@ -72,52 +61,13 @@ async function fillLists() {
   }
 }
 async function getGenres(isTV = false) {
-  const genreContainer = document.querySelector('#genre-container');
-  // @todo - get the list of genres from the API
   const endPoint = `genre/${isTV ? 'tv' : 'movie'}/list`;
   const genres = await fetchAPIData(endPoint);
   return genres;
 }
 async function getLanguages() {
-  const genreContainer = document.querySelector('#genre-container');
-  // @todo - get the list of genres from the API
   const languages = await fetchAPIData('configuration/languages');
   return languages;
-}
-function createGenreCheckboxes(genreNames) {
-  const genreContainer = document.querySelector('#genre-container');
-  genreNames.forEach((genre) => {
-    const checkbox = createCheckbox(genre);
-    genreContainer.appendChild(checkbox);
-  });
-}
-
-function createCheckbox(labelText) {
-  const checkbox = document.createElement('input');
-  checkbox.type = 'checkbox';
-  checkbox.id = labelText.toLowerCase();
-
-  const label = document.createElement('label');
-  label.setAttribute('for', labelText.toLowerCase());
-  label.textContent = '  ' + labelText;
-
-  const br = document.createElement('br');
-
-  const checkboxContainer = document.createElement('div');
-  checkboxContainer.classList.add('checkbox-container');
-  checkboxContainer.appendChild(checkbox);
-  checkboxContainer.appendChild(label);
-  checkboxContainer.appendChild(br);
-
-  return checkboxContainer;
-}
-
-function clearGenreCheckboxes() {
-  // Remove all child nodes from the container
-  const genreContainer = document.querySelector('#genre-container');
-  while (genreContainer.firstChild) {
-    genreContainer.removeChild(genreContainer.firstChild);
-  }
 }
 
 function createMenuItem(checkbox, title, menuID) {
@@ -161,27 +111,44 @@ function createCloseMenuButtonItem(menuID) {
   return listItem;
 }
 
-function createPopUpMenu(checkbox, titles, id) {
+function createPopUpMenu(menuInfo) {
+  const filterCheckbox = document.querySelector(menuInfo.checkboxID);
+
   const div = document.createElement('div');
   div.classList.add('popup-menu');
-  div.id = id;
+  div.id = menuInfo.popupName;
   const list = document.createElement('ul');
-  const closeItem = createCloseMenuButtonItem(id);
+  const closeItem = createCloseMenuButtonItem(menuInfo.popupName);
   list.appendChild(closeItem);
-  titles.forEach((title) => {
-    const item = createMenuItem(checkbox, title, id);
+  menuInfo.contents.forEach((title) => {
+    const item = createMenuItem(filterCheckbox, title, menuInfo.popupName);
     list.appendChild(item);
   });
   div.appendChild(list);
   div.style.display = 'block';
   return div;
 }
+function createAndPostionPopupMenu(menuInfo) {
+  closeAllPopups();
 
+  const popUpDiv = createPopUpMenu(menuInfo);
+  const labelRect = document
+    .querySelector(menuInfo.labelID)
+    .getBoundingClientRect();
+  popUpDiv.style.position = 'absolute';
+  popUpDiv.style.top = labelRect.top + 'px';
+  popUpDiv.style.left = labelRect.right + 'px';
+
+  const container = document.querySelector(menuInfo.containerID);
+  container.appendChild(popUpDiv);
+}
 function togglePopupMenu(menuID) {
   const popupMenu = document.getElementById(menuID);
-  if (popupMenu.style.display === 'block') {
-    popupMenu.style.display = 'none';
-  } else {
+  const show = popupMenu.style.display === 'none';
+
+  closeAllPopups();
+
+  if (show) {
     popupMenu.style.display = 'block';
   }
 }
@@ -189,14 +156,13 @@ function clearSelected(checkbox, menuID) {
   const popupMenu = document.getElementById(menuID);
   const ul = popupMenu.querySelector('ul');
 
-  // Sort the items in reverse alphabetical order so they can be re-added from the bottom up
   let selectedItems = Array.from(ul.querySelectorAll('.selected'));
   selectedItems.forEach((ea) => {
-    ea.classList.toggle('selected');
-    ea.classList.toggle('unselected');
+    ea.classList.toggle('selected'); // turn off selected
+    ea.classList.toggle('unselected'); // turn on unselected
   });
 
-  moveSelectedToTop(checkbox, menuID);
+  moveSelectedToTop(checkbox, menuID); // reorder all the unselected
 }
 function moveSelectedToTop(checkbox, menuID) {
   const popupMenu = document.getElementById(menuID);
@@ -222,29 +188,34 @@ function moveSelectedToTop(checkbox, menuID) {
     ul.insertBefore(ea.parentNode, ul.firstChild);
   });
 
+  // Make sure teh close menu item is at the very top
   const closeMenuItem = ul.querySelector('#close-menu-list-item');
   ul.removeChild(closeMenuItem);
   ul.insertBefore(closeMenuItem, ul.firstChild);
 
+  // Check or uncheck the checkbox associated with this menu based on whether there
+  // are any selected items
   checkbox.checked = selectedItems.length > 0;
 
   // Add a separator line if needed
-  selectedItems = ul.querySelectorAll('.selected');
+  // First remove the old separator, if there is one
+  const separator = ul.querySelector('.separator');
+  console.log(separator);
+  if (separator) {
+    ul.removeChild(separator);
+  }
 
-  const lastSelectedItem = selectedItems[selectedItems.length - 1];
-  if (lastSelectedItem) {
+  // Add a separator if there are any selected
+  if (selectedItems.length > 0) {
+    const lastSelectedItem = selectedItems[0]; //selectedItems are in reverse alphabetical order;
     const nextListItem = lastSelectedItem.parentNode.nextElementSibling;
 
-    if (nextListItem && !nextListItem.classList.contains('separator')) {
+    // if there are unselected items
+    if (nextListItem) {
       // Add a separator line
       const separator = document.createElement('li');
       separator.className = 'separator';
       ul.insertBefore(separator, nextListItem);
-    }
-  } else {
-    const separator = ul.querySelector('.separator');
-    if (separator) {
-      ul.removeChild(separator);
     }
   }
 }
@@ -258,25 +229,9 @@ function closeMenu(menuID, event = null) {
 }
 
 function openPopupMenu(menuID) {
+  closeAllPopups();
   const popupMenu = document.getElementById(menuID);
   popupMenu.style.display = 'block';
-}
-
-function createLanguagePopupMenu(languages) {
-  const languageFilter = document.querySelector('#language-filter');
-  const popUpDiv = createPopUpMenu(
-    languageFilter,
-    languages,
-    'language-popup-menu'
-  );
-  const languageContainer = document.querySelector('#language-container');
-  languageContainer.appendChild(popUpDiv);
-  const checkboxRect = document
-    .querySelector('#language-label')
-    .getBoundingClientRect();
-  popUpDiv.style.position = 'absolute';
-  popUpDiv.style.top = checkboxRect.top + 'px';
-  popUpDiv.style.left = checkboxRect.right + 'px';
 }
 
 function textContentSort(a, b) {
@@ -287,4 +242,33 @@ function textContentSort(a, b) {
     return 1; // Return 1 to indicate 'b' should come before 'a'
   }
   return 0; // Return 0 if they are equal
+}
+function addListenersTo(menuInfo) {
+  const filterCheckbox = document.querySelector(menuInfo.checkboxID);
+  filterCheckbox.addEventListener('change', function () {
+    const popupMenu = document.getElementById(menuInfo.popupName);
+    if (!popupMenu) {
+      createAndPostionPopupMenu(menuInfo); // also shows the menu
+    } else {
+      openPopupMenu(menuInfo.popupName);
+      if (!filterCheckbox.checked) {
+        clearSelected(filterCheckbox, menuInfo.popupName);
+      }
+    }
+  });
+
+  const label = document.querySelector(menuInfo.labelID);
+  label.addEventListener('click', function () {
+    const popupMenu = document.getElementById(menuInfo.popupName);
+    if (!popupMenu) {
+      createAndPostionPopupMenu(menuInfo); // also shows the menu
+    } else {
+      togglePopupMenu(menuInfo.popupName);
+    }
+  });
+}
+
+function closeAllPopups() {
+  const allPopups = document.querySelectorAll('.popup-menu');
+  allPopups.forEach((popup) => (popup.style.display = 'none'));
 }

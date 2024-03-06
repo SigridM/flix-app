@@ -485,3 +485,7 @@ section h5 {
   margin-right: 0px; /* Adjust spacing between the 'Close' text and 'X' anchor */
   display: inline;
 }
+.close-text:hover {
+  /* Your styles for the close anchor on hover */
+  text-decoration: underline; /* Example: Underline on hover */
+}
