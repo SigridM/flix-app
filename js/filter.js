@@ -11,30 +11,30 @@ export async function addFilterListeners(isTV = false) {
     : global.lists.genres.movies.map((ea) => ea.name);
 
   menuInfo = {
-    checkboxID: '#genre-filter-checkbox',
+    checkbox: document.querySelector('#genre-filter-checkbox'),
     popupName: 'genre-popup-menu',
-    labelID: '#genre-label',
-    containerID: '#genre-container',
+    label: document.querySelector('#genre-label'),
+    container: document.querySelector('#genre-container'),
     contents: genreNames,
     isExlcusive: false,
   };
   addListenersTo(menuInfo);
 
   menuInfo = {
-    checkboxID: '#adult-filter-checkbox',
+    checkbox: document.querySelector('#adult-filter-checkbox'),
     popupName: 'adult-popup-menu',
-    labelID: '#adult-label',
-    containerID: '#adult-container',
+    label: document.querySelector('#adult-label'),
+    container: document.querySelector('#adult-container'),
     contents: ['Adult Only', 'Non-Adult Only'],
     isExlcusive: true,
   };
   addListenersTo(menuInfo);
 
   menuInfo = {
-    checkboxID: '#language-filter-checkbox',
+    checkbox: document.querySelector('#language-filter-checkbox'),
     popupName: 'language-popup-menu',
-    labelID: '#language-label',
-    containerID: '#language-container',
+    label: document.querySelector('#language-label'),
+    container: document.querySelector('#language-container'),
     contents: global.lists.languages.map((ea) => ea.english_name).sort(),
     isExlcusive: false,
   };
@@ -73,7 +73,7 @@ async function getLanguages() {
   return languages;
 }
 
-function createMenuItem(checkbox, title, menuID, isExlcusive = false) {
+function createMenuItem(title, menuInfo) {
   const listItem = document.createElement('li');
   const anchor = document.createElement('a');
 
@@ -82,9 +82,9 @@ function createMenuItem(checkbox, title, menuID, isExlcusive = false) {
   anchor.textContent = title;
   anchor.addEventListener('click', function (event) {
     event.preventDefault();
-    if (isExlcusive) {
+    if (menuInfo.isExlcusive) {
       const wasSelected = event.target.classList.contains('selected');
-      const popupMenu = document.getElementById(menuID);
+      const popupMenu = menuInfo.popupMenu;
       const ul = popupMenu.querySelector('ul');
       const selectedItems = Array.from(ul.querySelectorAll('.selected'));
       selectedItems.forEach((ea) => {
@@ -99,19 +99,19 @@ function createMenuItem(checkbox, title, menuID, isExlcusive = false) {
       event.target.classList.toggle('selected');
       event.target.classList.toggle('unselected');
     }
-    moveSelectedToTop(checkbox, menuID);
+    moveSelectedToTop(menuInfo);
   });
   listItem.appendChild(anchor);
   return listItem;
 }
 
-function createCloseMenuButtonItem(menuID) {
+function createCloseMenuButtonItem(menuInfo) {
   const closeText = document.createElement('a');
   closeText.href = '#';
   closeText.classList.add('close-text');
   closeText.textContent = 'Close';
   closeText.addEventListener('click', function (event) {
-    closeMenu(menuID, event);
+    closeMenu(menuInfo, event);
   });
 
   const closeX = document.createElement('a');
@@ -119,7 +119,7 @@ function createCloseMenuButtonItem(menuID) {
   closeX.classList.add('close-x');
   closeX.textContent = 'X';
   closeX.addEventListener('click', function (event) {
-    closeMenu(menuID, event);
+    closeMenu(menuInfo, event);
   });
 
   const listItem = document.createElement('li');
@@ -130,21 +130,17 @@ function createCloseMenuButtonItem(menuID) {
 }
 
 function createPopUpMenu(menuInfo) {
-  const filterCheckbox = document.querySelector(menuInfo.checkboxID);
+  const filterCheckbox = menuInfo.checkbox;
 
   const div = document.createElement('div');
   div.classList.add('popup-menu');
   div.id = menuInfo.popupName;
+  menuInfo.popupMenu = div;
   const list = document.createElement('ul');
-  const closeItem = createCloseMenuButtonItem(menuInfo.popupName);
+  const closeItem = createCloseMenuButtonItem(menuInfo);
   list.appendChild(closeItem);
   menuInfo.contents.forEach((title) => {
-    const item = createMenuItem(
-      filterCheckbox,
-      title,
-      menuInfo.popupName,
-      menuInfo.isExlcusive
-    );
+    const item = createMenuItem(title, menuInfo);
     list.appendChild(item);
   });
   div.appendChild(list);
@@ -152,21 +148,20 @@ function createPopUpMenu(menuInfo) {
   return div;
 }
 function createAndPostionPopupMenu(menuInfo) {
+  console.log('in create');
   closeAllPopups();
 
   const popUpDiv = createPopUpMenu(menuInfo);
-  const labelRect = document
-    .querySelector(menuInfo.labelID)
-    .getBoundingClientRect();
+  const labelRect = menuInfo.label.getBoundingClientRect();
   popUpDiv.style.position = 'absolute';
   popUpDiv.style.top = labelRect.top + 'px';
   popUpDiv.style.left = labelRect.right + 'px';
 
-  const container = document.querySelector(menuInfo.containerID);
+  const container = menuInfo.container;
   container.appendChild(popUpDiv);
 }
-function togglePopupMenu(menuID) {
-  const popupMenu = document.getElementById(menuID);
+function togglePopupMenu(menuInfo) {
+  const popupMenu = menuInfo.popupMenu;
   const show = popupMenu.style.display === 'none';
 
   closeAllPopups();
@@ -175,8 +170,8 @@ function togglePopupMenu(menuID) {
     popupMenu.style.display = 'block';
   }
 }
-function clearSelected(checkbox, menuID) {
-  const popupMenu = document.getElementById(menuID);
+function clearSelected(menuInfo) {
+  const popupMenu = menuInfo.popupMenu;
   const ul = popupMenu.querySelector('ul');
 
   let selectedItems = Array.from(ul.querySelectorAll('.selected'));
@@ -185,10 +180,10 @@ function clearSelected(checkbox, menuID) {
     ea.classList.toggle('unselected'); // turn on unselected
   });
 
-  moveSelectedToTop(checkbox, menuID); // reorder all the unselected
+  moveSelectedToTop(menuInfo); // reorder all the unselected
 }
-function moveSelectedToTop(checkbox, menuID) {
-  const popupMenu = document.getElementById(menuID);
+function moveSelectedToTop(menuInfo) {
+  const popupMenu = menuInfo.popupMenu;
   const ul = popupMenu.querySelector('ul');
 
   // Sort the items in reverse alphabetical order so they can be re-added from the bottom up
@@ -218,12 +213,11 @@ function moveSelectedToTop(checkbox, menuID) {
 
   // Check or uncheck the checkbox associated with this menu based on whether there
   // are any selected items
-  checkbox.checked = selectedItems.length > 0;
+  menuInfo.checkbox.checked = selectedItems.length > 0;
 
   // Add a separator line if needed
   // First remove the old separator, if there is one
   const separator = ul.querySelector('.separator');
-  console.log(separator);
   if (separator) {
     ul.removeChild(separator);
   }
@@ -243,17 +237,17 @@ function moveSelectedToTop(checkbox, menuID) {
   }
 }
 
-function closeMenu(menuID, event = null) {
+function closeMenu(menuInfo, event = null) {
   if (event) {
     event.preventDefault();
   }
-  const popupMenu = document.getElementById(menuID);
+  const popupMenu = menuInfo.popupMenu;
   popupMenu.style.display = 'none';
 }
 
-function openPopupMenu(menuID) {
-  closeAllPopups();
-  const popupMenu = document.getElementById(menuID);
+function openPopupMenu(menuInfo) {
+  const popupMenu = menuInfo.popupMenu;
+  closeAllPopups(popupMenu);
   popupMenu.style.display = 'block';
 }
 
@@ -266,32 +260,41 @@ function textContentSort(a, b) {
   }
   return 0; // Return 0 if they are equal
 }
+function byOrderAddedSort(a, b) {
+  return 0;
+}
 function addListenersTo(menuInfo) {
-  const filterCheckbox = document.querySelector(menuInfo.checkboxID);
+  // Add a change listener to the checkbox
+  const filterCheckbox = menuInfo.checkbox;
   filterCheckbox.addEventListener('change', function () {
-    const popupMenu = document.getElementById(menuInfo.popupName);
+    const popupMenu = menuInfo.popupMenu;
     if (!popupMenu) {
       createAndPostionPopupMenu(menuInfo); // also shows the menu
     } else {
-      openPopupMenu(menuInfo.popupName);
+      openPopupMenu(menuInfo);
       if (!filterCheckbox.checked) {
-        clearSelected(filterCheckbox, menuInfo.popupName);
+        clearSelected(menuInfo);
+        setTimeout(closeAllPopups, 500);
       }
     }
   });
 
-  const label = document.querySelector(menuInfo.labelID);
-  label.addEventListener('click', function () {
-    const popupMenu = document.getElementById(menuInfo.popupName);
+  // Add a click listener to the checkbox's label
+  menuInfo.label.addEventListener('click', function () {
+    const popupMenu = menuInfo.popupMenu;
     if (!popupMenu) {
       createAndPostionPopupMenu(menuInfo); // also shows the menu
     } else {
-      togglePopupMenu(menuInfo.popupName);
+      togglePopupMenu(menuInfo);
     }
   });
 }
 
-function closeAllPopups() {
+function closeAllPopups(exceptPopUp) {
   const allPopups = document.querySelectorAll('.popup-menu');
-  allPopups.forEach((popup) => (popup.style.display = 'none'));
+  allPopups.forEach((popup) => {
+    if (popup !== exceptPopUp) {
+      popup.style.display = 'none';
+    }
+  });
 }
