@@ -1,7 +1,8 @@
-import { fetchAPIData } from './fetchData.js';
+import { discoverAPIData, fetchAPIData } from './fetchData.js';
 import { global } from './globals.js';
 
 export async function addFilterListeners(isTV = false) {
+  console.log(isTV);
   await fillLists();
 
   let menuInfo;
@@ -17,6 +18,7 @@ export async function addFilterListeners(isTV = false) {
     container: document.querySelector('#genre-container'),
     contents: genreNames,
     isExlcusive: false,
+    sortFunction: textContentSort,
   };
   addListenersTo(menuInfo);
 
@@ -27,6 +29,7 @@ export async function addFilterListeners(isTV = false) {
     container: document.querySelector('#adult-container'),
     contents: ['Adult Only', 'Non-Adult Only'],
     isExlcusive: true,
+    sortFunction: textContentSort,
   };
   addListenersTo(menuInfo);
 
@@ -37,17 +40,48 @@ export async function addFilterListeners(isTV = false) {
     container: document.querySelector('#language-container'),
     contents: global.lists.languages.map((ea) => ea.english_name).sort(),
     isExlcusive: false,
+    sortFunction: textContentSort,
   };
   addListenersTo(menuInfo);
 
-  const sortBy = document.querySelector('#sort-by-checkbox');
-  sortBy.addEventListener('change', function (event) {
-    if (event.target.checked) {
-      console.log('sort-by checkbox is checked');
-    } else {
-      console.log('sort-by checkbox is unchecked');
-    }
+  menuInfo = {
+    checkbox: document.querySelector('#sort-by-checkbox'),
+    popupName: 'sort-by-popup-menu',
+    label: document.querySelector('#sort-by-label'),
+    container: document.querySelector('#sort-by-container'),
+    contents: global.lists.sortCritera,
+    isExlcusive: true,
+    sortFunction: textContentSort,
+  };
+  addListenersTo(menuInfo);
+
+  const submitButton = document.querySelector('#filter-submit-button');
+  submitButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    doFilter(isTV);
   });
+}
+
+async function doFilter(isTV) {
+  closeAllPopups();
+  // console.log(endPoint);
+  const genres = getSelectedGenres();
+  if (genres.length === 0) {
+    return;
+  }
+  const filters = '&with_genres=' + genres.join('%7C');
+  console.log(await discoverAPIData(filters));
+}
+
+function getSelectedGenres(isTV) {
+  const popupMenu = document.querySelector('#genre-popup-menu');
+  if (!popupMenu) {
+    return [];
+  }
+  const selected = Array.from(
+    popupMenu.querySelector('ul').querySelectorAll('.selected')
+  ).map((ea) => ea.textContent);
+  return selected;
 }
 
 async function fillLists() {
@@ -62,6 +96,9 @@ async function fillLists() {
   if (global.lists.languages.length === 0) {
     global.lists.languages = await getLanguages();
   }
+  if (global.lists.sortCriteria.length === 0) {
+    global.lists.sortCritera = getSortCriteria();
+  }
 }
 async function getGenres(isTV = false) {
   const endPoint = `genre/${isTV ? 'tv' : 'movie'}/list`;
@@ -71,6 +108,25 @@ async function getGenres(isTV = false) {
 async function getLanguages() {
   const languages = await fetchAPIData('configuration/languages');
   return languages;
+}
+
+function getSortCriteria() {
+  const sortCriteria = [];
+  sortCriteria.push('original_title.asc');
+  sortCriteria.push('original_title.desc');
+  sortCriteria.push('popularity.asc');
+  sortCriteria.push('popularity.desc');
+  sortCriteria.push('primary_release_date.asc');
+  sortCriteria.push('primary_release_date.desc');
+  sortCriteria.push('revenue.asc');
+  sortCriteria.push('revenue.desc');
+  sortCriteria.push('title.asc');
+  sortCriteria.push('title.desc');
+  sortCriteria.push('vote_average.asc');
+  sortCriteria.push('vote_average.desc');
+  sortCriteria.push('vote_count.asc');
+  sortCriteria.push('vote_count.desc');
+  return sortCriteria;
 }
 
 function createMenuItem(title, menuInfo) {
@@ -148,14 +204,13 @@ function createPopUpMenu(menuInfo) {
   return div;
 }
 function createAndPostionPopupMenu(menuInfo) {
-  console.log('in create');
   closeAllPopups();
 
   const popUpDiv = createPopUpMenu(menuInfo);
   const labelRect = menuInfo.label.getBoundingClientRect();
   popUpDiv.style.position = 'absolute';
   popUpDiv.style.top = labelRect.top + 'px';
-  popUpDiv.style.left = labelRect.right + 'px';
+  popUpDiv.style.left = labelRect.right + 10 + 'px';
 
   const container = menuInfo.container;
   container.appendChild(popUpDiv);
@@ -188,10 +243,10 @@ function moveSelectedToTop(menuInfo) {
 
   // Sort the items in reverse alphabetical order so they can be re-added from the bottom up
   let selectedItems = Array.from(ul.querySelectorAll('.selected')).sort(
-    textContentSort
+    menuInfo.sortFunction
   );
   let unselectedItems = Array.from(ul.querySelectorAll('.unselected')).sort(
-    textContentSort
+    menuInfo.sortFunction
   );
 
   // Remove the unselected items and re-add them in alphabetical order
@@ -237,10 +292,8 @@ function moveSelectedToTop(menuInfo) {
   }
 }
 
-function closeMenu(menuInfo, event = null) {
-  if (event) {
-    event.preventDefault();
-  }
+function closeMenu(menuInfo, event) {
+  event.preventDefault();
   const popupMenu = menuInfo.popupMenu;
   popupMenu.style.display = 'none';
 }

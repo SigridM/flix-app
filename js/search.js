@@ -5,13 +5,12 @@ import { addFilterListeners } from './filter.js';
 
 // Search Movies/Shows
 export async function search() {
-  addFilterListeners();
-
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
   global.search.type = urlParams.get('type');
   global.search.term = urlParams.get('search-term');
   const savedPage = urlParams.get('page');
+  addFilterListeners(global.search.type == 'tv');
 
   if (global.search.term === '' || global.search.term === null) {
     return showAlert('Please enter a search term');

@@ -19,5 +19,6 @@ export const global = {
       tv: [],
     },
     languages: [],
+    sortCriteria: [],
   },
 };
