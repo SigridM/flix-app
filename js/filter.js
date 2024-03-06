@@ -16,6 +16,7 @@ export async function addFilterListeners(isTV = false) {
     labelID: '#genre-label',
     containerID: '#genre-container',
     contents: genreNames,
+    isExlcusive: false,
   };
   addListenersTo(menuInfo);
 
@@ -25,6 +26,7 @@ export async function addFilterListeners(isTV = false) {
     labelID: '#adult-label',
     containerID: '#adult-container',
     contents: ['Adult Only', 'Non-Adult Only'],
+    isExlcusive: true,
   };
   addListenersTo(menuInfo);
 
@@ -34,6 +36,7 @@ export async function addFilterListeners(isTV = false) {
     labelID: '#language-label',
     containerID: '#language-container',
     contents: global.lists.languages.map((ea) => ea.english_name).sort(),
+    isExlcusive: false,
   };
   addListenersTo(menuInfo);
 
@@ -70,7 +73,7 @@ async function getLanguages() {
   return languages;
 }
 
-function createMenuItem(checkbox, title, menuID) {
+function createMenuItem(checkbox, title, menuID, isExlcusive = false) {
   const listItem = document.createElement('li');
   const anchor = document.createElement('a');
 
@@ -79,8 +82,23 @@ function createMenuItem(checkbox, title, menuID) {
   anchor.textContent = title;
   anchor.addEventListener('click', function (event) {
     event.preventDefault();
-    event.target.classList.toggle('selected');
-    event.target.classList.toggle('unselected');
+    if (isExlcusive) {
+      const wasSelected = event.target.classList.contains('selected');
+      const popupMenu = document.getElementById(menuID);
+      const ul = popupMenu.querySelector('ul');
+      const selectedItems = Array.from(ul.querySelectorAll('.selected'));
+      selectedItems.forEach((ea) => {
+        ea.classList.toggle('selected');
+        ea.classList.toggle('unselected');
+      });
+      if (!wasSelected) {
+        event.target.classList.toggle('selected');
+        event.target.classList.toggle('unselected');
+      }
+    } else {
+      event.target.classList.toggle('selected');
+      event.target.classList.toggle('unselected');
+    }
     moveSelectedToTop(checkbox, menuID);
   });
   listItem.appendChild(anchor);
@@ -121,7 +139,12 @@ function createPopUpMenu(menuInfo) {
   const closeItem = createCloseMenuButtonItem(menuInfo.popupName);
   list.appendChild(closeItem);
   menuInfo.contents.forEach((title) => {
-    const item = createMenuItem(filterCheckbox, title, menuInfo.popupName);
+    const item = createMenuItem(
+      filterCheckbox,
+      title,
+      menuInfo.popupName,
+      menuInfo.isExlcusive
+    );
     list.appendChild(item);
   });
   div.appendChild(list);
