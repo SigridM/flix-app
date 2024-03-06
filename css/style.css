@@ -427,7 +427,7 @@ section h5 {
   margin-bottom: 10px;
 }
 
-.popup-menu ul li a {
+.filter-menu-item {
   text-decoration: none;
   color: #333;
   position: relative;
@@ -459,4 +459,29 @@ section h5 {
   border-top: 1px solid #ccc; /* Style the separator line */
   margin-top: 5px; /* Add some spacing */
   padding-top: 0px; /* Add some spacing */
+}
+
+.close-x {
+  /* display: block; */
+  float: right;
+  color: red;
+  font-weight: bold;
+  text-decoration: none;
+  margin-left: 30px;
+}
+.close-x:hover {
+  /* Your styles for the close anchor on hover */
+  text-decoration: underline; /* Example: Underline on hover */
+}
+
+.close-x:active {
+  /* Your styles for the close anchor when clicked */
+  color: darkred; /* Example: Darker color when clicked */
+}
+.close-text {
+  /* Your styles for the 'Close' text */
+  color: black; /* Change color as desired */
+  font-style: italic;
+  margin-right: 0px; /* Adjust spacing between the 'Close' text and 'X' anchor */
+  display: inline;
 }
