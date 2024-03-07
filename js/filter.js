@@ -162,7 +162,7 @@ function createMenuItem(title, menuInfo) {
   const anchor = document.createElement('a');
 
   anchor.href = '#';
-  anchor.classList.add('filter-menu-item', 'unselected');
+  anchor.classList.add('filter-menu-item');
   anchor.textContent = title;
   anchor.addEventListener('click', function (event) {
     event.preventDefault();
@@ -173,15 +173,12 @@ function createMenuItem(title, menuInfo) {
       const selectedItems = Array.from(ul.querySelectorAll('.selected'));
       selectedItems.forEach((ea) => {
         ea.classList.toggle('selected');
-        ea.classList.toggle('unselected');
       });
       if (!wasSelected) {
         event.target.classList.toggle('selected');
-        event.target.classList.toggle('unselected');
       }
     } else {
       event.target.classList.toggle('selected');
-      event.target.classList.toggle('unselected');
     }
     moveSelectedToTop(menuInfo);
   });
@@ -260,8 +257,9 @@ function clearSelected(menuInfo) {
   let selectedItems = Array.from(ul.querySelectorAll('.selected'));
   selectedItems.forEach((ea) => {
     ea.classList.toggle('selected'); // turn off selected
-    ea.classList.toggle('unselected'); // turn on unselected
   });
+
+  menuInfo.selected = [];
 
   moveSelectedToTop(menuInfo); // reorder all the unselected
 }
@@ -273,9 +271,10 @@ function moveSelectedToTop(menuInfo) {
   let selectedItems = Array.from(ul.querySelectorAll('.selected')).sort(
     menuInfo.sortFunction
   );
-  let unselectedItems = Array.from(ul.querySelectorAll('.unselected')).sort(
-    menuInfo.sortFunction
-  );
+
+  let unselectedItems = Array.from(
+    ul.querySelectorAll('a:not(.selected):not(.close-x):not(.close-text)')
+  ).sort(menuInfo.sortFunction);
 
   // Remove the unselected items and re-add them in alphabetical order
   unselectedItems.forEach((ea) => {
