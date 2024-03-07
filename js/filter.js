@@ -21,16 +21,16 @@ export async function addFilterListeners(isTV = false) {
   };
   addListenersTo(menuInfo);
 
-  menuInfo = {
-    checkbox: document.querySelector('#adult-filter-checkbox'),
-    popupName: 'adult-popup-menu',
-    label: document.querySelector('#adult-label'),
-    container: document.querySelector('#adult-container'),
-    contents: ['Adult Only', 'Non-Adult Only'],
-    isExlcusive: true,
-    sortFunction: textContentSort,
-  };
-  addListenersTo(menuInfo);
+  // menuInfo = {
+  //   checkbox: document.querySelector('#adult-filter-checkbox'),
+  //   popupName: 'adult-popup-menu',
+  //   label: document.querySelector('#adult-label'),
+  //   container: document.querySelector('#adult-container'),
+  //   contents: ['Adult Only', 'Non-Adult Only'],
+  //   isExlcusive: true,
+  //   sortFunction: textContentSort,
+  // };
+  // addListenersTo(menuInfo);
 
   menuInfo = {
     checkbox: document.querySelector('#language-filter-checkbox'),
@@ -75,6 +75,7 @@ async function doFilter(isTV) {
   if (languages.length > 0) {
     filters += '&with_original_language=' + languages.join(orJoinString);
   }
+  filters += '&include_adult=' + includeAdult();
   console.log(await discoverAPIData(filters));
 }
 
@@ -116,6 +117,11 @@ function getSelectedLanguageCodes() {
     .filter((ea) => selectedLanguages.includes(ea.english_name))
     .map((ea) => ea.iso_639_1);
   return selectedLanguageCodes;
+}
+
+function includeAdult() {
+  const adultCheckbox = document.querySelector('#adult-filter-checkbox');
+  return !adultCheckbox.checked;
 }
 async function fillLists() {
   if (global.lists.genres.movies.length === 0) {
