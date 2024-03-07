@@ -10,62 +10,83 @@ export async function addFilterListeners(isTV = false) {
     ? global.lists.genres.tv.map((ea) => ea.name)
     : global.lists.genres.movies.map((ea) => ea.name);
 
-  menuInfo = {
+  const genreMenuInfo = {
     checkbox: document.querySelector('#genre-filter-checkbox'),
     popupName: 'genre-popup-menu',
     label: document.querySelector('#genre-label'),
     container: document.querySelector('#genre-container'),
     contents: genreNames,
     isExlcusive: false,
+    selected: [],
     sortFunction: textContentSort,
   };
-  addListenersTo(menuInfo);
+  addListenersTo(genreMenuInfo);
 
-  menuInfo = {
+  const languageMenuInfo = {
     checkbox: document.querySelector('#language-filter-checkbox'),
     popupName: 'language-popup-menu',
     label: document.querySelector('#language-label'),
     container: document.querySelector('#language-container'),
     contents: global.lists.languages.map((ea) => ea.english_name).sort(),
     isExlcusive: false,
+    selected: [],
     sortFunction: textContentSort,
   };
-  addListenersTo(menuInfo);
+  addListenersTo(languageMenuInfo);
 
-  menuInfo = {
+  const sortMenuInfo = {
     checkbox: document.querySelector('#sort-by-checkbox'),
     popupName: 'sort-by-popup-menu',
     label: document.querySelector('#sort-by-label'),
     container: document.querySelector('#sort-by-container'),
     contents: global.lists.sortCriteria,
     isExlcusive: true,
+    selected: [],
     sortFunction: textContentSort,
   };
-  addListenersTo(menuInfo);
+  addListenersTo(sortMenuInfo);
 
   const submitButton = document.querySelector('#filter-submit-button');
   submitButton.addEventListener('click', function (event) {
     event.preventDefault();
-    doFilter(isTV);
+    doFilter(genreMenuInfo, languageMenuInfo, sortMenuInfo, isTV);
   });
 }
 
-async function doFilter(isTV) {
+async function doFilter(genreInfo, languageInfo, sortInfo, isTV) {
   closeAllPopups();
-  const andJoinString = '%2C';
-  const orJoinString = '%7C';
 
   let filters = '';
   const genres = getSelectedGenreCodes(isTV);
   if (genres.length > 0) {
-    filters += '&with_genres=' + genres.join(orJoinString);
+    filters += '&with_genres=' + genres.join(getJoinStringFor(genreInfo));
   }
   const languages = getSelectedLanguageCodes();
   if (languages.length > 0) {
-    filters += '&with_original_language=' + languages.join(orJoinString);
+    filters += '&with_original_language=' + languages.join('|');
   }
   filters += '&include_adult=' + includeAdult();
   console.log(await discoverAPIData(filters));
+}
+
+function getJoinStringFor(menuInfo) {
+  const andJoinString = '%2C';
+  const orJoinString = '%7C';
+
+  const radioButtons = menuInfo.combiner.querySelectorAll(
+    'input[type="radio"]'
+  );
+  let selectedRadiobuttonValue = null;
+  radioButtons.forEach((ea) => {
+    if (ea.checked) {
+      selectedRadiobuttonValue = ea.value;
+    }
+  });
+
+  if ((selectedRadiobuttonValue = 'and')) {
+    return andJoinString;
+  }
+  return orJoinString;
 }
 
 function getSelectedGenres(isTV) {
@@ -172,12 +193,13 @@ function createMenuItem(title, menuInfo) {
       const ul = popupMenu.querySelector('ul');
       const selectedItems = Array.from(ul.querySelectorAll('.selected'));
       selectedItems.forEach((ea) => {
-        ea.classList.toggle('selected');
+        ea.classList.remove('selected'); // turn selection off
       });
       if (!wasSelected) {
-        event.target.classList.toggle('selected');
+        event.target.classList.add('selected'); // turn selection on
       }
     } else {
+      // not exclusive
       event.target.classList.toggle('selected');
     }
     moveSelectedToTop(menuInfo);
@@ -242,7 +264,7 @@ function createAndPostionPopupMenu(menuInfo) {
 }
 function togglePopupMenu(menuInfo) {
   const popupMenu = menuInfo.popupMenu;
-  const show = popupMenu.style.display === 'none';
+  const show = popupMenu.style.display === 'none'; // was hidden; will show
 
   closeAllPopups();
 
@@ -256,10 +278,8 @@ function clearSelected(menuInfo) {
 
   let selectedItems = Array.from(ul.querySelectorAll('.selected'));
   selectedItems.forEach((ea) => {
-    ea.classList.toggle('selected'); // turn off selected
+    ea.classList.remove('selected'); // turn off selected
   });
-
-  menuInfo.selected = [];
 
   moveSelectedToTop(menuInfo); // reorder all the unselected
 }
@@ -317,6 +337,23 @@ function moveSelectedToTop(menuInfo) {
       ul.insertBefore(separator, nextListItem);
     }
   }
+
+  menuInfo.selected = selectedItems
+    .sort(menuInfo.sortFunction)
+    .reverse()
+    .map((ea) => ea.textContent);
+
+  const combiner = menuInfo.combiner;
+  if (combiner) {
+    const clarifier = combiner.querySelector('.clarifier');
+    clarifier.textContent =
+      '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
+    if (menuInfo.selected.length > 1) {
+      combiner.style.display = 'inline-block';
+    } else {
+      combiner.style.display = 'none';
+    }
+  }
 }
 
 function closeMenu(menuInfo, event) {
@@ -358,9 +395,11 @@ function addListenersTo(menuInfo) {
       }
     }
 
-    const combiner = menuInfo.combiner;
-    if (!combiner) {
-      createCombinersFor(menuInfo);
+    if (!menuInfo.isExlcusive) {
+      const combiner = menuInfo.combiner;
+      if (!combiner) {
+        createCombinersFor(menuInfo);
+      }
     }
   });
 
@@ -371,6 +410,13 @@ function addListenersTo(menuInfo) {
       createAndPostionPopupMenu(menuInfo); // also shows the menu
     } else {
       togglePopupMenu(menuInfo);
+    }
+    const combiner = menuInfo.combiner;
+
+    if (!menuInfo.isExlcusive) {
+      if (!combiner) {
+        createCombinersFor(menuInfo);
+      }
     }
   });
 }
@@ -385,11 +431,18 @@ function closeAllPopups(exceptPopUp) {
 }
 
 function createCombinersFor(menuInfo) {
-  const div = document.createElement('div');
-  div.textContent = 'Combine using: ';
-  div.classList.add('combiner');
+  const combiner = document.createElement('div');
+  combiner.textContent = '- combine using: ';
+  combiner.classList.add('combiner');
 
   menuInfo.combineUsing = 'and';
+
+  const clarification = document.createElement('div');
+  clarification.id = menuInfo.container.id + '-clarification';
+  clarification.classList.add('clarifier');
+  clarification.textContent =
+    '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
+  clarification.style.display = 'inline-block';
 
   const andChoice = document.createElement('input');
   andChoice.type = 'radio';
@@ -399,6 +452,8 @@ function createCombinersFor(menuInfo) {
   andChoice.checked = true;
   andChoice.addEventListener('change', function (event) {
     menuInfo.combineUsing = event.target.value;
+    clarification.textContent =
+      '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
   });
 
   const andLabel = document.createElement('label');
@@ -413,20 +468,27 @@ function createCombinersFor(menuInfo) {
   orChoice.checked = false;
   orChoice.addEventListener('change', function (event) {
     menuInfo.combineUsing = event.target.value;
+    clarification.textContent =
+      '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
   });
   const orLabel = document.createElement('label');
   orLabel.for = orChoice.id;
   orLabel.textContent = ' Or ';
 
-  div.appendChild(andChoice);
-  div.appendChild(andLabel);
-  div.appendChild(orChoice);
-  div.appendChild(orLabel);
+  combiner.appendChild(andChoice);
+  combiner.appendChild(andLabel);
+  combiner.appendChild(orChoice);
+  combiner.appendChild(orLabel);
+  combiner.appendChild(clarification);
 
-  div.style.display = 'inline-block';
+  if (menuInfo.selected.length > 1) {
+    combiner.style.display = 'inline-block';
+  } else {
+    combiner.style.display = 'none';
+  }
 
-  menuInfo.container.appendChild(div);
-  menuInfo.combiner = div;
+  menuInfo.container.appendChild(combiner);
+  menuInfo.combiner = combiner;
 
   // <input type="radio" id="movie" name="type" value="movie" checked />
   // <label for="movies">Movies</label>
