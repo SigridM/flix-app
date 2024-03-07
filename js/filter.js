@@ -2,7 +2,6 @@ import { discoverAPIData, fetchAPIData } from './fetchData.js';
 import { global } from './globals.js';
 
 export async function addFilterListeners(isTV = false) {
-  console.log(isTV);
   await fillLists();
 
   let menuInfo;
@@ -64,12 +63,18 @@ export async function addFilterListeners(isTV = false) {
 
 async function doFilter(isTV) {
   closeAllPopups();
-  // console.log(endPoint);
-  const genres = getSelectedGenres();
-  if (genres.length === 0) {
-    return;
+  const andJoinString = '%2C';
+  const orJoinString = '%7C';
+
+  let filters = '';
+  const genres = getSelectedGenreCodes(isTV);
+  if (genres.length > 0) {
+    filters += '&with_genres=' + genres.join(orJoinString);
   }
-  const filters = '&with_genres=' + genres.join('%7C');
+  const languages = getSelectedLanguageCodes();
+  if (languages.length > 0) {
+    filters += '&with_original_language=' + languages.join(orJoinString);
+  }
   console.log(await discoverAPIData(filters));
 }
 
@@ -83,7 +88,35 @@ function getSelectedGenres(isTV) {
   ).map((ea) => ea.textContent);
   return selected;
 }
+function getSelectedGenreCodes(isTV) {
+  const wholeList = isTV ? global.lists.genres.tv : global.lists.genres.movies;
 
+  const selectedGenreNames = getSelectedGenres(isTV);
+  const selectedGenreCodes = wholeList
+    .filter((ea) => selectedGenreNames.includes(ea.name))
+    .map((ea) => ea.id);
+  return selectedGenreCodes;
+}
+
+function getSelectedLanguages() {
+  const popupMenu = document.querySelector('#language-popup-menu');
+  if (!popupMenu) {
+    return [];
+  }
+  const selected = Array.from(
+    popupMenu.querySelector('ul').querySelectorAll('.selected')
+  ).map((ea) => ea.textContent);
+  return selected;
+}
+
+function getSelectedLanguageCodes() {
+  const wholeList = global.lists.languages;
+  const selectedLanguages = getSelectedLanguages();
+  const selectedLanguageCodes = wholeList
+    .filter((ea) => selectedLanguages.includes(ea.english_name))
+    .map((ea) => ea.iso_639_1);
+  return selectedLanguageCodes;
+}
 async function fillLists() {
   if (global.lists.genres.movies.length === 0) {
     const genreList = await getGenres();
