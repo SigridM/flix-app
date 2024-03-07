@@ -21,17 +21,6 @@ export async function addFilterListeners(isTV = false) {
   };
   addListenersTo(menuInfo);
 
-  // menuInfo = {
-  //   checkbox: document.querySelector('#adult-filter-checkbox'),
-  //   popupName: 'adult-popup-menu',
-  //   label: document.querySelector('#adult-label'),
-  //   container: document.querySelector('#adult-container'),
-  //   contents: ['Adult Only', 'Non-Adult Only'],
-  //   isExlcusive: true,
-  //   sortFunction: textContentSort,
-  // };
-  // addListenersTo(menuInfo);
-
   menuInfo = {
     checkbox: document.querySelector('#language-filter-checkbox'),
     popupName: 'language-popup-menu',
@@ -48,7 +37,7 @@ export async function addFilterListeners(isTV = false) {
     popupName: 'sort-by-popup-menu',
     label: document.querySelector('#sort-by-label'),
     container: document.querySelector('#sort-by-container'),
-    contents: global.lists.sortCritera,
+    contents: global.lists.sortCriteria,
     isExlcusive: true,
     sortFunction: textContentSort,
   };
@@ -136,7 +125,7 @@ async function fillLists() {
     global.lists.languages = await getLanguages();
   }
   if (global.lists.sortCriteria.length === 0) {
-    global.lists.sortCritera = getSortCriteria();
+    global.lists.sortCriteria = getSortCriteria();
   }
 }
 async function getGenres(isTV = false) {
@@ -369,6 +358,11 @@ function addListenersTo(menuInfo) {
         setTimeout(closeAllPopups, 500);
       }
     }
+
+    const combiner = menuInfo.combiner;
+    if (!combiner) {
+      createCombinersFor(menuInfo);
+    }
   });
 
   // Add a click listener to the checkbox's label
@@ -389,4 +383,54 @@ function closeAllPopups(exceptPopUp) {
       popup.style.display = 'none';
     }
   });
+}
+
+function createCombinersFor(menuInfo) {
+  const div = document.createElement('div');
+  div.textContent = 'Combine using: ';
+  div.classList.add('combiner');
+
+  menuInfo.combineUsing = 'and';
+
+  const andChoice = document.createElement('input');
+  andChoice.type = 'radio';
+  andChoice.id = menuInfo.container.id + '-and';
+  andChoice.name = menuInfo.container.id + '-combine-using';
+  andChoice.value = 'and';
+  andChoice.checked = true;
+  andChoice.addEventListener('change', function (event) {
+    menuInfo.combineUsing = event.target.value;
+  });
+
+  const andLabel = document.createElement('label');
+  andLabel.for = andChoice.id;
+  andLabel.textContent = ' And ';
+
+  const orChoice = document.createElement('input');
+  orChoice.type = 'radio';
+  orChoice.id = menuInfo.container.id + '-or';
+  orChoice.name = menuInfo.container.id + '-combine-using';
+  orChoice.value = 'or';
+  orChoice.checked = false;
+  orChoice.addEventListener('change', function (event) {
+    menuInfo.combineUsing = event.target.value;
+  });
+  const orLabel = document.createElement('label');
+  orLabel.for = orChoice.id;
+  orLabel.textContent = ' Or ';
+
+  div.appendChild(andChoice);
+  div.appendChild(andLabel);
+  div.appendChild(orChoice);
+  div.appendChild(orLabel);
+
+  div.style.display = 'inline-block';
+
+  menuInfo.container.appendChild(div);
+  menuInfo.combiner = div;
+
+  // <input type="radio" id="movie" name="type" value="movie" checked />
+  // <label for="movies">Movies</label>
+  // <input type="radio" id="tv" name="type" value="tv" />
+  // <label for="tv">TV Shows</label>
 }
