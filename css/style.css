@@ -492,3 +492,14 @@ section h5 {
 #all-filters {
   display: none;
 }
+#search-radio-button-panel {
+  display: flex;
+  justify-content: space-between;
+}
+/* .right-float {
+  float: right;
+}
+
+#search-radio-button-panel .search-radio.right-float {
+  float: right;
+} */

@@ -1,38 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
   <body>
-    <h2 id="filter-title">Filter by:</h2>
+    <h2 id="filter-title">Filter and/or Sort...</h2>
     <div id="all-filters">
       <div id="movie-genre-div" class="filter-div">
         <input
           type="checkbox"
           id="movie-genre-filter-checkbox"
           class="filter-checkbox"
-          name="filter"
+          name="movie-genre-filter"
           value="movie-genre"
         />
         <label for="movie-genre-filter-checkbox"> </label>
         <a href="#" id="movie-genre-label">With Genre</a>
         <div id="movie-genre-container" class="filter-container"></div>
-        <div id="tv-genre-div" class="filter-div">
-          <input
-            type="checkbox"
-            id="tv-genre-filter-checkbox"
-            class="filter-checkbox"
-            name="filter"
-            value="tv-genre"
-          />
-          <label for="tv-genre-filter-checkbox"> </label>
-          <a href="#" id="tv-genre-label">Genre</a>
-  
-          <div id="tv-genre-container" class="filter-container"></div>
+      </div>
+      <div id="tv-genre-div" class="filter-div">
+        <input
+          type="checkbox"
+          id="tv-genre-filter-checkbox"
+          class="filter-checkbox"
+          name="tv-genre-filter"
+          value="tv-genre"
+        />
+        <label for="tv-genre-filter-checkbox"> </label>
+        <a href="#" id="tv-genre-label">Genre</a>
+
+        <select id="tv-genre-container" class="filter-container"></select>
       </div>
       <div id="adult-div" class="filter-div">
         <input
           type="checkbox"
           id="adult-filter-checkbox"
           class="filter-checkbox"
-          name="filter"
+          name="adult-filter"
           value="adult"
         />
         <label for="adult-filter-checkbox" id="adult-label">
@@ -44,7 +45,7 @@
         <input
           type="checkbox"
           id="language-filter-checkbox"
-          name="filter"
+          name="language-filter"
           class="filter-checkbox"
           value="language"
         />

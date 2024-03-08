@@ -10,14 +10,40 @@
     <section class="search">
       <div class="container">
         <div id="alert"></div>
-        <form action="/search.html" class="search-form">
+        <form class="search-form" id="search-form">
           <!-- movies and shows radio box -->
-          <div class="search-radio">
-            <input type="radio" id="movie" name="type" value="movie" checked />
-            <label for="movies">Movies</label>
-            <input type="radio" id="tv" name="type" value="tv" />
-            <label for="tv">TV Shows</label>
+          <div id="search-radio-button-panel">
+            <div class="search-radio">
+              <input
+                type="radio"
+                id="movie"
+                name="type"
+                value="movie"
+                checked
+              />
+              <label for="movies">Movies</label>
+              <input type="radio" id="tv" name="type" value="tv" />
+              <label for="tv">TV Shows</label>
+            </div>
+            <div class="search-radio left-float">
+              <input
+                type="radio"
+                id="search-by-title"
+                name="isKeyword"
+                value="title"
+                checked
+              />
+              <label for="movies">By Title</label>
+              <input
+                type="radio"
+                id="search-by-keyword"
+                name="isKeyword"
+                value="keyword"
+              />
+              <label for="tv">By Keyword</label>
+            </div>
           </div>
+
           <div class="search-flex">
             <input
               type="text"
