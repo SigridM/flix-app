@@ -1,61 +1,108 @@
 import { discoverAPIData, fetchAPIData } from './fetchData.js';
 import { global } from './globals.js';
-
-export async function addFilterListeners(isTV = false) {
-  await fillLists();
-
-  let menuInfo;
-
-  const genreNames = isTV
-    ? global.lists.genres.tv.map((ea) => ea.name)
-    : global.lists.genres.movies.map((ea) => ea.name);
-
-  const genreMenuInfo = {
-    checkbox: document.querySelector('#genre-filter-checkbox'),
-    popupName: 'genre-popup-menu',
-    label: document.querySelector('#genre-label'),
-    container: document.querySelector('#genre-container'),
-    contents: genreNames,
+const allMenuInfo = {
+  movieGenreMenuInfo: {
+    checkbox: document.querySelector('#movie-genre-filter-checkbox'),
+    popupName: 'movie-genre-popup-menu',
+    label: document.querySelector('#movie-genre-label'),
+    container: document.querySelector('#movie-genre-container'),
     isExlcusive: false,
     selected: [],
     sortFunction: textContentSort,
-  };
-  addListenersTo(genreMenuInfo);
-
-  const languageMenuInfo = {
+  },
+  tvGenreMenuInfo: {
+    checkbox: document.querySelector('#tv-genre-filter-checkbox'),
+    popupName: 'tv-genre-popup-menu',
+    label: document.querySelector('#tv-genre-label'),
+    container: document.querySelector('#tv-genre-container'),
+    isExlcusive: false,
+    selected: [],
+    sortFunction: textContentSort,
+  },
+  languageMenuInfo: {
     checkbox: document.querySelector('#language-filter-checkbox'),
     popupName: 'language-popup-menu',
     label: document.querySelector('#language-label'),
     container: document.querySelector('#language-container'),
-    contents: global.lists.languages.map((ea) => ea.english_name).sort(),
     isExlcusive: false,
     selected: [],
     sortFunction: textContentSort,
-  };
-  addListenersTo(languageMenuInfo);
-
-  const sortMenuInfo = {
+  },
+  sortMenuInfo: {
     checkbox: document.querySelector('#sort-by-checkbox'),
     popupName: 'sort-by-popup-menu',
     label: document.querySelector('#sort-by-label'),
     container: document.querySelector('#sort-by-container'),
-    contents: global.lists.sortCriteria,
     isExlcusive: true,
     selected: [],
     sortFunction: textContentSort,
-  };
-  addListenersTo(sortMenuInfo);
+  },
+};
 
-  const submitButton = document.querySelector('#filter-submit-button');
-  submitButton.addEventListener('click', function (event) {
-    event.preventDefault();
-    doFilter(genreMenuInfo, languageMenuInfo, sortMenuInfo, isTV);
+export async function addFilterListeners(isTV = false) {
+  const filterTitle = document.querySelector('#filter-title');
+  filterTitle.addEventListener('click', function (event) {
+    const filterHolder = document.querySelector('#all-filters');
+    if (filterHolder.style.display === 'block') {
+      filterHolder.style.display = 'none';
+    } else {
+      filterHolder.style.display = 'block';
+    }
   });
+  await fillLists();
+
+  addListenersTo(allMenuInfo.movieGenreMenuInfo);
+  addListenersTo(allMenuInfo.tvGenreMenuInfo);
+  addListenersTo(allMenuInfo.languageMenuInfo);
+  addListenersTo(allMenuInfo.sortMenuInfo);
+
+  // const submitButton = document.querySelector('#filter-submit-button');
+  // submitButton.addEventListener('click', function (event) {
+  //   event.preventDefault();
+  //   doFilter(
+  //     menuInfo.movieGenreMenuInfo,
+  //     menuInfo.tvGenreMenuInfo,
+  //     menuInfo.languageMenuInfo,
+  //     menuInfo.sortMenuInfo,
+  //     isTV
+  //   );
+  // });
+  hideUnusedGenreFilter(isTV);
 }
 
-async function doFilter(genreInfo, languageInfo, sortInfo, isTV) {
+export function hideUnusedGenreFilter(isTV) {
+  const movieGenreFilter = document.querySelector('#movie-genre-div');
+  const tvGenreFilter = document.querySelector('#tv-genre-div');
+  if (isTV) {
+    movieGenreFilter.style.display = 'none';
+    tvGenreFilter.style.display = 'block';
+  } else {
+    movieGenreFilter.style.display = 'block';
+    tvGenreFilter.style.display = 'none';
+  }
+}
+
+export async function getFilterResults(isTV = false) {
+  const results = await doFilter(
+    menuInfo.movieGenreMenuInfo,
+    menuInfo.tvGenreFilter,
+    menuInfo.languageMenuInfo,
+    menuInfo.sortMenuInfo,
+    isTV
+  );
+  return results;
+}
+
+async function doFilter(
+  movieGenreInfo,
+  tvGenreInfo,
+  languageInfo,
+  sortInfo,
+  isTV
+) {
   closeAllPopups();
 
+  const genreInfo = isTV ? tvGenreInfo : movieGenreInfo;
   let filters = '';
   const genres = getSelectedGenreCodes(isTV);
   if (genres.length > 0) {
@@ -66,7 +113,9 @@ async function doFilter(genreInfo, languageInfo, sortInfo, isTV) {
     filters += '&with_original_language=' + languages.join('|');
   }
   filters += '&include_adult=' + includeAdult();
-  console.log(await discoverAPIData(filters));
+  const results = await discoverAPIData(filters);
+  console.log(results);
+  return results;
 }
 
 function getJoinStringFor(menuInfo) {
@@ -137,16 +186,26 @@ async function fillLists() {
   if (global.lists.genres.movies.length === 0) {
     const genreList = await getGenres();
     global.lists.genres.movies = genreList.genres;
+    allMenuInfo.movieGenreMenuInfo.contents = genreList.genres.map(
+      (ea) => ea.name
+    );
   }
   if (global.lists.genres.tv.length === 0) {
     const genreList = await getGenres(true);
     global.lists.genres.tv = genreList.genres;
+    allMenuInfo.tvGenreMenuInfo.contents = genreList.genres.map(
+      (ea) => ea.name
+    );
   }
   if (global.lists.languages.length === 0) {
     global.lists.languages = await getLanguages();
+    allMenuInfo.languageMenuInfo.contents = global.lists.languages
+      .map((ea) => ea.english_name)
+      .sort();
   }
   if (global.lists.sortCriteria.length === 0) {
     global.lists.sortCriteria = getSortCriteria();
+    allMenuInfo.sortMenuInfo.contents = global.lists.sortCriteria;
   }
 }
 async function getGenres(isTV = false) {
@@ -489,9 +548,4 @@ function createCombinersFor(menuInfo) {
 
   menuInfo.container.appendChild(combiner);
   menuInfo.combiner = combiner;
-
-  // <input type="radio" id="movie" name="type" value="movie" checked />
-  // <label for="movies">Movies</label>
-  // <input type="radio" id="tv" name="type" value="tv" />
-  // <label for="tv">TV Shows</label>
 }

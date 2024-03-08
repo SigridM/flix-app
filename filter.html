@@ -1,25 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Checkbox Example</title>
-  </head>
   <body>
-    <h2>Filter by:</h2>
-    <form>
-      <div id="genre-div" class="filter-div">
+    <h2 id="filter-title">Filter by:</h2>
+    <div id="all-filters">
+      <div id="movie-genre-div" class="filter-div">
         <input
           type="checkbox"
-          id="genre-filter-checkbox"
+          id="movie-genre-filter-checkbox"
           class="filter-checkbox"
           name="filter"
-          value="genre"
+          value="movie-genre"
         />
-        <label for="genre-filter-checkbox"> </label>
-        <a href="#" id="genre-label">Genre</a>
-
-        <div id="genre-container" class="filter-container"></div>
+        <label for="movie-genre-filter-checkbox"> </label>
+        <a href="#" id="movie-genre-label">With Genre</a>
+        <div id="movie-genre-container" class="filter-container"></div>
+        <div id="tv-genre-div" class="filter-div">
+          <input
+            type="checkbox"
+            id="tv-genre-filter-checkbox"
+            class="filter-checkbox"
+            name="filter"
+            value="tv-genre"
+          />
+          <label for="tv-genre-filter-checkbox"> </label>
+          <a href="#" id="tv-genre-label">Genre</a>
+  
+          <div id="tv-genre-container" class="filter-container"></div>
       </div>
       <div id="adult-div" class="filter-div">
         <input
@@ -43,7 +49,7 @@
           value="language"
         />
         <label for="language-filter-checkbox"> </label>
-        <a href="#" id="language-label">Language</a>
+        <a href="#" id="language-label">Original Language</a>
         <div id="language-container" class="filter-container"></div>
       </div>
       <div id="sort-by-div" class="filter-div">
@@ -58,7 +64,6 @@
         <a href="#" id="sort-by-label">Sort </a>
         <div id="sort-by-container" class="filter-container"></div>
       </div>
-      <input type="submit" id="filter-submit-button" value="Submit" />
-    </form>
+    </div>
   </body>
 </html>

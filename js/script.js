@@ -1,5 +1,5 @@
 import { global } from './globals.js';
-import { displaySlider, displayResults } from './imageManagement.js';
+import { displaySlider } from './imageManagement.js';
 import { displayDetails, displayPopular } from './commonElements.js';
 import { search } from './search.js';
 
@@ -14,7 +14,7 @@ function highlightActiveLink() {
 }
 
 // Init App - runs on every page
-function init() {
+async function init() {
   switch (
     global.currentPage // Simple router
   ) {

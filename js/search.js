@@ -1,7 +1,7 @@
 import { global } from './globals.js';
 import { displayResults } from './imageManagement.js';
 import { searchAPIData } from './fetchData.js';
-import { addFilterListeners } from './filter.js';
+import { addFilterListeners, getFilterResults } from './filter.js';
 
 // Search Movies/Shows
 export async function search() {
@@ -14,6 +14,9 @@ export async function search() {
 
   if (global.search.term === '' || global.search.term === null) {
     return showAlert('Please enter a search term');
+  } else {
+    const searchBox = document.querySelector('#search-term');
+    searchBox.placeholder = global.search.term;
   }
   global.search.page = savedPage ? Number(savedPage) : 1;
 
@@ -21,6 +24,10 @@ export async function search() {
   document.querySelector('#tv').checked = global.search.type == 'tv';
 
   const { results, total_pages, page, total_results } = await searchAPIData();
+  // const { results, total_pages, page, total_results } = await getFilterResults(
+  //   global.search.type == 'tv'
+  // );
+
   global.search.page = page;
   global.search.totalPages = total_pages;
   global.search.totalResults = total_results;

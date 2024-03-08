@@ -489,3 +489,6 @@ section h5 {
   /* Your styles for the close anchor on hover */
   text-decoration: underline; /* Example: Underline on hover */
 }
+#all-filters {
+  display: none;
+}
