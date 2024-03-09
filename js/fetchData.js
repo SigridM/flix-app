@@ -29,7 +29,7 @@ export async function fetchAPIData(endpoint) {
 export async function searchAPIData() {
   showSpinner();
   const response = await fetch(
-    `${global.api.apiURL}search/${global.search.type}?api_key=${global.api.apiKey}&language=en-US&query=${global.search.term}&page=${global.search.page}` //,
+    `${global.api.apiURL}search/${global.search.space}?api_key=${global.api.apiKey}&language=en-US&query=${global.search.term}&page=${global.search.page}` //,
     // options
   );
 
@@ -44,7 +44,7 @@ export async function discoverAPIData(filters) {
   showSpinner();
   const keywords = await getKeywordCodes();
   const keywordString = keywords.join('%7C');
-  const fetchString = `${global.api.apiURL}discover/${global.search.type}?api_key=${global.api.apiKey}&language=en-US&with_keywords=${keywordString}&page=${global.search.page}${filters}`;
+  const fetchString = `${global.api.apiURL}discover/${global.search.space}?api_key=${global.api.apiKey}&language=en-US&with_keywords=${keywordString}&page=${global.search.page}${filters}`;
   console.log(fetchString);
   const response = await fetch(fetchString);
 
