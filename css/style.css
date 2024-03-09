@@ -496,10 +496,9 @@ section h5 {
   display: flex;
   justify-content: space-between;
 }
-/* .right-float {
-  float: right;
-}
 
-#search-radio-button-panel .search-radio.right-float {
-  float: right;
-} */
+.center-div {
+  width: 50%; /* Adjust the width as needed */
+  margin: 0 auto; /* This centers the div horizontally */
+  text-align: center; /* This centers the content inside the div */
+}
