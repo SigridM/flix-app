@@ -26,15 +26,11 @@
       includeHTML('./header.html', 'main-header');
     </script>
 
-    <div id="search-container"></div>
-    <script>
-      includeHTML(
-        './search-container.html',
-        'search-container',
-        () => (document.getElementById('tv').checked = true)
-      );
-      includeHTML('./filter.html', 'filter-container');
-    </script>
+    <div class="center-div">
+      <button class="btn">
+        <a href="./search.html">Search</a>
+      </button>
+    </div>
 
     <!-- Top Rated Section -->
     <section class="now-playing">
