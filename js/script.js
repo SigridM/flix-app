@@ -38,7 +38,7 @@ function init() {
       break;
     case '/search.html':
       initSearchForm();
-      search();
+      // search();
       break;
   }
   highlightActiveLink();
@@ -46,11 +46,13 @@ function init() {
 
 function initSearchForm() {
   const searchForm = document.querySelector('#search-form');
-  searchForm.addEventListener('submit', function (event) {
-    event.preventDefault();
-    search();
-  });
-  addFilterListeners(global.search.type == 'tv');
+  if (searchForm) {
+    searchForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+      search();
+    });
+    addFilterListeners();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
