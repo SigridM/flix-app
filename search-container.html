@@ -11,8 +11,9 @@
       <div class="container">
         <div id="alert"></div>
         <form class="search-form" id="search-form">
-          <!-- movies and shows radio box -->
+          <!-- radio button groups -->
           <div id="search-radio-button-panel">
+            <!-- movies and shows radio box -->
             <div class="search-radio">
               <input
                 type="radio"
@@ -21,11 +22,13 @@
                 value="movie"
                 checked
               />
-              <label for="movies">Movies</label>
+              <label for="movie">Movies</label>
               <input type="radio" id="tv" name="type" value="tv" />
               <label for="tv">TV Shows</label>
             </div>
-            <div class="search-radio left-float">
+
+            <!-- keyword vs. title radio box -->
+            <div class="search-radio">
               <input
                 type="radio"
                 id="search-by-title"
@@ -33,14 +36,14 @@
                 value="title"
                 checked
               />
-              <label for="movies">By Title</label>
+              <label for="search-by-title">By Title</label>
               <input
                 type="radio"
                 id="search-by-keyword"
                 name="isKeyword"
                 value="keyword"
               />
-              <label for="tv">By Keyword</label>
+              <label for="search-by-keyword">By Keyword</label>
             </div>
           </div>
 
