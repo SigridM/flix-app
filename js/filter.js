@@ -39,7 +39,7 @@ const allMenuInfo = {
   },
 };
 
-export async function addFilterListeners(isTV = false) {
+export async function addFilterListeners() {
   const filterTitle = document.querySelector('#filter-title');
   filterTitle.addEventListener('click', function (event) {
     const filterHolder = document.querySelector('#all-filters');
@@ -67,10 +67,32 @@ export async function addFilterListeners(isTV = false) {
   //     isTV
   //   );
   // });
+  addRadioBUttonListeners();
+}
+
+function addRadioBUttonListeners() {
+  const movieRadioButton = document
+    .querySelector('#search-radio-button-panel')
+    .querySelector('#movie');
+  movieRadioButton.addEventListener('change', function (event) {
+    const isTV = !movieRadioButton.checked;
+    hideUnusedGenreFilter(isTV);
+  });
+
+  const tvRadioButton = document
+    .querySelector('#search-radio-button-panel')
+    .querySelector('#tv');
+  tvRadioButton.addEventListener('change', function (event) {
+    const isTV = tvRadioButton.checked;
+    hideUnusedGenreFilter(isTV);
+  });
+
+  const isTV = tvRadioButton.checked;
   hideUnusedGenreFilter(isTV);
 }
 
 export function hideUnusedGenreFilter(isTV) {
+  closeAllPopups();
   const movieGenreFilter = document.querySelector('#movie-genre-div');
   const tvGenreFilter = document.querySelector('#tv-genre-div');
   if (isTV) {
