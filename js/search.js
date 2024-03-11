@@ -76,16 +76,34 @@ function searchResultsHeading(numResultsThisPage, isTV, isSearchByTitle) {
   let h2 = document.querySelector('#results-heading');
   if (!h2) {
     h2 = document.createElement('h2');
+    h2.id = 'results-heading';
   }
-  h2.id = 'results-heading';
-  h2.textContent = `Showing ${
+  let textContent = `Showing ${
     beforeStart + 1
-  } to ${end} of ${totalResults} results for ${isTV ? ' TV Shows' : ' Movies'} 
-  ${
-    isSearchByTitle
-      ? ' with ' + quotedSearchTerm + ' in the title'
-      : ' containing ' + quotedSearchTerm
-  }`;
+  } to ${end} of ${totalResults} results for `;
+  if (isSearchByTitle) {
+    textContent += `${
+      isTV ? ' TV Shows' : ' Movies'
+    } with ${quotedSearchTerm} in the title`;
+    h2.textContent = textContent;
+    return h2;
+  }
+
+  const genreInfo = isTV
+    ? allMenuInfo.tvGenreMenuInfo
+    : allMenuInfo.movieGenreMenuInfo;
+  textContent += genreInfo.selected.join(' ' + genreInfo.combineUsing + ' ');
+  textContent += `${isTV ? ' TV Shows' : ' Movies'}`;
+  const noSearchTerm = global.search.term === '' || global.search.term === null;
+  textContent += noSearchTerm ? '' : ' containing ' + quotedSearchTerm;
+  if (allMenuInfo.languageMenuInfo.selected.length > 0) {
+    textContent +=
+      ' in ' +
+      allMenuInfo.languageMenuInfo.selected.join(
+        ' ' + allMenuInfo.languageMenuInfo.combineUsing + ' '
+      );
+  }
+  h2.textContent = textContent;
   return h2;
 }
 async function nextPage() {
