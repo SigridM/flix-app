@@ -33,14 +33,15 @@ export async function search() {
 
   const { results, total_pages, page, total_results } = searchByTitle
     ? await searchAPIData()
-    : await getFilterResults(global.search.type == 'tv');
+    : await getFilterResults(global.search.space == 'tv');
 
   global.search.page = page;
   global.search.totalPages = total_pages;
   global.search.totalResults = total_results;
   if (results.length === 0) {
-    showAlert('No matches', 'alert-success');
+    return showAlert('No matches', 'alert-success');
   }
+  clearPreviousPage();
   displayResults(
     results,
     'card',
@@ -49,22 +50,27 @@ export async function search() {
     false, // not swiper
     true // is search
   );
-  displayPagination(results.length, global.search.space == 'tv');
+  displayPagination(results.length, global.search.space == 'tv', searchByTitle);
 }
 
-function searchResultsHeading(resultsThisPage, isTV) {
+function searchResultsHeading(numResultsThisPage, isTV, isSearchByTitle) {
   const beforeStart = 20 * (global.search.page - 1);
-  const end = beforeStart + Math.min(resultsThisPage, 20);
+  const end = beforeStart + Math.min(numResultsThisPage, 20);
+  const quotedSearchTerm = `'${global.search.term}'`;
+  const totalResults = global.search.totalResults.toLocaleString();
   let h2 = document.querySelector('#results-heading');
   if (!h2) {
     h2 = document.createElement('h2');
   }
   h2.id = 'results-heading';
-  h2.textContent = `Showing ${beforeStart + 1} to ${end} of ${
-    global.search.totalResults
-  } results for ${isTV ? ' TV Shows' : ' Movies'} containing ' ${
-    global.search.term
-  } '`;
+  h2.textContent = `Showing ${
+    beforeStart + 1
+  } to ${end} of ${totalResults} results for ${isTV ? ' TV Shows' : ' Movies'} 
+  ${
+    isSearchByTitle
+      ? ' with ' + quotedSearchTerm + ' in the title'
+      : ' containing ' + quotedSearchTerm
+  }`;
   return h2;
 }
 async function nextPage() {
@@ -128,61 +134,58 @@ async function lastPage() {
 }
 
 // Create and display pagination for search
-function displayPagination(resultsThisPage, isTV) {
+function displayPagination(numResultsThisPage, isTV, isSearchByTitle) {
   const heading = document.querySelector('#search-results-heading');
-  const h2 = searchResultsHeading(resultsThisPage, isTV);
+  const h2 = searchResultsHeading(numResultsThisPage, isTV, isSearchByTitle);
   heading.appendChild(h2);
 
-  const pagination = document.createElement('div');
-  pagination.classList.add('pagination');
+  let paginationDiv = document.querySelector('.pagination');
+  if (!paginationDiv) {
+    paginationDiv = document.createElement('div');
+    paginationDiv.classList.add('pagination');
+    document.querySelector('#pagination').appendChild(paginationDiv);
+  }
 
-  const prevButton = document.createElement('button');
-  prevButton.classList.add('btn', 'btn-primary');
-  prevButton.id = 'prev';
-  prevButton.textContent = 'Prev';
-  prevButton.addEventListener('click', previousPage);
-  prevButton.disabled = global.search.page == 1;
-
-  const firstButton = document.createElement('button');
-  firstButton.classList.add('btn', 'btn-primary');
-  firstButton.id = 'first';
-  firstButton.textContent = 'First';
-  firstButton.addEventListener('click', firstPage);
+  const firstButton = paginationButton('First', firstPage, paginationDiv);
   firstButton.disabled = global.search.page == 1;
 
-  const nextButton = document.createElement('button');
-  nextButton.classList.add('btn', 'btn-primary');
-  nextButton.id = 'next';
-  nextButton.textContent = 'Next';
-  nextButton.addEventListener('click', nextPage);
+  const prevButton = paginationButton('Prev', previousPage, paginationDiv);
+  prevButton.disabled = global.search.page == 1;
+
+  const nextButton = paginationButton('Next', nextPage, paginationDiv);
   nextButton.disabled = global.search.page == global.search.totalPages;
 
-  const lastButton = document.createElement('button');
-  lastButton.classList.add('btn', 'btn-primary');
-  lastButton.id = 'last';
-  lastButton.textContent = 'Last';
-  lastButton.addEventListener('click', lastPage);
+  let lastButton = paginationButton('Last', lastPage, paginationDiv);
   lastButton.disabled = global.search.page == global.search.totalPages;
 
-  const pageCounter = document.createElement('div');
-  pageCounter.classList.add('page-counter');
+  let pageCounter = document.querySelector('.page-counter');
+  if (!pageCounter) {
+    pageCounter = document.createElement('div');
+    pageCounter.classList.add('page-counter');
+    paginationDiv.appendChild(pageCounter);
+  }
   pageCounter.textContent =
     global.search.page + ' of ' + global.search.totalPages;
-
-  pagination.appendChild(firstButton);
-  pagination.appendChild(prevButton);
-  pagination.appendChild(nextButton);
-  pagination.appendChild(lastButton);
-
-  pagination.appendChild(pageCounter);
-  document.querySelector('#pagination').appendChild(pagination);
 }
 
+function paginationButton(text, listenerFuntion, paginationDiv) {
+  const id = text.toLowerCase();
+  let button = document.getElementById(id);
+  if (!button) {
+    button = document.createElement('button');
+    button.classList.add('btn', 'btn-primary');
+    button.id = id;
+    button.textContent = text;
+    button.addEventListener('click', listenerFuntion);
+    paginationDiv.appendChild(button);
+  }
+  return button;
+}
 // Clear previous results
 function clearPreviousPage() {
   document.querySelector('#search-results').innerHTML = '';
-  document.querySelector('#search-results-heading').innerHTML = '';
-  document.querySelector('#pagination').innerHTML = '';
+  // document.querySelector('#search-results-heading').innerHTML = '';
+  // document.querySelector('#pagination').innerHTML = '';
 }
 // Show Alert
 function showAlert(message, className = 'alert-error') {
