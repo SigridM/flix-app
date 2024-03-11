@@ -38,7 +38,6 @@ function init() {
       break;
     case '/search.html':
       initSearchForm();
-      // search();
       break;
   }
   highlightActiveLink();
