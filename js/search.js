@@ -24,12 +24,10 @@ export async function search() {
   const urlParams = new URLSearchParams(queryString);
   const savedPage = urlParams.get('page');
 
-  const searchByTitle =
-    radioButtonPanel.querySelector('#search-by-title').checked;
   const noSearchTerm = global.search.term === '' || global.search.term === null;
 
   // Check for unrestricted searches
-  if (searchByTitle && noSearchTerm) {
+  if (searchByTitle() && noSearchTerm) {
     return showAlert('Please enter a word in the title');
   } else if (
     getSelectedLanguages().length === 0 &&
@@ -47,7 +45,7 @@ export async function search() {
   document.querySelector('#movie').checked = global.search.space == 'movie';
   document.querySelector('#tv').checked = global.search.space == 'tv';
 
-  const { results, total_pages, page, total_results } = searchByTitle
+  const { results, total_pages, page, total_results } = searchByTitle()
     ? await searchAPIData()
     : await getFilterResults(global.search.space == 'tv');
 
@@ -66,10 +64,15 @@ export async function search() {
     false, // not swiper
     true // is search
   );
-  displayPagination(results.length, global.search.space == 'tv', searchByTitle);
+  displayPagination(results.length, global.search.space == 'tv');
 }
 
-function searchResultsHeading(numResultsThisPage, isTV, isSearchByTitle) {
+function searchByTitle() {
+  const radioButtonPanel = document.querySelector('#search-radio-button-panel');
+  return radioButtonPanel.querySelector('#search-by-title').checked;
+}
+
+function searchResultsHeading(numResultsThisPage, isTV) {
   const beforeStart = 20 * (global.search.page - 1);
   const end = beforeStart + Math.min(numResultsThisPage, 20);
   const quotedSearchTerm = `'${global.search.term}'`;
@@ -82,7 +85,7 @@ function searchResultsHeading(numResultsThisPage, isTV, isSearchByTitle) {
   let textContent = `Showing ${
     beforeStart + 1
   } to ${end} of ${totalResults} results for `;
-  if (isSearchByTitle) {
+  if (searchByTitle()) {
     textContent += `${
       isTV ? ' TV Shows' : ' Movies'
     } with ${quotedSearchTerm} in the title`;
@@ -152,7 +155,10 @@ function friendlySortString(sortString) {
 }
 async function nextPage() {
   global.search.page++;
-  const { results, total_pages } = await searchAPIData();
+  const { results, total_pages } = searchByTitle()
+    ? await searchAPIData()
+    : await getFilterResults(global.search.space == 'tv');
+
   clearPreviousPage();
   displayResults(
     results,
@@ -167,7 +173,9 @@ async function nextPage() {
 
 async function previousPage() {
   global.search.page--;
-  const { results, total_pages } = await searchAPIData();
+  const { results, total_pages } = searchByTitle()
+    ? await searchAPIData()
+    : await getFilterResults(global.search.space == 'tv');
   clearPreviousPage();
   displayResults(
     results,
@@ -182,7 +190,9 @@ async function previousPage() {
 
 async function firstPage() {
   global.search.page = 1;
-  const { results, total_pages } = await searchAPIData();
+  const { results, total_pages } = searchByTitle()
+    ? await searchAPIData()
+    : await getFilterResults(global.search.space == 'tv');
   clearPreviousPage();
   displayResults(
     results,
@@ -197,7 +207,9 @@ async function firstPage() {
 
 async function lastPage() {
   global.search.page = global.search.totalPages;
-  const { results, total_pages } = await searchAPIData();
+  const { results, total_pages } = searchByTitle()
+    ? await searchAPIData()
+    : await getFilterResults(global.search.space == 'tv');
   clearPreviousPage();
   displayResults(
     results,
@@ -211,9 +223,9 @@ async function lastPage() {
 }
 
 // Create and display pagination for search
-function displayPagination(numResultsThisPage, isTV, isSearchByTitle) {
+function displayPagination(numResultsThisPage, isTV) {
   const heading = document.querySelector('#search-results-heading');
-  const h2 = searchResultsHeading(numResultsThisPage, isTV, isSearchByTitle);
+  const h2 = searchResultsHeading(numResultsThisPage, isTV, searchByTitle());
   heading.appendChild(h2);
 
   let paginationDiv = document.querySelector('.pagination');
