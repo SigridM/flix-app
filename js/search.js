@@ -20,8 +20,11 @@ export async function search() {
 
   const searchByTitle =
     radioButtonPanel.querySelector('#search-by-title').checked;
-  if (global.search.term === '' || global.search.term === null) {
-    return showAlert('Please enter a search term');
+  if (
+    searchByTitle &&
+    (global.search.term === '' || global.search.term === null)
+  ) {
+    return showAlert('Please enter a word in the title');
   } else {
     const searchBox = document.querySelector('#search-term');
     searchBox.placeholder = global.search.term;
