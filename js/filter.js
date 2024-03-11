@@ -56,17 +56,6 @@ export async function addFilterListeners() {
   addListenersTo(allMenuInfo.languageMenuInfo);
   addListenersTo(allMenuInfo.sortMenuInfo);
 
-  // const submitButton = document.querySelector('#filter-submit-button');
-  // submitButton.addEventListener('click', function (event) {
-  //   event.preventDefault();
-  //   doFilter(
-  //     menuInfo.movieGenreMenuInfo,
-  //     menuInfo.tvGenreMenuInfo,
-  //     menuInfo.languageMenuInfo,
-  //     menuInfo.sortMenuInfo,
-  //     isTV
-  //   );
-  // });
   addRadioBUttonListeners();
 }
 
@@ -88,8 +77,7 @@ function addRadioBUttonListeners() {
     hideUnusedGenreFilter(isTV);
   });
 
-  const isTV = tvRadioButton.checked;
-  hideUnusedGenreFilter(isTV);
+  hideUnusedGenreFilter(tvRadioButton.checked);
 
   // Keyword vs. Title
   const filterTitle = document.querySelector('#filter-title');
@@ -109,6 +97,10 @@ function addRadioBUttonListeners() {
       ? (filterTitle.style.display = 'none')
       : (filterTitle.style.display = 'block');
   });
+
+  titleRadioButton.checked
+    ? (filterTitle.style.display = 'none')
+    : (filterTitle.style.display = 'block');
 }
 
 export function hideUnusedGenreFilter(isTV) {
