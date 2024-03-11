@@ -280,6 +280,18 @@ function addStatus(media, details) {
   });
 }
 
+// Add the status to the array of details, if that detail exists
+function addAdult(media, details) {
+  const detail = media.adult;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Adult: '),
+    listText: detail,
+  });
+}
+
 // Add the production companies list to the array of details, if that detail exists
 function addProductionCompanies(media, details) {
   const detail = media.production_companies;
@@ -365,6 +377,7 @@ function detailsBottomList(media, providers) {
   addLastEpisode(media, details);
   addEpisodeRuntime(media, details);
   addStatus(media, details);
+  addAdult(media, details);
 
   addRentFrom(providers, details);
   addFreeFrom(providers, details);
