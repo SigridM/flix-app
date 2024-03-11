@@ -7,6 +7,7 @@ const allMenuInfo = {
     label: document.querySelector('#movie-genre-label'),
     container: document.querySelector('#movie-genre-container'),
     isExlcusive: false,
+    orOnly: false,
     selected: [],
     sortFunction: textContentSort,
   },
@@ -16,6 +17,7 @@ const allMenuInfo = {
     label: document.querySelector('#tv-genre-label'),
     container: document.querySelector('#tv-genre-container'),
     isExlcusive: false,
+    orOnly: false,
     selected: [],
     sortFunction: textContentSort,
   },
@@ -25,6 +27,7 @@ const allMenuInfo = {
     label: document.querySelector('#language-label'),
     container: document.querySelector('#language-container'),
     isExlcusive: false,
+    orOnly: true,
     selected: [],
     sortFunction: textContentSort,
   },
@@ -80,27 +83,27 @@ function addRadioBUttonListeners() {
   hideUnusedGenreFilter(tvRadioButton.checked);
 
   // Keyword vs. Title
-  const filterTitle = document.querySelector('#filter-title');
+  const filterContainer = document.querySelector('#filter-container');
   const keywordRadioButton = document
     .querySelector('#search-radio-button-panel')
     .querySelector('#search-by-keyword');
   keywordRadioButton.addEventListener('change', function (event) {
     keywordRadioButton.checked
-      ? (filterTitle.style.display = 'block')
-      : (filterTitle.style.display = 'none');
+      ? (filterContainer.style.display = 'block')
+      : (filterContainer.style.display = 'none');
   });
   const titleRadioButton = document
     .querySelector('#search-radio-button-panel')
     .querySelector('#search-by-title');
   titleRadioButton.addEventListener('change', function (event) {
     titleRadioButton.checked
-      ? (filterTitle.style.display = 'none')
-      : (filterTitle.style.display = 'block');
+      ? (filterContainer.style.display = 'none')
+      : (filterContainer.style.display = 'block');
   });
 
   titleRadioButton.checked
-    ? (filterTitle.style.display = 'none')
-    : (filterTitle.style.display = 'block');
+    ? (filterContainer.style.display = 'none')
+    : (filterContainer.style.display = 'block');
 }
 
 export function hideUnusedGenreFilter(isTV) {
@@ -119,7 +122,7 @@ export function hideUnusedGenreFilter(isTV) {
 export async function getFilterResults(isTV = false) {
   const results = await doFilter(
     allMenuInfo.movieGenreMenuInfo,
-    allMenuInfo.tvGenreFilter,
+    allMenuInfo.tvGenreMenuInfo,
     allMenuInfo.languageMenuInfo,
     allMenuInfo.sortMenuInfo,
     isTV
@@ -147,6 +150,7 @@ async function doFilter(
     filters += '&with_original_language=' + languages.join('|');
   }
   filters += '&include_adult=' + includeAdult();
+  console.log(filters);
   const results = await discoverAPIData(filters);
   console.log(results);
   return results;
@@ -173,7 +177,8 @@ function getJoinStringFor(menuInfo) {
 }
 
 function getSelectedGenres(isTV) {
-  const popupMenu = document.querySelector('#genre-popup-menu');
+  const popupID = isTV ? '#tv-genre-popup-menu' : '#movie-genre-popup-menu';
+  const popupMenu = document.querySelector(popupID);
   if (!popupMenu) {
     return [];
   }
@@ -447,6 +452,15 @@ function moveSelectedToTop(menuInfo) {
       combiner.style.display = 'none';
     }
   }
+  const singleClarifier = menuInfo.singleClarifier;
+  if (singleClarifier) {
+    if (menuInfo.selected.length === 1) {
+      singleClarifier.textContent = '(' + menuInfo.selected[0] + ')';
+      singleClarifier.style.display = 'inline-block';
+    } else {
+      singleClarifier.style.display = 'none';
+    }
+  }
 }
 
 function closeMenu(menuInfo, event) {
@@ -477,8 +491,7 @@ function addListenersTo(menuInfo) {
   // Add a change listener to the checkbox
   const filterCheckbox = menuInfo.checkbox;
   filterCheckbox.addEventListener('change', function () {
-    const popupMenu = menuInfo.popupMenu;
-    if (!popupMenu) {
+    if (!menuInfo.popupMenu) {
       createAndPostionPopupMenu(menuInfo); // also shows the menu
     } else {
       openPopupMenu(menuInfo);
@@ -487,29 +500,26 @@ function addListenersTo(menuInfo) {
         setTimeout(closeAllPopups, 500);
       }
     }
-
-    if (!menuInfo.isExlcusive) {
-      const combiner = menuInfo.combiner;
-      if (!combiner) {
-        createCombinersFor(menuInfo);
-      }
+    if (!menuInfo.isExlcusive && !menuInfo.combiner) {
+      createCombinersFor(menuInfo);
+    }
+    if (!menuInfo.singleClarifier) {
+      createSingleClarifierFor(menuInfo);
     }
   });
 
   // Add a click listener to the checkbox's label
   menuInfo.label.addEventListener('click', function () {
-    const popupMenu = menuInfo.popupMenu;
-    if (!popupMenu) {
+    if (!menuInfo.popupMenu) {
       createAndPostionPopupMenu(menuInfo); // also shows the menu
     } else {
       togglePopupMenu(menuInfo);
     }
-    const combiner = menuInfo.combiner;
-
-    if (!menuInfo.isExlcusive) {
-      if (!combiner) {
-        createCombinersFor(menuInfo);
-      }
+    if (!menuInfo.isExlcusive && !menuInfo.combiner) {
+      createCombinersFor(menuInfo);
+    }
+    if (!menuInfo.singleClarifier) {
+      createSingleClarifierFor(menuInfo);
     }
   });
 }
@@ -525,11 +535,48 @@ function closeAllPopups(exceptPopUp) {
 
 function createCombinersFor(menuInfo) {
   const combiner = document.createElement('div');
-  combiner.textContent = '- combine using: ';
   combiner.classList.add('combiner');
+  if (!menuInfo.orOnly) {
+    combiner.textContent = '- combine using: ';
+    menuInfo.combineUsing = 'and';
+    const andChoice = document.createElement('input');
+    andChoice.type = 'radio';
+    andChoice.id = menuInfo.container.id + '-and';
+    andChoice.name = menuInfo.container.id + '-combine-using';
+    andChoice.value = 'and';
+    andChoice.checked = true;
+    andChoice.addEventListener('change', function (event) {
+      menuInfo.combineUsing = event.target.value;
+      clarification.textContent =
+        '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
+    });
 
-  menuInfo.combineUsing = 'and';
+    const andLabel = document.createElement('label');
+    andLabel.for = andChoice.id;
+    andLabel.textContent = ' And ';
 
+    const orChoice = document.createElement('input');
+    orChoice.type = 'radio';
+    orChoice.id = menuInfo.container.id + '-or';
+    orChoice.name = menuInfo.container.id + '-combine-using';
+    orChoice.value = 'or';
+    orChoice.checked = false;
+    orChoice.addEventListener('change', function (event) {
+      menuInfo.combineUsing = event.target.value;
+      clarification.textContent =
+        '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
+    });
+    const orLabel = document.createElement('label');
+    orLabel.for = orChoice.id;
+    orLabel.textContent = ' Or ';
+
+    combiner.appendChild(andChoice);
+    combiner.appendChild(andLabel);
+    combiner.appendChild(orChoice);
+    combiner.appendChild(orLabel);
+  } else {
+    menuInfo.combineUsing = 'or';
+  }
   const clarification = document.createElement('div');
   clarification.id = menuInfo.container.id + '-clarification';
   clarification.classList.add('clarifier');
@@ -537,41 +584,6 @@ function createCombinersFor(menuInfo) {
     '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
   clarification.style.display = 'inline-block';
 
-  const andChoice = document.createElement('input');
-  andChoice.type = 'radio';
-  andChoice.id = menuInfo.container.id + '-and';
-  andChoice.name = menuInfo.container.id + '-combine-using';
-  andChoice.value = 'and';
-  andChoice.checked = true;
-  andChoice.addEventListener('change', function (event) {
-    menuInfo.combineUsing = event.target.value;
-    clarification.textContent =
-      '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
-  });
-
-  const andLabel = document.createElement('label');
-  andLabel.for = andChoice.id;
-  andLabel.textContent = ' And ';
-
-  const orChoice = document.createElement('input');
-  orChoice.type = 'radio';
-  orChoice.id = menuInfo.container.id + '-or';
-  orChoice.name = menuInfo.container.id + '-combine-using';
-  orChoice.value = 'or';
-  orChoice.checked = false;
-  orChoice.addEventListener('change', function (event) {
-    menuInfo.combineUsing = event.target.value;
-    clarification.textContent =
-      '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
-  });
-  const orLabel = document.createElement('label');
-  orLabel.for = orChoice.id;
-  orLabel.textContent = ' Or ';
-
-  combiner.appendChild(andChoice);
-  combiner.appendChild(andLabel);
-  combiner.appendChild(orChoice);
-  combiner.appendChild(orLabel);
   combiner.appendChild(clarification);
 
   if (menuInfo.selected.length > 1) {
@@ -581,5 +593,20 @@ function createCombinersFor(menuInfo) {
   }
 
   menuInfo.container.appendChild(combiner);
-  menuInfo.combiner = combiner;
+
+  menuInfo.combiner = combiner; // save the combiner in the menuInfo
+}
+function createSingleClarifierFor(menuInfo) {
+  const clarification = document.createElement('div');
+  clarification.id = menuInfo.container.id + '-single-clarification';
+  clarification.classList.add('single-clarifier');
+  clarification.textContent = '(' + menuInfo.selected[0] + ')';
+  if (menuInfo.selected.length === 1) {
+    clarification.style.display = 'inline-block';
+  } else {
+    clarification.style.display = 'none';
+  }
+  menuInfo.container.appendChild(clarification);
+
+  menuInfo.singleClarifier = clarification; // save the single clarifier in the menuInfo
 }
