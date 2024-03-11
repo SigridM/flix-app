@@ -71,6 +71,7 @@ export async function addFilterListeners() {
 }
 
 function addRadioBUttonListeners() {
+  // TV vs. Movie
   const movieRadioButton = document
     .querySelector('#search-radio-button-panel')
     .querySelector('#movie');
@@ -89,6 +90,25 @@ function addRadioBUttonListeners() {
 
   const isTV = tvRadioButton.checked;
   hideUnusedGenreFilter(isTV);
+
+  // Keyword vs. Title
+  const filterTitle = document.querySelector('#filter-title');
+  const keywordRadioButton = document
+    .querySelector('#search-radio-button-panel')
+    .querySelector('#search-by-keyword');
+  keywordRadioButton.addEventListener('change', function (event) {
+    keywordRadioButton.checked
+      ? (filterTitle.style.display = 'block')
+      : (filterTitle.style.display = 'none');
+  });
+  const titleRadioButton = document
+    .querySelector('#search-radio-button-panel')
+    .querySelector('#search-by-title');
+  titleRadioButton.addEventListener('change', function (event) {
+    titleRadioButton.checked
+      ? (filterTitle.style.display = 'none')
+      : (filterTitle.style.display = 'block');
+  });
 }
 
 export function hideUnusedGenreFilter(isTV) {
@@ -106,10 +126,10 @@ export function hideUnusedGenreFilter(isTV) {
 
 export async function getFilterResults(isTV = false) {
   const results = await doFilter(
-    menuInfo.movieGenreMenuInfo,
-    menuInfo.tvGenreFilter,
-    menuInfo.languageMenuInfo,
-    menuInfo.sortMenuInfo,
+    allMenuInfo.movieGenreMenuInfo,
+    allMenuInfo.tvGenreFilter,
+    allMenuInfo.languageMenuInfo,
+    allMenuInfo.sortMenuInfo,
     isTV
   );
   return results;

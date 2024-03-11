@@ -5,13 +5,21 @@ import { addFilterListeners, getFilterResults } from './filter.js';
 
 // Search Movies/Shows
 export async function search() {
+  const radioButtonPanel = document.querySelector('#search-radio-button-panel');
+
+  global.search.space = radioButtonPanel.querySelector('#movie').checked
+    ? 'movie'
+    : 'tv';
+  const textInput = document.querySelector('#search-term');
+  global.search.term = textInput.value;
+  console.log(global.search);
+  // http://127.0.0.1:5500/search.html?type=movie&search-term=&filter=movie-genre&movie-genre-container-combine-using=and&filter=language&language-container-combine-using=and
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
-  global.search.type = urlParams.get('type');
-  global.search.term = urlParams.get('search-term');
   const savedPage = urlParams.get('page');
-  addFilterListeners(global.search.type == 'tv');
 
+  const searchByTitle =
+    radioButtonPanel.querySelector('#search-by-title').checked;
   if (global.search.term === '' || global.search.term === null) {
     return showAlert('Please enter a search term');
   } else {
@@ -20,13 +28,12 @@ export async function search() {
   }
   global.search.page = savedPage ? Number(savedPage) : 1;
 
-  document.querySelector('#movie').checked = global.search.type == 'movie';
-  document.querySelector('#tv').checked = global.search.type == 'tv';
+  document.querySelector('#movie').checked = global.search.space == 'movie';
+  document.querySelector('#tv').checked = global.search.space == 'tv';
 
-  const { results, total_pages, page, total_results } = await searchAPIData();
-  // const { results, total_pages, page, total_results } = await getFilterResults(
-  //   global.search.type == 'tv'
-  // );
+  const { results, total_pages, page, total_results } = searchByTitle
+    ? await searchAPIData()
+    : await getFilterResults(global.search.type == 'tv');
 
   global.search.page = page;
   global.search.totalPages = total_pages;
@@ -38,17 +45,21 @@ export async function search() {
     results,
     'card',
     '#search-results',
-    global.search.type == 'tv',
+    global.search.space == 'tv',
     false, // not swiper
     true // is search
   );
-  displayPagination(results.length, global.search.type == 'tv');
+  displayPagination(results.length, global.search.space == 'tv');
 }
 
 function searchResultsHeading(resultsThisPage, isTV) {
   const beforeStart = 20 * (global.search.page - 1);
   const end = beforeStart + Math.min(resultsThisPage, 20);
-  const h2 = document.createElement('h2');
+  let h2 = document.querySelector('#results-heading');
+  if (!h2) {
+    h2 = document.createElement('h2');
+  }
+  h2.id = 'results-heading';
   h2.textContent = `Showing ${beforeStart + 1} to ${end} of ${
     global.search.totalResults
   } results for ${isTV ? ' TV Shows' : ' Movies'} containing ' ${
@@ -64,7 +75,7 @@ async function nextPage() {
     results,
     'card',
     '#search-results',
-    global.search.type == 'tv',
+    global.search.space == 'tv',
     false,
     true
   );
@@ -79,7 +90,7 @@ async function previousPage() {
     results,
     'card',
     '#search-results',
-    global.search.type == 'tv',
+    global.search.space == 'tv',
     false,
     true
   );
@@ -94,7 +105,7 @@ async function firstPage() {
     results,
     'card',
     '#search-results',
-    global.search.type == 'tv',
+    global.search.space == 'tv',
     false,
     true
   );
@@ -109,7 +120,7 @@ async function lastPage() {
     results,
     'card',
     '#search-results',
-    global.search.type == 'tv',
+    global.search.space == 'tv',
     false,
     true
   );
@@ -122,8 +133,8 @@ function displayPagination(resultsThisPage, isTV) {
   const h2 = searchResultsHeading(resultsThisPage, isTV);
   heading.appendChild(h2);
 
-  const div = document.createElement('div');
-  div.classList.add('pagination');
+  const pagination = document.createElement('div');
+  pagination.classList.add('pagination');
 
   const prevButton = document.createElement('button');
   prevButton.classList.add('btn', 'btn-primary');
@@ -158,13 +169,13 @@ function displayPagination(resultsThisPage, isTV) {
   pageCounter.textContent =
     global.search.page + ' of ' + global.search.totalPages;
 
-  div.appendChild(firstButton);
-  div.appendChild(prevButton);
-  div.appendChild(nextButton);
-  div.appendChild(lastButton);
+  pagination.appendChild(firstButton);
+  pagination.appendChild(prevButton);
+  pagination.appendChild(nextButton);
+  pagination.appendChild(lastButton);
 
-  div.appendChild(pageCounter);
-  document.querySelector('#pagination').appendChild(div);
+  pagination.appendChild(pageCounter);
+  document.querySelector('#pagination').appendChild(pagination);
 }
 
 // Clear previous results
