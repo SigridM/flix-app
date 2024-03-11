@@ -109,8 +109,46 @@ function searchResultsHeading(numResultsThisPage, isTV, isSearchByTitle) {
     textContent += ', excluding adult content';
   }
 
+  textContent +=
+    allMenuInfo.sortMenuInfo.selected.length > 0
+      ? '; sorted by ' +
+        friendlySortString(allMenuInfo.sortMenuInfo.selected[0])
+      : '';
   h2.textContent = textContent;
   return h2;
+}
+
+function friendlySortString(sortString) {
+  switch (sortString) {
+    case 'original_title.asc':
+      return 'Original Title, Ascending';
+    case 'original_title.desc':
+      return 'Original Title, Descending';
+    case 'pouplarity.asc':
+      return 'Popularity, Ascending';
+    case 'pouplarity.desc':
+      return 'Popularity, Descending';
+    case 'revenue.asc':
+      return 'Revenue, Ascending';
+    case 'revenue.desc':
+      return 'Revenue, Descending';
+    case 'primary_release_date.asc':
+      return 'Primary release date, Ascending';
+    case 'primary_release_date.desc':
+      return 'Primary release date, Descending';
+    case 'title.asc':
+      return 'title, Ascending';
+    case 'title.desc':
+      return 'title, Descending';
+    case 'vote_average.asc':
+      return 'vote average, Ascending';
+    case 'vote_average.desc':
+      return 'vote average, Descending';
+    case 'vote_count.asc':
+      return 'vote count, Ascending';
+    case 'vote_count.desc':
+      return 'vote count, Descending';
+  }
 }
 async function nextPage() {
   global.search.page++;

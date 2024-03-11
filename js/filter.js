@@ -150,6 +150,11 @@ async function doFilter(
     filters += '&with_original_language=' + languages.join('|');
   }
   filters += '&include_adult=' + includeAdult();
+
+  filters +=
+    allMenuInfo.sortMenuInfo.selected.length > 0
+      ? '&sort_by=' + allMenuInfo.sortMenuInfo.selected[0]
+      : '';
   console.log(filters);
   const results = await discoverAPIData(filters);
   console.log(results);
@@ -221,6 +226,7 @@ export function includeAdult() {
   const adultCheckbox = document.querySelector('#adult-filter-checkbox');
   return !adultCheckbox.checked;
 }
+
 async function fillLists() {
   if (global.lists.genres.movies.length === 0) {
     const genreList = await getGenres();
