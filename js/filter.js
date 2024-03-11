@@ -1,6 +1,6 @@
 import { discoverAPIData, fetchAPIData } from './fetchData.js';
 import { global } from './globals.js';
-const allMenuInfo = {
+export const allMenuInfo = {
   movieGenreMenuInfo: {
     checkbox: document.querySelector('#movie-genre-filter-checkbox'),
     popupName: 'movie-genre-popup-menu',
@@ -176,7 +176,7 @@ function getJoinStringFor(menuInfo) {
   return orJoinString;
 }
 
-function getSelectedGenres(isTV) {
+export function getSelectedGenres(isTV) {
   const popupID = isTV ? '#tv-genre-popup-menu' : '#movie-genre-popup-menu';
   const popupMenu = document.querySelector(popupID);
   if (!popupMenu) {
@@ -197,7 +197,7 @@ function getSelectedGenreCodes(isTV) {
   return selectedGenreCodes;
 }
 
-function getSelectedLanguages() {
+export function getSelectedLanguages() {
   const popupMenu = document.querySelector('#language-popup-menu');
   if (!popupMenu) {
     return [];

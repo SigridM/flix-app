@@ -1,7 +1,12 @@
 import { global } from './globals.js';
 import { displayResults } from './imageManagement.js';
 import { searchAPIData } from './fetchData.js';
-import { addFilterListeners, getFilterResults } from './filter.js';
+import {
+  allMenuInfo,
+  getFilterResults,
+  getSelectedLanguages,
+  getSelectedGenres,
+} from './filter.js';
 
 // Search Movies/Shows
 export async function search() {
@@ -20,15 +25,22 @@ export async function search() {
 
   const searchByTitle =
     radioButtonPanel.querySelector('#search-by-title').checked;
-  if (
-    searchByTitle &&
-    (global.search.term === '' || global.search.term === null)
-  ) {
+  const noSearchTerm = global.search.term === '' || global.search.term === null;
+
+  // Check for unrestricted searches
+  if (searchByTitle && noSearchTerm) {
     return showAlert('Please enter a word in the title');
-  } else {
-    const searchBox = document.querySelector('#search-term');
-    searchBox.placeholder = global.search.term;
+  } else if (
+    getSelectedLanguages().length === 0 &&
+    getSelectedGenres(global.search.space === 'tv').length === 0 &&
+    noSearchTerm
+  ) {
+    return showAlert(
+      'Please enter a keyword, one or more genres, or a language'
+    );
   }
+  const searchBox = document.querySelector('#search-term');
+  searchBox.placeholder = global.search.term;
   global.search.page = savedPage ? Number(savedPage) : 1;
 
   document.querySelector('#movie').checked = global.search.space == 'movie';
