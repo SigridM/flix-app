@@ -217,7 +217,7 @@ function getSelectedLanguageCodes() {
   return selectedLanguageCodes;
 }
 
-function includeAdult() {
+export function includeAdult() {
   const adultCheckbox = document.querySelector('#adult-filter-checkbox');
   return !adultCheckbox.checked;
 }

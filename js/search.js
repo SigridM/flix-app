@@ -6,6 +6,7 @@ import {
   getFilterResults,
   getSelectedLanguages,
   getSelectedGenres,
+  includeAdult,
 } from './filter.js';
 
 // Search Movies/Shows
@@ -103,6 +104,11 @@ function searchResultsHeading(numResultsThisPage, isTV, isSearchByTitle) {
         ' ' + allMenuInfo.languageMenuInfo.combineUsing + ' '
       );
   }
+
+  if (!includeAdult()) {
+    textContent += ', excluding adult content';
+  }
+
   h2.textContent = textContent;
   return h2;
 }
