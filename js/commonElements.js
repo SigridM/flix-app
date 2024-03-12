@@ -3,9 +3,8 @@ import { formatDate, currencyFormatter } from './formatters.js';
 import {
   posterPathImageLink,
   displayBackgroundImage,
-  displayResults,
 } from './imageManagement.js';
-import { global } from './globals.js';
+import { PopularDetailReturnInfo } from './detailReturn.js';
 
 // Add the rating icon inside the wrapper element (a paragraph or h4)
 export function addRatingIcon(media, wrapper) {
@@ -450,6 +449,6 @@ export async function displayPopular(isTV = false) {
 
   const { results } = await fetchAPIData(endPoint);
 
-  const popularDivID = isTV ? '#popular-shows' : '#popular-movies';
-  displayResults(results, 'card', popularDivID, isTV);
+  const returnInfo = new PopularDetailReturnInfo(isTV);
+  returnInfo.displayResults(results, returnInfo);
 }

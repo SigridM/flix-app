@@ -1,21 +1,20 @@
 import { global } from './globals.js';
-import { displayResults } from './imageManagement.js';
-import { searchAPIData } from './fetchData.js';
+
+import { getSelectedLanguages, getSelectedGenres } from './filter.js';
 import {
-  allMenuInfo,
-  getFilterResults,
-  getSelectedLanguages,
-  getSelectedGenres,
-  includeAdult,
-} from './filter.js';
+  KeywordSearchDetailReturnInfo,
+  TitleSearchDetailReturnInfo,
+} from './detailReturn.js';
 
-// Search Movies/Shows
+// Search Movies/Shows. We can come here either from an intial search or because we are returning here from
+// a details page. If the latter, the URL will hold all the information needed to restore the correct page
+// for the correct search. Check the URL to see if there is saved data there before taking the data from the
+// inputs.
 export async function search() {
-  const radioButtonPanel = document.querySelector('#search-radio-button-panel');
-
-  global.search.space = radioButtonPanel.querySelector('#movie').checked
-    ? 'movie'
-    : 'tv';
+  const isTV = document
+    .querySelector('#search-radio-button-panel')
+    .querySelector('#tv').checked;
+  global.search.space = isTV ? 'tv' : 'movie';
   const textInput = document.querySelector('#search-term');
   global.search.term = textInput.value;
   console.log(global.search);
@@ -45,237 +44,26 @@ export async function search() {
   document.querySelector('#movie').checked = global.search.space == 'movie';
   document.querySelector('#tv').checked = global.search.space == 'tv';
 
-  const { results, total_pages, page, total_results } = searchByTitle()
-    ? await searchAPIData()
-    : await getFilterResults(global.search.space == 'tv');
-
-  global.search.page = page;
-  global.search.totalPages = total_pages;
-  global.search.totalResults = total_results;
+  const returnInfo = searchByTitle()
+    ? TitleSearchDetailReturnInfo(isTV, global.search.term, global.search.page)
+    : KeywordSearchDetailReturnInfo(
+        isTV,
+        global.search.term,
+        global.search.page
+      );
+  results = returnInfo.getInitialResults();
   if (results.length === 0) {
     return showAlert('No matches', 'alert-success');
   }
-  clearPreviousPage();
-  displayResults(
-    results,
-    'card',
-    '#search-results',
-    global.search.space == 'tv',
-    false, // not swiper
-    true // is search
-  );
-  displayPagination(results.length, global.search.space == 'tv');
+  returnInfo.displayResults(results);
 }
 
 function searchByTitle() {
-  const radioButtonPanel = document.querySelector('#search-radio-button-panel');
-  return radioButtonPanel.querySelector('#search-by-title').checked;
+  return document
+    .querySelector('#search-radio-button-panel')
+    .querySelector('#search-by-title').checked;
 }
 
-function searchResultsHeading(numResultsThisPage, isTV) {
-  const beforeStart = 20 * (global.search.page - 1);
-  const end = beforeStart + Math.min(numResultsThisPage, 20);
-  const quotedSearchTerm = `'${global.search.term}'`;
-  const totalResults = global.search.totalResults.toLocaleString();
-  let h2 = document.querySelector('#results-heading');
-  if (!h2) {
-    h2 = document.createElement('h2');
-    h2.id = 'results-heading';
-  }
-  let textContent = `Showing ${
-    beforeStart + 1
-  } to ${end} of ${totalResults} results for `;
-  if (searchByTitle()) {
-    textContent += `${
-      isTV ? ' TV Shows' : ' Movies'
-    } with ${quotedSearchTerm} in the title`;
-    h2.textContent = textContent;
-    return h2;
-  }
-
-  const genreInfo = isTV
-    ? allMenuInfo.tvGenreMenuInfo
-    : allMenuInfo.movieGenreMenuInfo;
-  textContent += genreInfo.selected.join(' ' + genreInfo.combineUsing + ' ');
-  textContent += `${isTV ? ' TV Shows' : ' Movies'}`;
-  const noSearchTerm = global.search.term === '' || global.search.term === null;
-  textContent += noSearchTerm ? '' : ' containing ' + quotedSearchTerm;
-  if (allMenuInfo.languageMenuInfo.selected.length > 0) {
-    textContent +=
-      ' in ' +
-      allMenuInfo.languageMenuInfo.selected.join(
-        ' ' + allMenuInfo.languageMenuInfo.combineUsing + ' '
-      );
-  }
-
-  if (!includeAdult()) {
-    textContent += ', excluding adult content';
-  }
-
-  textContent +=
-    allMenuInfo.sortMenuInfo.selected.length > 0
-      ? '; sorted by ' +
-        friendlySortString(allMenuInfo.sortMenuInfo.selected[0])
-      : '';
-  h2.textContent = textContent;
-  return h2;
-}
-
-function friendlySortString(sortString) {
-  switch (sortString) {
-    case 'original_title.asc':
-      return 'Original Title, Ascending';
-    case 'original_title.desc':
-      return 'Original Title, Descending';
-    case 'pouplarity.asc':
-      return 'Popularity, Ascending';
-    case 'pouplarity.desc':
-      return 'Popularity, Descending';
-    case 'revenue.asc':
-      return 'Revenue, Ascending';
-    case 'revenue.desc':
-      return 'Revenue, Descending';
-    case 'primary_release_date.asc':
-      return 'Primary release date, Ascending';
-    case 'primary_release_date.desc':
-      return 'Primary release date, Descending';
-    case 'title.asc':
-      return 'title, Ascending';
-    case 'title.desc':
-      return 'title, Descending';
-    case 'vote_average.asc':
-      return 'vote average, Ascending';
-    case 'vote_average.desc':
-      return 'vote average, Descending';
-    case 'vote_count.asc':
-      return 'vote count, Ascending';
-    case 'vote_count.desc':
-      return 'vote count, Descending';
-  }
-}
-async function nextPage() {
-  global.search.page++;
-  const { results, total_pages } = searchByTitle()
-    ? await searchAPIData()
-    : await getFilterResults(global.search.space == 'tv');
-
-  clearPreviousPage();
-  displayResults(
-    results,
-    'card',
-    '#search-results',
-    global.search.space == 'tv',
-    false,
-    true
-  );
-  displayPagination(results.length);
-}
-
-async function previousPage() {
-  global.search.page--;
-  const { results, total_pages } = searchByTitle()
-    ? await searchAPIData()
-    : await getFilterResults(global.search.space == 'tv');
-  clearPreviousPage();
-  displayResults(
-    results,
-    'card',
-    '#search-results',
-    global.search.space == 'tv',
-    false,
-    true
-  );
-  displayPagination(results.length);
-}
-
-async function firstPage() {
-  global.search.page = 1;
-  const { results, total_pages } = searchByTitle()
-    ? await searchAPIData()
-    : await getFilterResults(global.search.space == 'tv');
-  clearPreviousPage();
-  displayResults(
-    results,
-    'card',
-    '#search-results',
-    global.search.space == 'tv',
-    false,
-    true
-  );
-  displayPagination(results.length);
-}
-
-async function lastPage() {
-  global.search.page = global.search.totalPages;
-  const { results, total_pages } = searchByTitle()
-    ? await searchAPIData()
-    : await getFilterResults(global.search.space == 'tv');
-  clearPreviousPage();
-  displayResults(
-    results,
-    'card',
-    '#search-results',
-    global.search.space == 'tv',
-    false,
-    true
-  );
-  displayPagination(results.length);
-}
-
-// Create and display pagination for search
-function displayPagination(numResultsThisPage, isTV) {
-  const heading = document.querySelector('#search-results-heading');
-  const h2 = searchResultsHeading(numResultsThisPage, isTV, searchByTitle());
-  heading.appendChild(h2);
-
-  let paginationDiv = document.querySelector('.pagination');
-  if (!paginationDiv) {
-    paginationDiv = document.createElement('div');
-    paginationDiv.classList.add('pagination');
-    document.querySelector('#pagination').appendChild(paginationDiv);
-  }
-
-  const firstButton = paginationButton('First', firstPage, paginationDiv);
-  firstButton.disabled = global.search.page == 1;
-
-  const prevButton = paginationButton('Prev', previousPage, paginationDiv);
-  prevButton.disabled = global.search.page == 1;
-
-  const nextButton = paginationButton('Next', nextPage, paginationDiv);
-  nextButton.disabled = global.search.page == global.search.totalPages;
-
-  let lastButton = paginationButton('Last', lastPage, paginationDiv);
-  lastButton.disabled = global.search.page == global.search.totalPages;
-
-  let pageCounter = document.querySelector('.page-counter');
-  if (!pageCounter) {
-    pageCounter = document.createElement('div');
-    pageCounter.classList.add('page-counter');
-    paginationDiv.appendChild(pageCounter);
-  }
-  pageCounter.textContent =
-    global.search.page + ' of ' + global.search.totalPages;
-}
-
-function paginationButton(text, listenerFuntion, paginationDiv) {
-  const id = text.toLowerCase();
-  let button = document.getElementById(id);
-  if (!button) {
-    button = document.createElement('button');
-    button.classList.add('btn', 'btn-primary');
-    button.id = id;
-    button.textContent = text;
-    button.addEventListener('click', listenerFuntion);
-    paginationDiv.appendChild(button);
-  }
-  return button;
-}
-// Clear previous results
-function clearPreviousPage() {
-  document.querySelector('#search-results').innerHTML = '';
-  // document.querySelector('#search-results-heading').innerHTML = '';
-  // document.querySelector('#pagination').innerHTML = '';
-}
 // Show Alert
 function showAlert(message, className = 'alert-error') {
   const alertEl = document.createElement('div');
