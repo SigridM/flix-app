@@ -127,7 +127,7 @@ export class PopularDetailReturnInfo extends DetailReturnInfo {
 }
 
 export class SwiperDetailReturnInfo extends DetailReturnInfo {
-  divClassName = 'swiper-slider';
+  divClassName = 'swiper-slide';
   parentDivClassName = '.swiper-wrapper';
 
   // Create and return the h4 element that contains a rating icon
