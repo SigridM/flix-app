@@ -24,8 +24,6 @@ function imageLinkFrom(media, isTV = false) {
 }
 
 export function posterPathImageLink(media, isTV = false) {
-  const alt = isTV ? media.name : media.title;
-
   return media.poster_path // if not null
     ? imageLinkFrom(media, isTV)
     : noImage(isTV);
