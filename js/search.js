@@ -21,6 +21,7 @@ export async function search() {
   // http://127.0.0.1:5500/search.html?type=movie&search-term=&filter=movie-genre&movie-genre-container-combine-using=and&filter=language&language-container-combine-using=and
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
+  console.log(urlParams);
   const savedPage = urlParams.get('page');
 
   const noSearchTerm = global.search.term === '' || global.search.term === null;
@@ -45,13 +46,17 @@ export async function search() {
   document.querySelector('#tv').checked = global.search.space == 'tv';
 
   const returnInfo = searchByTitle()
-    ? TitleSearchDetailReturnInfo(isTV, global.search.term, global.search.page)
-    : KeywordSearchDetailReturnInfo(
+    ? new TitleSearchDetailReturnInfo(
+        isTV,
+        global.search.term,
+        global.search.page
+      )
+    : new KeywordSearchDetailReturnInfo(
         isTV,
         global.search.term,
         global.search.page
       );
-  results = returnInfo.getInitialResults();
+  const results = await returnInfo.getInitialResults();
   if (results.length === 0) {
     return showAlert('No matches', 'alert-success');
   }

@@ -220,7 +220,7 @@ export class TitleSearchDetailReturnInfo extends DetailReturnInfo {
   }
 
   divClassName = 'card';
-  parentDivClassName = '.search-results';
+  parentDivClassName = '#search-results';
   searchType = 'title';
 
   isSearch() {
@@ -314,7 +314,8 @@ export class TitleSearchDetailReturnInfo extends DetailReturnInfo {
   }
 
   async getInitialResults() {
-    const { results, total_pages, page, total_results } = this.getResults();
+    const { results, total_pages, page, total_results } =
+      await this.getResults();
     global.search.page = page;
     this.originPage = page;
     global.search.totalPages = total_pages;
@@ -360,30 +361,30 @@ export class TitleSearchDetailReturnInfo extends DetailReturnInfo {
       document.querySelector('#pagination').appendChild(paginationDiv);
     }
 
-    this.addPaginationButtonn(
+    this.addPaginationButton(
       'First',
-      goToFirstOriginPage,
+      this.goToFirstOriginPage,
       paginationDiv,
       this.originPage == 1
     );
 
     this.addPaginationButton(
       'Prev',
-      decreaseOriginPage,
+      this.decreaseOriginPage,
       paginationDiv,
       this.originPage == 1
     );
 
     this.addPaginationButton(
       'Next',
-      increaseOriginPage,
+      this.increaseOriginPage,
       paginationDiv,
       this.originPage == global.search.totalPages
     );
 
     this.addPaginationButton(
       'Last',
-      goToLastOriginPage,
+      this.goToLastOriginPage,
       paginationDiv,
       this.originPage == global.search.totalPages
     );
