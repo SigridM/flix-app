@@ -21,12 +21,10 @@ function init() {
   ) {
     case '/':
     case '/index.html':
-      initSearchForm();
       displaySlider();
       displayPopular();
       break;
     case '/shows.html':
-      initSearchForm();
       displaySlider(true);
       displayPopular(true);
       break;
