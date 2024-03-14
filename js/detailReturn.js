@@ -8,10 +8,43 @@ export class DetailReturnInfo {
     this.media = null;
   }
 
-  detailsPage = this.isTV ? 'tv-details.html' : 'movie-details.html';
+  static fromURL(urlParams, isTV) {
+    const isSearch = urlParams.get('search') == 'true';
+    if (!isSearch) {
+      return new PopularDetailReturnInfo(isTV);
+    }
+
+    const searchType = urlParams.get('search-type');
+    const searchTerm = urlParams.get('search-term');
+    const savedPage = urlParams.get('page');
+    if (searchType === 'title') {
+      return new TitleSearchDetailReturnInfo(isTV, searchTerm, savedPage);
+    }
+
+    const genres = urlParams.get('genres').split('+');
+    const genreCombineUsing = urlParams.get('genre-combine-using');
+    const languages = urlParams.get('languages').split('+');
+    const excludeAdult = urlParams.get('exclude-adult');
+    const sortBy = urlParams.get('sort-by');
+
+    return new KeywordSearchDetailReturnInfo(
+      isTV,
+      searchTerm,
+      savedPage,
+      genres,
+      genreCombineUsing,
+      languages,
+      excludeAdult,
+      sortBy
+    );
+  }
+
+  detailsPage() {
+    return this.isTV ? 'tv-details.html' : 'movie-details.html';
+  }
 
   imagePaths = {
-    original: 'https:/image.tmdb.org/t/p/original/', // 'original' means original size
+    original: 'https://image.tmdb.org/t/p/original', // 'original' means original size
     width500: 'https://image.tmdb.org/t/p/w500', // 'w500' means width of 500
   };
 
@@ -33,22 +66,33 @@ export class DetailReturnInfo {
   }
 
   posterPathImageLink() {
-    const alt = this.isTV ? this.media.name : this.media.title;
-
     return this.media.poster_path // if not null
       ? this.imageLink()
       : this.noImage();
   }
 
-  hRefExtension() {
-    return this.detailsPage + '?id=' + this.media.id + '&search=false';
+  detailsHRef() {
+    return (
+      this.detailsPage() + '?id=' + this.media.id + '&search=' + this.isSearch()
+    );
   }
 
+  backButtonHRef() {
+    return this.isTV ? 'shows.html' : 'index.html';
+  }
+
+  backButtonTextContent() {
+    return this.isTV ? 'Back to TV Shows' : 'Back to Movies';
+  }
+
+  isSearch() {
+    return false;
+  }
   anchor() {
     const imageLink = this.posterPathImageLink();
 
     const anchor = document.createElement('a');
-    anchor.href = this.hRefExtension();
+    anchor.href = this.detailsHRef();
     anchor.appendChild(imageLink);
     return anchor;
   }
@@ -122,8 +166,11 @@ export class DetailReturnInfo {
 }
 
 export class PopularDetailReturnInfo extends DetailReturnInfo {
+  constructor(isTV) {
+    super(isTV);
+    this.parentDivClassName = this.isTV ? '#popular-shows' : '#popular-movies';
+  }
   divClassName = 'card';
-  parentDivClassName = this.isTV ? '#popular-shows' : '#popular-movies';
 }
 
 export class SwiperDetailReturnInfo extends DetailReturnInfo {
@@ -174,13 +221,40 @@ export class TitleSearchDetailReturnInfo extends DetailReturnInfo {
 
   divClassName = 'card';
   parentDivClassName = '.search-results';
+  searchType = 'title';
 
-  hRefExtension =
-    super.hRefExtension +
-    '&search-term=' +
-    this.searchTerm +
-    '&page=' +
-    this.originPage;
+  isSearch() {
+    return true;
+  }
+
+  searchSpace() {
+    return this.isTV ? 'tv' : 'movie';
+  }
+
+  backButtonHRef() {
+    return (
+      'search.html?space=' +
+      this.searchSpace() +
+      '&search-term=' +
+      this.searchTerm +
+      '&page=' +
+      this.originPage
+    );
+  }
+
+  backButtonTextContent() {
+    return this.isTV ? 'Back to TV Show Search' : 'Back to Movie Search';
+  }
+
+  detailsHRef() {
+    super.detailsHRef() +
+      '&search-type' +
+      this.searchType +
+      '&search-term=' +
+      this.searchTerm +
+      '&page=' +
+      this.originPage;
+  }
 
   searchResultsH2() {
     let h2 = document.querySelector('#results-heading');
@@ -349,13 +423,43 @@ export class KeywordSearchDetailReturnInfo extends TitleSearchDetailReturnInfo {
     this.sortBy = sortBy;
   }
 
-  hRefExtension =
-    super.hRefExtension +
-    '&genreCodes=' +
-    this.genres.map((ea) => ea.name).join('+');
+  searchType = 'keyword';
+
+  backButtonHRef() {
+    return (
+      super.backButtonHRef() +
+      '&genres=' +
+      // @todo - get the keyword search details in here: genre codes, genre joins, language codes, language joins, excludeAdult, and sort
+      this.genres.map((ea) => ea.name).join('+') +
+      '&genre-combine-using=' +
+      this.genreCombineUsing +
+      '&languages=' +
+      this.languages.join('+') +
+      '&exclude-adult=' +
+      this.excludeAdult +
+      '&sort-by=' +
+      this.sortBy
+    );
+  }
+  detailsHRef() {
+    return (
+      super.detailsHRef() +
+      '&genres=' +
+      // @todo - get the keyword search details in here: genre codes, genre joins, language codes, language joins, excludeAdult, and sort
+      this.genres.map((ea) => ea.name).join('+') +
+      '&genre-combine-using=' +
+      this.genreCombineUsing +
+      '&languages=' +
+      this.languages.join('+') +
+      '&exclude-adult=' +
+      this.excludeAdult +
+      '&sort-by=' +
+      this.sortBy
+    );
+  }
 
   searchResultsHeading(numResultsThisPage) {
-    const h2 = super.searchResultsH2();
+    const h2 = this.searchResultsH2();
 
     let textContent = this.searchResultsPreamble(numResultsThisPage);
     textContent += this.genres
