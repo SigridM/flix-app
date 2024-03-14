@@ -18,7 +18,7 @@ export class DetailReturnInfo {
     const searchTerm = urlParams.get('search-term');
     const savedPage = urlParams.get('page');
     if (searchType === 'title') {
-      return new TitleSearchDetailReturnInfo(isTV, searchTerm, savedPage);
+      return new SearchDetailReturnInfo(isTV, searchTerm, savedPage);
     }
 
     const genres = urlParams.get('genres').split('+');
@@ -212,7 +212,7 @@ export class SwiperDetailReturnInfo extends DetailReturnInfo {
   }
 }
 
-export class TitleSearchDetailReturnInfo extends DetailReturnInfo {
+export class SearchDetailReturnInfo extends DetailReturnInfo {
   constructor(isTV, searchTerm = '', originPage = 1) {
     super(isTV);
     this.searchTerm = searchTerm;
@@ -235,6 +235,8 @@ export class TitleSearchDetailReturnInfo extends DetailReturnInfo {
     return (
       'search.html?space=' +
       this.searchSpace() +
+      '&search-type=' +
+      this.searchType +
       '&search-term=' +
       this.searchTerm +
       '&page=' +
@@ -331,7 +333,7 @@ export class TitleSearchDetailReturnInfo extends DetailReturnInfo {
   async pageButtonClick(pageSetFunction) {
     pageSetFunction();
     const { results } = await this.getResults();
-    this.displayResults(results, returnInfo);
+    this.displayResults(results);
   }
 
   addPaginationButton(text, pageSetFunction, paginationDiv, isDisabled) {
@@ -342,8 +344,8 @@ export class TitleSearchDetailReturnInfo extends DetailReturnInfo {
       button.classList.add('btn', 'btn-primary');
       button.id = id;
       button.textContent = text;
-      button.addEventListener('click', function () {
-        this.pageButtonClick(pageSetFunction);
+      button.addEventListener('click', async () => {
+        await this.pageButtonClick(pageSetFunction);
       });
       paginationDiv.appendChild(button);
     }
@@ -365,28 +367,28 @@ export class TitleSearchDetailReturnInfo extends DetailReturnInfo {
 
     this.addPaginationButton(
       'First',
-      this.goToFirstOriginPage,
+      this.goToFirstOriginPage.bind(this),
       paginationDiv,
       this.originPage == 1
     );
 
     this.addPaginationButton(
       'Prev',
-      this.decreaseOriginPage,
+      this.decreaseOriginPage.bind(this),
       paginationDiv,
       this.originPage == 1
     );
 
     this.addPaginationButton(
       'Next',
-      this.increaseOriginPage,
+      this.increaseOriginPage.bind(this),
       paginationDiv,
       this.originPage == global.search.totalPages
     );
 
     this.addPaginationButton(
       'Last',
-      this.goToLastOriginPage,
+      this.goToLastOriginPage.bind(this),
       paginationDiv,
       this.originPage == global.search.totalPages
     );
@@ -407,7 +409,7 @@ export class TitleSearchDetailReturnInfo extends DetailReturnInfo {
   }
 }
 
-export class KeywordSearchDetailReturnInfo extends TitleSearchDetailReturnInfo {
+export class KeywordSearchDetailReturnInfo extends SearchDetailReturnInfo {
   constructor(
     isTV,
     searchTerm = '',
@@ -432,8 +434,7 @@ export class KeywordSearchDetailReturnInfo extends TitleSearchDetailReturnInfo {
     return (
       super.backButtonHRef() +
       '&genres=' +
-      // @todo - get the keyword search details in here: genre codes, genre joins, language codes, language joins, excludeAdult, and sort
-      this.genres.map((ea) => ea.name).join('+') +
+      this.genres.join('+') +
       '&genre-combine-using=' +
       this.genreCombineUsing +
       '&languages=' +
@@ -448,8 +449,7 @@ export class KeywordSearchDetailReturnInfo extends TitleSearchDetailReturnInfo {
     return (
       super.detailsHRef() +
       '&genres=' +
-      // @todo - get the keyword search details in here: genre codes, genre joins, language codes, language joins, excludeAdult, and sort
-      this.genres.map((ea) => ea.name).join('+') +
+      this.genres.join('+') +
       '&genre-combine-using=' +
       this.genreCombineUsing +
       '&languages=' +
@@ -474,9 +474,8 @@ export class KeywordSearchDetailReturnInfo extends TitleSearchDetailReturnInfo {
       global.search.term === '' || global.search.term === null;
     textContent += noSearchTerm ? '' : ' containing ' + this.quotedSearchTerm();
 
-    if (languages.length > 0) {
-      textContent +=
-        ' in ' + this.languages.map((ea) => ea.english_name).join(' or ');
+    if (this.languages.length > 0) {
+      textContent += ' in ' + this.languages.join(' or ');
     }
 
     if (this.excludeAdult) {
@@ -484,7 +483,7 @@ export class KeywordSearchDetailReturnInfo extends TitleSearchDetailReturnInfo {
     }
 
     textContent +=
-      this.sortBy === null
+      this.sortBy.length === 0
         ? ''
         : '; sorted by ' + this.friendlySortString(this.sortBy);
     h2.textContent = textContent;
@@ -524,6 +523,7 @@ export class KeywordSearchDetailReturnInfo extends TitleSearchDetailReturnInfo {
   }
 
   async getResults() {
+    // go to filter.js to get the results
     return await getFilterResults(this.isTV);
   }
 }

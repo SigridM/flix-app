@@ -1,6 +1,8 @@
 import { discoverAPIData, fetchAPIData } from './fetchData.js';
 import { global } from './globals.js';
-export const allMenuInfo = {
+import { KeywordSearchDetailReturnInfo } from './detailReturn.js';
+
+const allMenuInfo = {
   movieGenreMenuInfo: {
     checkbox: document.querySelector('#movie-genre-filter-checkbox'),
     popupName: 'movie-genre-popup-menu',
@@ -42,6 +44,18 @@ export const allMenuInfo = {
   },
 };
 
+export function keywordResultInfo(isTV) {
+  return new KeywordSearchDetailReturnInfo(
+    isTV,
+    global.search.term,
+    global.search.page,
+    getSelectedGenres(isTV),
+    getGenreCombineUsing(isTV),
+    getSelectedLanguages(),
+    !includeAdult(),
+    sortBy()
+  );
+}
 export async function addFilterListeners() {
   const filterTitle = document.querySelector('#filter-title');
   filterTitle.addEventListener('click', function (event) {
@@ -59,10 +73,10 @@ export async function addFilterListeners() {
   addListenersTo(allMenuInfo.languageMenuInfo);
   addListenersTo(allMenuInfo.sortMenuInfo);
 
-  addRadioBUttonListeners();
+  addRadioButtonListeners();
 }
 
-function addRadioBUttonListeners() {
+function addRadioButtonListeners() {
   // TV vs. Movie
   const movieRadioButton = document
     .querySelector('#search-radio-button-panel')
@@ -105,8 +119,7 @@ function addRadioBUttonListeners() {
     ? (filterContainer.style.display = 'none')
     : (filterContainer.style.display = 'block');
 }
-
-export function hideUnusedGenreFilter(isTV) {
+function hideUnusedGenreFilter(isTV) {
   closeAllPopups();
   const movieGenreFilter = document.querySelector('#movie-genre-div');
   const tvGenreFilter = document.querySelector('#tv-genre-div');
@@ -120,26 +133,14 @@ export function hideUnusedGenreFilter(isTV) {
 }
 
 export async function getFilterResults(isTV = false) {
-  const results = await doFilter(
-    allMenuInfo.movieGenreMenuInfo,
-    allMenuInfo.tvGenreMenuInfo,
-    allMenuInfo.languageMenuInfo,
-    allMenuInfo.sortMenuInfo,
-    isTV
-  );
+  const results = await doFilter(isTV);
   return results;
 }
 
-async function doFilter(
-  movieGenreInfo,
-  tvGenreInfo,
-  languageInfo,
-  sortInfo,
-  isTV
-) {
+async function doFilter(isTV) {
   closeAllPopups();
 
-  const genreInfo = isTV ? tvGenreInfo : movieGenreInfo;
+  const genreInfo = isTV ? allMenuInfo.tvGenreInfo : allMenuInfo.movieGenreInfo;
   let filters = '';
   const genres = getSelectedGenreCodes(isTV);
   if (genres.length > 0) {
@@ -151,14 +152,19 @@ async function doFilter(
   }
   filters += '&include_adult=' + includeAdult();
 
-  filters +=
-    allMenuInfo.sortMenuInfo.selected.length > 0
-      ? '&sort_by=' + allMenuInfo.sortMenuInfo.selected[0]
-      : '';
+  filters += hasSort() ? '&sort_by=' + sortBy() : '';
   console.log(filters);
   const results = await discoverAPIData(filters);
   console.log(results);
   return results;
+}
+
+function hasSort() {
+  return allMenuInfo.sortMenuInfo.selected.length > 0;
+}
+
+function sortBy() {
+  return hasSort() ? allMenuInfo.sortMenuInfo.selected[0] : '';
 }
 
 function getJoinStringFor(menuInfo) {
@@ -181,9 +187,74 @@ function getJoinStringFor(menuInfo) {
   return orJoinString;
 }
 
-export function getSelectedGenres(isTV) {
-  const popupID = isTV ? '#tv-genre-popup-menu' : '#movie-genre-popup-menu';
-  const popupMenu = document.querySelector(popupID);
+export function setSelectedLanguages(languages) {
+  const menuInfo = allMenuInfo.languageMenuInfo;
+  let popupMenu = document.getElementById(menuInfo.popupName);
+  if (!popupMenu) {
+    createAndPostionPopupMenu(menuInfo); // also shows the menu
+    popupMenu = document.getElementById(menuInfo.popupName);
+    popupMenu.style.display = 'none';
+  }
+
+  const listItems = Array.from(popupMenu.querySelectorAll('li')).filter((li) =>
+    languages.includes(li.textContent)
+  );
+  listItems.forEach((li) => li.querySelector('a').classList.add('selected'));
+  menuInfo.selected = languages;
+
+  moveSelectedToTop(menuInfo);
+}
+
+export function setSortBy(sortByString) {
+  const menuInfo = allMenuInfo.sortMenuInfo;
+  const popupMenu = document.getElementById(menuInfo.popupName);
+  if (!popupMenu) {
+    return;
+  }
+
+  const listItem = popupMenu
+    .querySelectorAll('li')
+    .find((li) => sortByString === li.textContent);
+  listItem.classList.add('selected');
+  menuInfo.selected = new Array(sortByString);
+
+  moveSelectedToTop(menuInfo);
+}
+
+export function setSelectedGenres(isTV, genres, genreCombiner) {
+  const menuInfo = isTV
+    ? allMenuInfo.tvGenreMenuInfo
+    : allMenuInfo.movieGenreMenuInfo;
+
+  const popupMenu = document.getElementById(menuInfo.popupName);
+  if (!popupMenu) {
+    return;
+  }
+  const listItems = popupMenu
+    .querySelectorAll('li')
+    .filter((li) => genres.includes(li.textContent));
+  listItems.forEach((li) => li.classList.add('selected'));
+
+  menuInfo.selected = genres;
+
+  menuInfo.combinUsing = genreCombiner;
+
+  moveSelectedToTop(menuInfo);
+}
+
+export function hasSelectedGenres(isTV) {
+  return getSelectedGenres(isTV).length > 0;
+}
+
+export function hasSelectedLanguages() {
+  return getSelectedLanguages().length > 0;
+}
+
+function getSelectedGenres(isTV) {
+  const menuInfo = isTV
+    ? allMenuInfo.tvGenreMenuInfo
+    : allMenuInfo.movieGenreMenuInfo;
+  const popupMenu = document.getElementById(menuInfo.popupName);
   if (!popupMenu) {
     return [];
   }
@@ -192,6 +263,14 @@ export function getSelectedGenres(isTV) {
   ).map((ea) => ea.textContent);
   return selected;
 }
+
+function getGenreCombineUsing(isTV) {
+  const menuInfo = isTV
+    ? allMenuInfo.tvGenreMenuInfo
+    : allMenuInfo.movieGenreMenuInfo;
+  return menuInfo.combinUsing;
+}
+
 function getSelectedGenreCodes(isTV) {
   const wholeList = isTV ? global.lists.genres.tv : global.lists.genres.movies;
 
@@ -202,8 +281,10 @@ function getSelectedGenreCodes(isTV) {
   return selectedGenreCodes;
 }
 
-export function getSelectedLanguages() {
-  const popupMenu = document.querySelector('#language-popup-menu');
+function getSelectedLanguages() {
+  const popupMenu = document.getElementById(
+    allMenuInfo.languageMenuInfo.popupName
+  );
   if (!popupMenu) {
     return [];
   }
@@ -222,9 +303,14 @@ function getSelectedLanguageCodes() {
   return selectedLanguageCodes;
 }
 
-export function includeAdult() {
+function includeAdult() {
   const adultCheckbox = document.querySelector('#adult-filter-checkbox');
   return !adultCheckbox.checked;
+}
+
+export function setExcludeAdult(excludeAdult) {
+  const adultCheckbox = document.querySelector('#adult-filter-checkbox');
+  adultCheckbox.checked = excludeAdult;
 }
 
 async function fillLists() {
@@ -337,8 +423,6 @@ function createCloseMenuButtonItem(menuInfo) {
 }
 
 function createPopUpMenu(menuInfo) {
-  const filterCheckbox = menuInfo.checkbox;
-
   const div = document.createElement('div');
   div.classList.add('popup-menu');
   div.id = menuInfo.popupName;

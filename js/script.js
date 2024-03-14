@@ -1,8 +1,7 @@
 import { global } from './globals.js';
 import { displaySlider } from './imageManagement.js';
 import { displayDetails, displayPopular } from './commonElements.js';
-import { search } from './search.js';
-import { addFilterListeners } from './filter.js';
+import { openSearchPage } from './search.js';
 
 // Highlight active link
 function highlightActiveLink() {
@@ -35,21 +34,12 @@ function init() {
       displayDetails(true);
       break;
     case '/search.html':
-      initSearchForm();
+      openSearchPage();
+
       break;
   }
   highlightActiveLink();
 }
 
-function initSearchForm() {
-  const searchForm = document.querySelector('#search-form');
-  if (searchForm) {
-    searchForm.addEventListener('submit', function (event) {
-      event.preventDefault();
-      search();
-    });
-    addFilterListeners();
-  }
-}
-
-document.addEventListener('DOMContentLoaded', init);
+// document.addEventListener('DOMContentLoaded', init);
+window.addEventListener('load', init);
