@@ -247,13 +247,15 @@ export class TitleSearchDetailReturnInfo extends DetailReturnInfo {
   }
 
   detailsHRef() {
-    super.detailsHRef() +
-      '&search-type' +
+    return (
+      super.detailsHRef() +
+      '&search-type=' +
       this.searchType +
       '&search-term=' +
       this.searchTerm +
       '&page=' +
-      this.originPage;
+      this.originPage
+    );
   }
 
   searchResultsH2() {
