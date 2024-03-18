@@ -465,9 +465,7 @@ export class KeywordSearchDetailReturnInfo extends SearchDetailReturnInfo {
     const h2 = this.searchResultsH2();
 
     let textContent = this.searchResultsPreamble(numResultsThisPage);
-    textContent += this.genres
-      .map((ea) => ea.name)
-      .join(' ' + this.genreCombineUsing + ' ');
+    textContent += this.genres.join(' ' + this.genreCombineUsing + ' ');
     textContent += `${this.isTV ? ' TV Shows' : ' Movies'}`;
 
     const noSearchTerm =
