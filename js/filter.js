@@ -4,40 +4,40 @@ import { KeywordSearchDetailReturnInfo } from './detailReturn.js';
 
 const allMenuInfo = {
   movieGenreMenuInfo: {
-    checkbox: document.querySelector('#movie-genre-filter-checkbox'),
+    checkbox: () => document.querySelector('#movie-genre-filter-checkbox'),
     popupName: 'movie-genre-popup-menu',
-    label: document.querySelector('#movie-genre-label'),
-    container: document.querySelector('#movie-genre-container'),
+    label: () => document.querySelector('#movie-genre-label'),
+    container: () => document.querySelector('#movie-genre-container'),
     isExlcusive: false,
     orOnly: false,
     selected: [],
     sortFunction: textContentSort,
   },
   tvGenreMenuInfo: {
-    checkbox: document.querySelector('#tv-genre-filter-checkbox'),
+    checkbox: () => document.querySelector('#tv-genre-filter-checkbox'),
     popupName: 'tv-genre-popup-menu',
-    label: document.querySelector('#tv-genre-label'),
-    container: document.querySelector('#tv-genre-container'),
+    label: () => document.querySelector('#tv-genre-label'),
+    container: () => document.querySelector('#tv-genre-container'),
     isExlcusive: false,
     orOnly: false,
     selected: [],
     sortFunction: textContentSort,
   },
   languageMenuInfo: {
-    checkbox: document.querySelector('#language-filter-checkbox'),
+    checkbox: () => document.querySelector('#language-filter-checkbox'),
     popupName: 'language-popup-menu',
-    label: document.querySelector('#language-label'),
-    container: document.querySelector('#language-container'),
+    label: () => document.querySelector('#language-label'),
+    container: () => document.querySelector('#language-container'),
     isExlcusive: false,
     orOnly: true,
     selected: [],
     sortFunction: textContentSort,
   },
   sortMenuInfo: {
-    checkbox: document.querySelector('#sort-by-checkbox'),
+    checkbox: () => document.querySelector('#sort-by-checkbox'),
     popupName: 'sort-by-popup-menu',
-    label: document.querySelector('#sort-by-label'),
-    container: document.querySelector('#sort-by-container'),
+    label: () => document.querySelector('#sort-by-label'),
+    container: () => document.querySelector('#sort-by-container'),
     isExlcusive: true,
     selected: [],
     sortFunction: textContentSort,
@@ -442,12 +442,12 @@ function createAndPostionPopupMenu(menuInfo) {
   closeAllPopups();
 
   const popUpDiv = createPopUpMenu(menuInfo);
-  const labelRect = menuInfo.label.getBoundingClientRect();
+  const labelRect = menuInfo.label().getBoundingClientRect();
   popUpDiv.style.position = 'absolute';
   popUpDiv.style.top = labelRect.top + 'px';
   popUpDiv.style.left = labelRect.right + 10 + 'px';
 
-  const container = menuInfo.container;
+  const container = menuInfo.container();
   container.appendChild(popUpDiv);
 }
 function togglePopupMenu(menuInfo) {
@@ -503,7 +503,7 @@ function moveSelectedToTop(menuInfo) {
 
   // Check or uncheck the checkbox associated with this menu based on whether there
   // are any selected items
-  menuInfo.checkbox.checked = selectedItems.length > 0;
+  menuInfo.checkbox().checked = selectedItems.length > 0;
 
   // Add a separator line if needed
   // First remove the old separator, if there is one
@@ -579,7 +579,7 @@ function byOrderAddedSort(a, b) {
 }
 function addListenersTo(menuInfo) {
   // Add a change listener to the checkbox
-  const filterCheckbox = menuInfo.checkbox;
+  const filterCheckbox = menuInfo.checkbox();
   filterCheckbox.addEventListener('change', function () {
     if (!menuInfo.popupMenu) {
       createAndPostionPopupMenu(menuInfo); // also shows the menu
@@ -599,7 +599,7 @@ function addListenersTo(menuInfo) {
   });
 
   // Add a click listener to the checkbox's label
-  menuInfo.label.addEventListener('click', function () {
+  menuInfo.label().addEventListener('click', function () {
     if (!menuInfo.popupMenu) {
       createAndPostionPopupMenu(menuInfo); // also shows the menu
     } else {
@@ -631,8 +631,8 @@ function createCombinersFor(menuInfo) {
     menuInfo.combineUsing = 'and';
     const andChoice = document.createElement('input');
     andChoice.type = 'radio';
-    andChoice.id = menuInfo.container.id + '-and';
-    andChoice.name = menuInfo.container.id + '-combine-using';
+    andChoice.id = menuInfo.container().id + '-and';
+    andChoice.name = menuInfo.container().id + '-combine-using';
     andChoice.value = 'and';
     andChoice.checked = true;
     andChoice.addEventListener('change', function (event) {
@@ -647,8 +647,8 @@ function createCombinersFor(menuInfo) {
 
     const orChoice = document.createElement('input');
     orChoice.type = 'radio';
-    orChoice.id = menuInfo.container.id + '-or';
-    orChoice.name = menuInfo.container.id + '-combine-using';
+    orChoice.id = menuInfo.container().id + '-or';
+    orChoice.name = menuInfo.container().id + '-combine-using';
     orChoice.value = 'or';
     orChoice.checked = false;
     orChoice.addEventListener('change', function (event) {
@@ -668,7 +668,7 @@ function createCombinersFor(menuInfo) {
     menuInfo.combineUsing = 'or';
   }
   const clarification = document.createElement('div');
-  clarification.id = menuInfo.container.id + '-clarification';
+  clarification.id = menuInfo.container().id + '-clarification';
   clarification.classList.add('clarifier');
   clarification.textContent =
     '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
@@ -682,13 +682,13 @@ function createCombinersFor(menuInfo) {
     combiner.style.display = 'none';
   }
 
-  menuInfo.container.appendChild(combiner);
+  menuInfo.container().appendChild(combiner);
 
   menuInfo.combiner = combiner; // save the combiner in the menuInfo
 }
 function createSingleClarifierFor(menuInfo) {
   const clarification = document.createElement('div');
-  clarification.id = menuInfo.container.id + '-single-clarification';
+  clarification.id = menuInfo.container().id + '-single-clarification';
   clarification.classList.add('single-clarifier');
   clarification.textContent = '(' + menuInfo.selected[0] + ')';
   if (menuInfo.selected.length === 1) {
@@ -696,7 +696,7 @@ function createSingleClarifierFor(menuInfo) {
   } else {
     clarification.style.display = 'none';
   }
-  menuInfo.container.appendChild(clarification);
+  menuInfo.container().appendChild(clarification);
 
   menuInfo.singleClarifier = clarification; // save the single clarifier in the menuInfo
 }
