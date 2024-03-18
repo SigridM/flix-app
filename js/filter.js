@@ -68,10 +68,21 @@ export async function addFilterListeners() {
   });
   await fillLists();
 
-  addListenersTo(allMenuInfo.movieGenreMenuInfo);
-  addListenersTo(allMenuInfo.tvGenreMenuInfo);
-  addListenersTo(allMenuInfo.languageMenuInfo);
-  addListenersTo(allMenuInfo.sortMenuInfo);
+  addMenuListenersTo(allMenuInfo.movieGenreMenuInfo);
+  addMenuListenersTo(allMenuInfo.tvGenreMenuInfo);
+  addMenuListenersTo(allMenuInfo.languageMenuInfo);
+  addMenuListenersTo(allMenuInfo.sortMenuInfo);
+
+  document
+    .querySelector('#adult-filter-checkbox')
+    .addEventListener('change', function () {
+      closeAllPopups();
+    });
+  // document
+  //   .querySelector('#adult-filter-label')
+  //   .addEventListener('change', function () {
+  //     closeAllPopups();
+  //   });
 
   addRadioButtonListeners();
 }
@@ -577,7 +588,7 @@ function textContentSort(a, b) {
 function byOrderAddedSort(a, b) {
   return 0;
 }
-function addListenersTo(menuInfo) {
+function addMenuListenersTo(menuInfo) {
   // Add a change listener to the checkbox
   const filterCheckbox = menuInfo.checkbox();
   filterCheckbox.addEventListener('change', function () {
