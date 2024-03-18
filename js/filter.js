@@ -157,7 +157,9 @@ export async function getFilterResults(isTV = false) {
 async function doFilter(isTV) {
   closeAllPopups();
 
-  const genreInfo = isTV ? allMenuInfo.tvGenreInfo : allMenuInfo.movieGenreInfo;
+  const genreInfo = isTV
+    ? allMenuInfo.tvGenreMenuInfo
+    : allMenuInfo.movieGenreMenuInfo;
   let filters = '';
   const genres = getSelectedGenreCodes(isTV);
   if (genres.length > 0) {
