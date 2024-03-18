@@ -150,7 +150,7 @@ function alertOnBlankSearchTerm(isTV) {
     showAlert('Please enter a word in the title');
     return true;
   }
-  if (hasSelectedLanguages() && hasSelectedGenres(isTV) && noSearchTerm) {
+  if (!hasSelectedLanguages() && !hasSelectedGenres(isTV) && noSearchTerm) {
     showAlert('Please enter a keyword, one or more genres, or a language');
     return true;
   }
