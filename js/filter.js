@@ -212,7 +212,14 @@ export function setSelectedLanguages(languages) {
   if (!popupMenu) {
     createAndPostionPopupMenu(menuInfo); // also shows the menu
     popupMenu = document.getElementById(menuInfo.popupName);
-    popupMenu.style.display = 'none';
+    popupMenu.style.display = 'none'; // hide it again
+  }
+
+  if (!menuInfo.isExlcusive && !menuInfo.combiner) {
+    createCombinersFor(menuInfo);
+  }
+  if (!menuInfo.singleClarifier) {
+    createSingleClarifierFor(menuInfo);
   }
 
   const listItems = Array.from(popupMenu.querySelectorAll('li')).filter((li) =>
@@ -229,15 +236,24 @@ export function setSortBy(sortByString) {
     return;
   }
   const menuInfo = allMenuInfo.sortMenuInfo;
-  const popupMenu = document.getElementById(menuInfo.popupName);
+  let popupMenu = document.getElementById(menuInfo.popupName);
   if (!popupMenu) {
-    return;
+    createAndPostionPopupMenu(menuInfo); // also shows the menu
+    popupMenu = document.getElementById(menuInfo.popupName);
+    popupMenu.style.display = 'none'; // hide it again
   }
 
-  const listItem = popupMenu
-    .querySelectorAll('li')
-    .find((li) => sortByString === li.textContent);
-  listItem.classList.add('selected');
+  if (!menuInfo.isExlcusive && !menuInfo.combiner) {
+    createCombinersFor(menuInfo);
+  }
+  if (!menuInfo.singleClarifier) {
+    createSingleClarifierFor(menuInfo);
+  }
+
+  const listItem = Array.from(popupMenu.querySelectorAll('li')).find(
+    (li) => sortByString === li.textContent
+  );
+  listItem.querySelector('a').classList.add('selected');
   menuInfo.selected = new Array(sortByString);
 
   moveSelectedToTop(menuInfo);
@@ -248,14 +264,24 @@ export function setSelectedGenres(isTV, genres, genreCombiner) {
     ? allMenuInfo.tvGenreMenuInfo
     : allMenuInfo.movieGenreMenuInfo;
 
-  const popupMenu = document.getElementById(menuInfo.popupName);
+  let popupMenu = document.getElementById(menuInfo.popupName);
   if (!popupMenu) {
-    return;
+    createAndPostionPopupMenu(menuInfo); // also shows the menu
+    popupMenu = document.getElementById(menuInfo.popupName);
+    popupMenu.style.display = 'none'; // hide it again
   }
-  const listItems = popupMenu
-    .querySelectorAll('li')
-    .filter((li) => genres.includes(li.textContent));
-  listItems.forEach((li) => li.classList.add('selected'));
+
+  if (!menuInfo.isExlcusive && !menuInfo.combiner) {
+    createCombinersFor(menuInfo);
+  }
+  if (!menuInfo.singleClarifier) {
+    createSingleClarifierFor(menuInfo);
+  }
+
+  const listItems = Array.from(popupMenu.querySelectorAll('li')).filter((li) =>
+    genres.includes(li.textContent)
+  );
+  listItems.forEach((li) => li.querySelector('a').classList.add('selected'));
 
   menuInfo.selected = genres;
 
