@@ -69,6 +69,10 @@ async function returnSearch(urlParams) {
   radioButtonPanel.querySelector('#search-by-title').checked = !isKeyword;
   radioButtonPanel.querySelector('#search-by-keyword').checked = isKeyword;
 
+  isKeyword
+    ? showFilters()
+    : (document.querySelector('#filter-container').style.display = 'none');
+
   const textInput = document.querySelector('#search-term');
   textInput.placeholder = searchTerm;
 

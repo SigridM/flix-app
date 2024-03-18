@@ -56,6 +56,12 @@ export function keywordResultInfo(isTV) {
     sortBy()
   );
 }
+
+export function showFilters() {
+  document.querySelector('#filter-container').style.display = 'block';
+  document.querySelector('#all-filters').style.display = 'block';
+}
+
 export async function addFilterListeners() {
   const filterTitle = document.querySelector('#filter-title');
   filterTitle.addEventListener('click', function (event) {
