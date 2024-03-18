@@ -132,18 +132,14 @@ function addRadioButtonListeners() {
   hideUnusedGenreFilter(tvRadioButton.checked);
 
   // Keyword vs. Title
-  const filterContainer = document.querySelector('#filter-container');
-  const keywordRadioButton = document
-    .querySelector('#search-radio-button-panel')
-    .querySelector('#search-by-keyword');
+  const keywordRadioButton = document.querySelector('#search-by-keyword');
   keywordRadioButton.addEventListener('change', function (event) {
     keywordRadioButton.checked
       ? (filterContainer.style.display = 'block')
       : (filterContainer.style.display = 'none');
   });
-  const titleRadioButton = document
-    .querySelector('#search-radio-button-panel')
-    .querySelector('#search-by-title');
+
+  const titleRadioButton = document.querySelector('#search-by-title');
   titleRadioButton.addEventListener('change', function (event) {
     titleRadioButton.checked
       ? (filterContainer.style.display = 'none')
