@@ -277,6 +277,7 @@ export function setSortBy(sortByString) {
 }
 
 export function setSelectedGenres(isTV, genres, genreCombiner) {
+  hideUnusedGenreFilter(isTV);
   const menuInfo = isTV
     ? allMenuInfo.tvGenreMenuInfo
     : allMenuInfo.movieGenreMenuInfo;
