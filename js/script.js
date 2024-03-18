@@ -34,6 +34,7 @@ function init() {
       displayDetails(true);
       break;
     case '/search.html':
+      console.log('Dom Content must be loaded');
       openSearchPage();
 
       break;
@@ -41,5 +42,5 @@ function init() {
   highlightActiveLink();
 }
 
-// document.addEventListener('DOMContentLoaded', init);
-window.addEventListener('load', init);
+document.addEventListener('DOMContentLoaded', init);
+// window.addEventListener('load', init);
