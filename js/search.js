@@ -9,6 +9,7 @@ import {
   setExcludeAdult,
   setSortBy,
   keywordResultInfo,
+  showFilters,
 } from './filter.js';
 import { SearchDetailReturnInfo } from './detailReturn.js';
 
@@ -36,8 +37,14 @@ export function clearSearchResults() {
 // for the correct search. Check the URL params to see if there is saved data there to decide from where to
 // take the search data. If there are no URL params, wait for the user to click the search button.
 export async function openSearchPage() {
+  // document.addEventListener('DOMContentLoaded', () => {
+  //   includeHTML('./search-container.html', 'search-container');
+  //   includeHTML('./filter.html', 'filter-container');
+  // });
+
   await initSearchForm();
   const queryString = window.location.search;
+  console.log(queryString);
   const urlParams = new URLSearchParams(queryString);
   if (urlParams.size > 0) {
     await returnSearch(urlParams);
