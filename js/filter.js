@@ -225,6 +225,9 @@ export function setSelectedLanguages(languages) {
 }
 
 export function setSortBy(sortByString) {
+  if (sortByString.length === 0) {
+    return;
+  }
   const menuInfo = allMenuInfo.sortMenuInfo;
   const popupMenu = document.getElementById(menuInfo.popupName);
   if (!popupMenu) {
