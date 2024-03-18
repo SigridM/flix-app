@@ -90,7 +90,8 @@ async function returnSearch(urlParams) {
 }
 
 function initializeFilterCriteraInDOMFrom(isTV, urlParams) {
-  const genres = urlParams.get('genres').split('+');
+  let genres = urlParams.get('genres');
+  genres = genres.split(' ');
   const genreCombiner = urlParams.get('genre-combine-using');
   setSelectedGenres(isTV, genres, genreCombiner);
   const languages = urlParams.get('languages').split('+');
