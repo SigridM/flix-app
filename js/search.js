@@ -128,6 +128,7 @@ async function doSearch(isTV) {
   const returnInfo = getReturnInfo(isTV);
   const results = await returnInfo.getInitialResults();
   if (results.length === 0) {
+    clearSearchResults();
     return showAlert('No matches', 'alert-success');
   }
   returnInfo.displayResults(results);
