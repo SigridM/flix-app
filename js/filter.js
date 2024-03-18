@@ -1,6 +1,7 @@
 import { discoverAPIData, fetchAPIData } from './fetchData.js';
 import { global } from './globals.js';
 import { KeywordSearchDetailReturnInfo } from './detailReturn.js';
+import { clearSearchResults } from './search.js';
 
 const allMenuInfo = {
   movieGenreMenuInfo: {
@@ -93,22 +94,39 @@ export async function addFilterListeners() {
   addRadioButtonListeners();
 }
 
+function clearCheckboxes() {
+  [
+    allMenuInfo.movieGenreMenuInfo,
+    allMenuInfo.languageMenuInfo,
+    allMenuInfo.sortMenuInfo,
+    allMenuInfo.tvGenreMenuInfo,
+  ].forEach((menuInfo) => {
+    if (menuInfo.popupMenu) {
+      clearSelected(menuInfo);
+      menuInfo.checkbox().checked = false;
+    }
+  });
+  document.querySelector('#adult-filter-checkbox').checked = false;
+}
+
 function addRadioButtonListeners() {
   // TV vs. Movie
   const movieRadioButton = document
     .querySelector('#search-radio-button-panel')
     .querySelector('#movie');
   movieRadioButton.addEventListener('change', function (event) {
-    const isTV = !movieRadioButton.checked;
-    hideUnusedGenreFilter(isTV);
+    clearSearchResults();
+    clearCheckboxes();
+    hideUnusedGenreFilter(!movieRadioButton.checked);
   });
 
   const tvRadioButton = document
     .querySelector('#search-radio-button-panel')
     .querySelector('#tv');
   tvRadioButton.addEventListener('change', function (event) {
-    const isTV = tvRadioButton.checked;
-    hideUnusedGenreFilter(isTV);
+    clearSearchResults();
+    clearCheckboxes();
+    hideUnusedGenreFilter(tvRadioButton.checked);
   });
 
   hideUnusedGenreFilter(tvRadioButton.checked);

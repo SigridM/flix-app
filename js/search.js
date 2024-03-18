@@ -25,6 +25,12 @@ async function initSearchForm() {
   }
 }
 
+export function clearSearchResults() {
+  document.querySelector('#search-results-heading').innerHTML = '';
+  document.querySelector('#search-results').innerHTML = '';
+  document.querySelector('#pagination').innerHTML = '';
+}
+
 // We landed on the search page, either from an intial search or because we are returning here from
 // a details page. If the latter, the URL will hold all the information needed to restore the correct page
 // for the correct search. Check the URL params to see if there is saved data there to decide from where to
