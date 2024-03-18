@@ -134,19 +134,22 @@ function addRadioButtonListeners() {
   // Keyword vs. Title
   const keywordRadioButton = document.querySelector('#search-by-keyword');
   keywordRadioButton.addEventListener('change', function (event) {
-    keywordRadioButton.checked
-      ? (filterContainer.style.display = 'block')
-      : (filterContainer.style.display = 'none');
+    clearSearchResults();
+    hideOrShowFilterContainer(!keywordRadioButton.checked);
   });
 
   const titleRadioButton = document.querySelector('#search-by-title');
   titleRadioButton.addEventListener('change', function (event) {
-    titleRadioButton.checked
-      ? (filterContainer.style.display = 'none')
-      : (filterContainer.style.display = 'block');
+    clearSearchResults();
+    hideOrShowFilterContainer(titleRadioButton.checked);
   });
 
-  titleRadioButton.checked
+  hideOrShowFilterContainer(titleRadioButton.checked);
+}
+
+function hideOrShowFilterContainer(titleChecked) {
+  const filterContainer = document.querySelector('#filter-container');
+  titleChecked
     ? (filterContainer.style.display = 'none')
     : (filterContainer.style.display = 'block');
 }
