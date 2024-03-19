@@ -406,7 +406,7 @@ export class SearchDetailReturnInfo extends DetailReturnInfo {
       document.querySelector('#pagination' + num).appendChild(pageCounter);
     }
     pageCounter.textContent =
-      this.originPage + ' of ' + global.search.totalPages;
+      'Page ' + this.originPage + ' of ' + global.search.totalPages;
   }
   displayResults(results) {
     this.clearPreviousResults();
