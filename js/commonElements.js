@@ -184,45 +184,51 @@ async function detailsBottom(media, mediaID, isTV) {
 
 // Add the budget to the array of details, if that detail exists
 function addBudget(media, details) {
-  const detail = media.budget;
+  let detail = media.budget;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
+  } else {
+    detail = currencyFormatter.format(detail);
   }
   details.push({
     span: spanFor('Budget: '),
-    listText: currencyFormatter.format(detail),
+    listText: detail,
   });
 }
 
 // Add the revenue to the array of details, if that detail exists
 function addRevenue(media, details) {
-  const detail = media.revenue;
+  let detail = media.revenue;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
+  } else {
+    detail = currencyFormatter.format(detail);
   }
   details.push({
     span: spanFor('Revenue: '),
-    listText: currencyFormatter.format(detail),
+    listText: detail,
   });
 }
 
 // Add the runtime to the array of details, if that detail exists
 function addRuntime(media, details) {
-  const detail = media.runtime;
+  let detail = media.runtime;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
+  } else {
+    detail += ' minutes';
   }
   details.push({
     span: spanFor('Runtime: '),
-    listText: detail + ' minutes',
+    listText: detail,
   });
 }
 
 // Add the number of episodes to the array of details, if that detail exists
 function addNumEpisodes(media, details) {
-  const detail = media.number_of_episodes;
+  let detail = media.number_of_episodes;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
   }
   details.push({
     span: spanFor('Number of Episodes: '),
@@ -232,9 +238,9 @@ function addNumEpisodes(media, details) {
 
 // Add the number of seasons to the array of details, if that detail exists
 function addNumSeasons(media, details) {
-  const detail = media.number_of_seasons;
+  let detail = media.number_of_seasons;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
   }
   details.push({
     span: spanFor('Number of Seasons: '),
@@ -244,9 +250,9 @@ function addNumSeasons(media, details) {
 
 // Add the last episode to the array of details, if that detail exists
 function addLastEpisode(media, details) {
-  const detail = media.last_episode_to_air;
+  let detail = media.last_episode_to_air;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
   }
   details.push({
     span: spanFor('Last Episode to Air: '),
@@ -256,22 +262,23 @@ function addLastEpisode(media, details) {
 
 // Add the episode runtime to the array of details, if that detail exists
 function addEpisodeRuntime(media, details) {
-  const detail = media.episode_run_time;
+  let detail = media.episode_run_time;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
+  } else {
+    detail = detail[0] ? `${detail[0]} minutes` : 'Unavailable';
   }
-  const runtimeText = detail[0] ? `${detail[0]} minutes` : 'unavailable';
-  details.push({
+  const runtimeText = details.push({
     span: spanFor('Episode Runtime: '),
-    listText: runtimeText,
+    listText: detail,
   });
 }
 
 // Add the status to the array of details, if that detail exists
 function addStatus(media, details) {
-  const detail = media.status;
+  let detail = media.status;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
   }
   details.push({
     span: spanFor('Status: '),
@@ -281,9 +288,9 @@ function addStatus(media, details) {
 
 // Add the status to the array of details, if that detail exists
 function addAdult(media, details) {
-  const detail = media.adult;
+  let detail = media.adult;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
   }
   details.push({
     span: spanFor('Adult: '),
@@ -293,34 +300,42 @@ function addAdult(media, details) {
 
 // Add the production companies list to the array of details, if that detail exists
 function addProductionCompanies(media, details) {
-  const detail = media.production_companies;
-  if (!detail) {
-    return;
+  let detail = media.production_companies;
+  let label = 'Production Company:';
+  if (!detail || detail.length === 0) {
+    detail = 'Unavailable';
+  } else {
+    label =
+      detail.length > 1 ? 'Production Companies: ' : 'Production Company: ';
+    detail = detail.map((company) => company.name).join('; ');
   }
   details.push({
-    span: spanFor('Production Companies: '),
-    listText: detail.map((company) => company.name).join('; '),
+    span: spanFor(label),
+    listText: detail,
   });
 }
 
 // Add the spoken languages list to the array of details, if that detail exists
 function addLanguages(media, details) {
-  const detail = media.spoken_languages;
+  let detail = media.spoken_languages;
+  let label = 'Spoken Language: ';
   if (!detail) {
-    return;
+    detail = 'Unavailable';
+  } else {
+    label = detail.length > 1 ? 'Spoken Langages: ' : 'Spoken Language: ';
+    detail = detail.map((language) => language.english_name).join(', ');
   }
-  const label = detail.length > 1 ? 'Spoken Langages: ' : 'Spoken Language: ';
   details.push({
     span: spanFor(label),
-    listText: detail.map((language) => language.english_name).join(', '),
+    listText: detail,
   });
 }
 
 // Add the places to rent list to the array of details, if that detail exists
 function addRentFrom(providers, details) {
-  const detail = providers.rent;
+  let detail = providers.rent;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
   }
   details.push({
     span: spanFor('Rent from: '),
@@ -330,9 +345,9 @@ function addRentFrom(providers, details) {
 
 // Add the free places list to the array of details, if that detail exists
 function addFreeFrom(providers, details) {
-  const detail = providers.free;
+  let detail = providers.free;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
   }
   details.push({
     span: spanFor('Free from: '),
@@ -354,9 +369,9 @@ function addBuyFrom(providers, details) {
 
 // Add the places to stream list to the array of details, if that detail exists
 function addStreamFrom(providers, details) {
-  const detail = providers.stream;
+  let detail = providers.stream;
   if (!detail) {
-    return;
+    detail = 'Unavailable';
   }
   details.push({
     span: spanFor('Stream from: '),
