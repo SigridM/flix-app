@@ -336,8 +336,8 @@ export class SearchDetailReturnInfo extends DetailReturnInfo {
     this.displayResults(results);
   }
 
-  addPaginationButton(text, pageSetFunction, paginationDiv, isDisabled) {
-    const id = text.toLowerCase();
+  addPaginationButton(text, num, pageSetFunction, paginationDiv, isDisabled) {
+    const id = text.toLowerCase() + num;
     let button = document.getElementById(id);
     if (!button) {
       button = document.createElement('button');
@@ -353,20 +353,22 @@ export class SearchDetailReturnInfo extends DetailReturnInfo {
   }
 
   // Create and display pagination for search
-  displayPagination(numResultsThisPage) {
+  displayPagination(numResultsThisPage, num) {
     const heading = document.querySelector('#search-results-heading');
     const h2 = this.searchResultsHeading(numResultsThisPage);
     heading.appendChild(h2);
 
-    let paginationDiv = document.querySelector('.pagination');
+    let paginationDiv = document.querySelector('#page-button-container' + num);
     if (!paginationDiv) {
       paginationDiv = document.createElement('div');
-      paginationDiv.classList.add('pagination');
-      document.querySelector('#pagination').appendChild(paginationDiv);
+      paginationDiv.id = 'page-button-container' + num;
+      paginationDiv.classList.add('page-button-container');
+      document.querySelector('#pagination' + num).appendChild(paginationDiv);
     }
 
     this.addPaginationButton(
       'First',
+      num,
       this.goToFirstOriginPage.bind(this),
       paginationDiv,
       this.originPage == 1
@@ -374,6 +376,7 @@ export class SearchDetailReturnInfo extends DetailReturnInfo {
 
     this.addPaginationButton(
       'Prev',
+      num,
       this.decreaseOriginPage.bind(this),
       paginationDiv,
       this.originPage == 1
@@ -381,6 +384,7 @@ export class SearchDetailReturnInfo extends DetailReturnInfo {
 
     this.addPaginationButton(
       'Next',
+      num,
       this.increaseOriginPage.bind(this),
       paginationDiv,
       this.originPage == global.search.totalPages
@@ -388,24 +392,27 @@ export class SearchDetailReturnInfo extends DetailReturnInfo {
 
     this.addPaginationButton(
       'Last',
+      num,
       this.goToLastOriginPage.bind(this),
       paginationDiv,
       this.originPage == global.search.totalPages
     );
 
-    let pageCounter = document.querySelector('.page-counter');
+    let pageCounter = document.querySelector('.page-counter' + num);
     if (!pageCounter) {
       pageCounter = document.createElement('div');
-      pageCounter.classList.add('page-counter');
-      paginationDiv.appendChild(pageCounter);
+      pageCounter.classList.add('page-counter' + num);
+      //   paginationDiv.appendChild(pageCounter);
+      document.querySelector('#pagination' + num).appendChild(pageCounter);
     }
     pageCounter.textContent =
       this.originPage + ' of ' + global.search.totalPages;
   }
   displayResults(results) {
     this.clearPreviousResults();
+    this.displayPagination(results.length, 1);
     super.displayResults(results);
-    this.displayPagination(results.length);
+    this.displayPagination(results.length, 2);
   }
 }
 
