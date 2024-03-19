@@ -15,9 +15,7 @@ import { SearchDetailReturnInfo } from './detailReturn.js';
 
 async function initSearchForm() {
   const searchForm = document.querySelector('#search-form');
-  console.log('in initSearchForm');
   if (searchForm) {
-    console.log('searchForm not null');
     searchForm.addEventListener('submit', function (event) {
       event.preventDefault();
       firstSearch();
@@ -37,14 +35,8 @@ export function clearSearchResults() {
 // for the correct search. Check the URL params to see if there is saved data there to decide from where to
 // take the search data. If there are no URL params, wait for the user to click the search button.
 export async function openSearchPage() {
-  // document.addEventListener('DOMContentLoaded', () => {
-  //   includeHTML('./search-container.html', 'search-container');
-  //   includeHTML('./filter.html', 'filter-container');
-  // });
-
   await initSearchForm();
   const queryString = window.location.search;
-  console.log(queryString);
   const urlParams = new URLSearchParams(queryString);
   if (urlParams.size > 0) {
     await returnSearch(urlParams);
@@ -56,8 +48,6 @@ export async function openSearchPage() {
 // Check the URL to see if there is saved data there before taking the data from the
 // inputs.
 async function returnSearch(urlParams) {
-  console.log('In returnToSearch()', urlParams);
-
   // Get the four paramaters common to both a title search and a keyword search.
   // These are searchSpace, searchType, searchTerm and page
   const searchSpace = urlParams.get('space');

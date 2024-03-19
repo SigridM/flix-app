@@ -8,7 +8,6 @@ function includeHTML(path, elementID, alsoDo = null) {
     })
 
     .then((html) => {
-      console.log('in includeHTML', path, html);
       const element = document.getElementById(elementID);
       if (!element) {
         throw new Error('element not found');

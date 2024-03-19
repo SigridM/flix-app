@@ -189,9 +189,7 @@ async function doFilter(isTV) {
   filters += '&include_adult=' + includeAdult();
 
   filters += hasSort() ? '&sort_by=' + sortBy() : '';
-  console.log(filters);
   const results = await discoverAPIData(filters);
-  console.log(results);
   return results;
 }
 

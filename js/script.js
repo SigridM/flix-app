@@ -34,7 +34,6 @@ function init() {
       displayDetails(true);
       break;
     case '/search.html':
-      console.log('Dom Content must be loaded');
       openSearchPage();
 
       break;
