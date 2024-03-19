@@ -2,6 +2,7 @@ import { discoverAPIData, fetchAPIData } from './fetchData.js';
 import { global } from './globals.js';
 import { KeywordSearchDetailReturnInfo } from './detailReturn.js';
 import { clearSearchResults } from './search.js';
+import { ExtendedMap } from './extensions.js';
 
 const allMenuInfo = {
   movieGenreMenuInfo: {
@@ -198,7 +199,12 @@ function hasSort() {
 }
 
 function sortBy() {
-  return hasSort() ? allMenuInfo.sortMenuInfo.selected[0] : '';
+  if (!hasSort) {
+    return '';
+  }
+  return global.lists.sortCriteria.getKeyByValue(
+    allMenuInfo.sortMenuInfo.selected[0]
+  );
 }
 
 function getJoinStringFor(menuInfo) {
@@ -265,11 +271,12 @@ export function setSortBy(sortByString) {
     createSingleClarifierFor(menuInfo);
   }
 
+  const friendlySortString = global.lists.sortCriteria.get(sortByString);
   const listItem = Array.from(popupMenu.querySelectorAll('li')).find(
-    (li) => sortByString === li.textContent
+    (li) => friendlySortString === li.textContent
   );
   listItem.querySelector('a').classList.add('selected');
-  menuInfo.selected = new Array(sortByString);
+  menuInfo.selected = new Array(friendlySortString);
 
   moveSelectedToTop(menuInfo);
 }
@@ -399,8 +406,10 @@ async function fillLists() {
       .sort();
   }
   if (global.lists.sortCriteria.length === 0) {
-    global.lists.sortCriteria = getSortCriteria();
-    allMenuInfo.sortMenuInfo.contents = global.lists.sortCriteria;
+    global.lists.sortCriteria = initSortByDictionary();
+    allMenuInfo.sortMenuInfo.contents = Array.from(
+      global.lists.sortCriteria.values()
+    );
   }
 }
 async function getGenres(isTV = false) {
@@ -763,4 +772,26 @@ function createSingleClarifierFor(menuInfo) {
   menuInfo.container().appendChild(clarification);
 
   menuInfo.singleClarifier = clarification; // save the single clarifier in the menuInfo
+}
+
+function initSortByDictionary() {
+  const dictionary = new ExtendedMap();
+  dictionary.set('original_title.asc', 'Original Title, Ascending');
+  dictionary.set('original_title.desc', 'Original Title, Descending');
+  dictionary.set('pouplarity.asc', 'Popularity, Ascending');
+  dictionary.set('pouplarity.desc', 'Popularity, Descending');
+  dictionary.set('revenue.asc', 'Revenue, Ascending');
+  dictionary.set('revenue.desc', 'Revenue, Descending');
+  dictionary.set('primary_release_date.asc', 'Primary release date, Ascending');
+  dictionary.set(
+    'primary_release_date.desc',
+    'Primary release date, Descending'
+  );
+  dictionary.set('title.asc', 'Title, Ascending');
+  dictionary.set('title.desc', 'Title, Descending');
+  dictionary.set('vote_average.asc', 'Vote average, Ascending');
+  dictionary.set('vote_average.desc', 'Vote average, Descending');
+  dictionary.set('vote_count.desc', 'Vote count, Descending');
+
+  return dictionary;
 }
