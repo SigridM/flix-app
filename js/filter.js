@@ -199,7 +199,7 @@ function hasSort() {
 }
 
 function sortBy() {
-  if (!hasSort) {
+  if (!hasSort()) {
     return '';
   }
   return global.lists.sortCriteria.getKeyByValue(

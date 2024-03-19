@@ -345,17 +345,29 @@ section h5 {
   color: #fff;
 }
 
-.pagination {
+.page-button-container {
+  margin-right: 20px; /* Add margin to the right side of pagination1 */
+}
+
+#pagination1 {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+#pagination2 {
+  display: flex;
   position: absolute;
   bottom: 0;
   left: 20;
-  margin-bottom: -100px;
+  margin-bottom: -50px;
 }
 
 .page-counter {
   margin-top: 10px;
-  position: relative;
+  margin-left: 50px;
+  /* position: relative; */
   z-index: 1000;
+  /* float: left; */
 }
 
 /* Alert */

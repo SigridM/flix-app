@@ -27,7 +27,9 @@ async function initSearchForm() {
 export function clearSearchResults() {
   document.querySelector('#search-results-heading').innerHTML = '';
   document.querySelector('#search-results').innerHTML = '';
-  document.querySelector('#pagination').innerHTML = '';
+  Array.from(document.querySelectorAll('.page-button-container')).forEach(
+    (ea) => (ea.innerHTML = '')
+  );
 }
 
 // We landed on the search page, either from an intial search or because we are returning here from
