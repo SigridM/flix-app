@@ -1,18 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <script type="module" src="js/script.js" defer></script>
+
+    <script src="js/include.js"></script>
+  </head>
   <body>
     <!-- Search Movies (by default) or TV (set checked for element by id 'tv' to true)-->
     <section class="search">
       <div class="container">
         <div id="alert"></div>
-        <form action="/search.html" class="search-form">
-          <!-- movies and shows radio box -->
-          <div class="search-radio">
-            <input type="radio" id="movie" name="type" value="movie" checked />
-            <label for="movies">Movies</label>
-            <input type="radio" id="tv" name="type" value="tv" />
-            <label for="shows">TV Shows</label>
+        <form class="search-form" id="search-form">
+          <!-- radio button groups -->
+          <div id="search-radio-button-panel">
+            <!-- movies and shows radio box -->
+            <div class="search-radio">
+              <input
+                type="radio"
+                id="movie"
+                name="type"
+                value="movie"
+                checked
+              />
+              <label for="movie">Movies</label>
+              <input type="radio" id="tv" name="type" value="tv" />
+              <label for="tv">TV Shows</label>
+            </div>
+
+            <!-- keyword vs. title radio box -->
+            <div class="search-radio">
+              <input
+                type="radio"
+                id="search-by-title"
+                name="isKeyword"
+                value="title"
+                checked
+              />
+              <label for="search-by-title">By Title</label>
+              <input
+                type="radio"
+                id="search-by-keyword"
+                name="isKeyword"
+                value="keyword"
+              />
+              <label for="search-by-keyword">By Keyword</label>
+            </div>
           </div>
+
           <div class="search-flex">
             <input
               type="text"
@@ -23,6 +57,74 @@
             <button class="btn" type="submit">
               <i class="fas fa-search"></i>
             </button>
+          </div>
+          <!-- Include filter.html here -->
+          <div id="filter-container">
+            <h2 id="filter-title">Filter and/or Sort...</h2>
+            <div id="all-filters">
+              <div id="movie-genre-div" class="filter-div">
+                <input
+                  type="checkbox"
+                  id="movie-genre-filter-checkbox"
+                  class="filter-checkbox"
+                  name="movie-genre-filter"
+                  value="movie-genre"
+                />
+                <label for="movie-genre-filter-checkbox"> </label>
+                <a href="#" id="movie-genre-label">With Movie Genre</a>
+                <div id="movie-genre-container" class="filter-container"></div>
+              </div>
+              <div id="tv-genre-div" class="filter-div">
+                <input
+                  type="checkbox"
+                  id="tv-genre-filter-checkbox"
+                  class="filter-checkbox"
+                  name="tv-genre-filter"
+                  value="tv-genre"
+                />
+                <label for="tv-genre-filter-checkbox"> </label>
+                <a href="#" id="tv-genre-label"> With TV Genre</a>
+
+                <div id="tv-genre-container" class="filter-container"></div>
+              </div>
+              <div id="adult-div" class="filter-div">
+                <input
+                  type="checkbox"
+                  id="adult-filter-checkbox"
+                  class="filter-checkbox"
+                  name="adult-filter"
+                  value="adult"
+                />
+                <label for="adult-filter-checkbox" id="adult-label">
+                  Exclude Adult
+                </label>
+                <div id="adult-container" class="filter-container"></div>
+              </div>
+              <div id="language-div" class="filter-div">
+                <input
+                  type="checkbox"
+                  id="language-filter-checkbox"
+                  name="language-filter"
+                  class="filter-checkbox"
+                  value="language"
+                />
+                <label for="language-filter-checkbox"> </label>
+                <a href="#" id="language-label">Original Language</a>
+                <div id="language-container" class="filter-container"></div>
+              </div>
+              <div id="sort-by-div" class="filter-div">
+                <input
+                  type="checkbox"
+                  id="sort-by-checkbox"
+                  class="filter-checkbox"
+                  name="filter"
+                  value="sort"
+                />
+                <label for="sort-by-checkbox"> </label>
+                <a href="#" id="sort-by-label">Sort </a>
+                <div id="sort-by-container" class="filter-container"></div>
+              </div>
+            </div>
           </div>
         </form>
       </div>

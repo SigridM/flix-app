@@ -3,9 +3,8 @@ import { formatDate, currencyFormatter } from './formatters.js';
 import {
   posterPathImageLink,
   displayBackgroundImage,
-  displayResults,
 } from './imageManagement.js';
-import { global } from './globals.js';
+import { DetailReturnInfo, PopularDetailReturnInfo } from './detailReturn.js';
 
 // Add the rating icon inside the wrapper element (a paragraph or h4)
 export function addRatingIcon(media, wrapper) {
@@ -280,6 +279,18 @@ function addStatus(media, details) {
   });
 }
 
+// Add the status to the array of details, if that detail exists
+function addAdult(media, details) {
+  const detail = media.adult;
+  if (!detail) {
+    return;
+  }
+  details.push({
+    span: spanFor('Adult: '),
+    listText: detail,
+  });
+}
+
 // Add the production companies list to the array of details, if that detail exists
 function addProductionCompanies(media, details) {
   const detail = media.production_companies;
@@ -365,6 +376,7 @@ function detailsBottomList(media, providers) {
   addLastEpisode(media, details);
   addEpisodeRuntime(media, details);
   addStatus(media, details);
+  addAdult(media, details);
 
   addRentFrom(providers, details);
   addFreeFrom(providers, details);
@@ -391,13 +403,10 @@ export async function displayDetails(isTV = false) {
   const urlParams = new URLSearchParams(queryString);
 
   const mediaID = urlParams.get('id');
-  const isSearch = urlParams.get('search') == 'true';
-  const searchTerm = urlParams.get('search-term');
-  const savedPage = urlParams.get('page');
-
   const searchType = isTV ? 'tv' : 'movie';
   const endPoint = searchType + '/';
   const media = await fetchAPIData(endPoint + mediaID);
+  const returnInfo = DetailReturnInfo.fromURL(urlParams, isTV);
 
   displayBackgroundImage(media.backdrop_path, isTV);
 
@@ -411,21 +420,9 @@ export async function displayDetails(isTV = false) {
 
   const btn = document.createElement('a');
   btn.classList.add('btn');
-  if (isSearch) {
-    // @todo figure out what makes this global.search.term go back to an empty string
-    // Answer: reloading the page to any new url resets the globals
-    btn.href =
-      'search.html?type=' +
-      searchType +
-      '&search-term=' +
-      searchTerm +
-      '&page=' +
-      savedPage;
-    btn.textContent = isTV ? 'Back to TV Show Search' : 'Back to Movie Search';
-  } else {
-    btn.href = isTV ? 'shows.html' : 'index.html';
-    btn.textContent = isTV ? 'Back to TV Shows' : 'Back to Movies';
-  }
+  btn.href = returnInfo.backButtonHRef();
+  btn.textContent = returnInfo.backButtonTextContent();
+
   document.querySelector('.back').innerHTML = '';
   document.querySelector('.back').appendChild(btn);
   document.querySelector(selector).appendChild(div);
@@ -437,6 +434,6 @@ export async function displayPopular(isTV = false) {
 
   const { results } = await fetchAPIData(endPoint);
 
-  const popularDivID = isTV ? '#popular-shows' : '#popular-movies';
-  displayResults(results, 'card', popularDivID, isTV);
+  const returnInfo = new PopularDetailReturnInfo(isTV);
+  returnInfo.displayResults(results, returnInfo);
 }

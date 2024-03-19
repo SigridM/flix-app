@@ -390,3 +390,115 @@ section h5 {
   position: relative;
   margin-bottom: 160px;
 }
+.filter-div {
+  display: block;
+  float: top; /* Align to the top of the trigger checkbox */
+}
+.filter-container {
+  display: inline;
+  float: top;
+  margin-left: 10px; /* Adjust spacing between checkboxes */
+  vertical-align: top; /* Align to the top of the trigger checkbox */
+}
+.checkbox-container {
+  display: inline-block;
+  /* float: left; */
+  /* margin-left: 10px; /* Adjust spacing between checkboxes */
+  padding-left: 10px;
+  vertical-align: top; /* Align to the top of the trigger checkbox */
+}
+
+.popup-menu {
+  display: none;
+  position: absolute;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  z-index: 1000;
+}
+
+.popup-menu ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.popup-menu ul li {
+  margin-bottom: 10px;
+}
+
+.filter-menu-item {
+  text-decoration: none;
+  color: #333;
+  position: relative;
+  display: inline-block;
+}
+
+.popup-menu ul li:not(.selected) {
+  margin-top: 5px; /* Adjust the margin of the unselected items */
+}
+.filter-menu-item::after {
+  content: '\2713'; /* Unicode checkmark symbol */
+  display: none;
+  position: absolute;
+  top: 0px;
+  left: -5px;
+  transform: translate(-50%);
+  color: #007bff;
+  /* width: 10px;
+  height: 10px;
+  background-color: #007bff;
+  border-radius: 70%; */
+}
+
+.filter-menu-item.selected::after {
+  display: block;
+}
+
+.separator {
+  border-top: 1px solid #ccc; /* Style the separator line */
+  margin-top: 5px; /* Add some spacing */
+  padding-top: 0px; /* Add some spacing */
+}
+
+.close-x {
+  /* display: block; */
+  float: right;
+  color: red;
+  font-weight: bold;
+  text-decoration: none;
+  margin-left: 30px;
+}
+.close-x:hover {
+  /* Your styles for the close anchor on hover */
+  text-decoration: underline; /* Example: Underline on hover */
+}
+
+.close-x:active {
+  /* Your styles for the close anchor when clicked */
+  color: darkred; /* Example: Darker color when clicked */
+}
+.close-text {
+  /* Your styles for the 'Close' text */
+  color: black; /* Change color as desired */
+  font-style: italic;
+  margin-right: 0px; /* Adjust spacing between the 'Close' text and 'X' anchor */
+  display: inline;
+}
+.close-text:hover {
+  /* Your styles for the close anchor on hover */
+  text-decoration: underline; /* Example: Underline on hover */
+}
+#all-filters {
+  display: none;
+}
+#search-radio-button-panel {
+  display: flex;
+  justify-content: space-between;
+}
+
+.center-div {
+  width: 50%; /* Adjust the width as needed */
+  margin: 0 auto; /* This centers the div horizontally */
+  text-align: center; /* This centers the content inside the div */
+}
