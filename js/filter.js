@@ -4,6 +4,412 @@ import { KeywordSearchDetailReturnInfo } from './detailReturn.js';
 import { clearSearchResults } from './search.js';
 import { ExtendedMap } from './extensions.js';
 
+/* A simple Boolean filter with a Checkbox  */
+export class Filter {
+  constructor(name, options) {
+    this.name = name;
+    this.options = options;
+  }
+
+  /* Answer a String, the name in the DOM of the checkbox for this filter */
+  checkboxID() {
+    return this.name + '-filter-checkbox';
+  }
+
+  /* Answer the input element from the DOM that is the checkbox for this filter */
+  checkbox() {
+    return document.getElementById(this.checkboxID());
+  }
+
+  /* Uncheck the checkbox */
+  uncheck() {
+    this.checkbox().checked = false;
+  }
+
+  /* Deselect this filter and clear its state */
+  clear() {
+    this.uncheck();
+  }
+}
+
+/* A Filter that displays a popUpMenu when the checkbox is checked, but only one option at a time can be
+   selected in the menu */
+export class SingleChoiceMenuFilter extends Filter {
+  /* Answer a String, the name in the DOM of the popUpMenu for this filter*/
+  popUpID() {
+    return this.name + '-popupMenu';
+  }
+
+  /* Answer the div element from the DOM behaves as a popUpMenu for this filter */
+  popUpMenu() {
+    return document.getElementById(this.popUpID());
+  }
+
+  /* Answer a String, the name in the DOM of the interactive checkbox label for this filter */
+  labelID() {
+    return this.name + '-label';
+  }
+
+  /* Answer the anchor element from the DOM serves as the interactive label for the checkbox of this filter */
+  label() {
+    return document.getElementById(this.labelID);
+  }
+
+  /* Answer a String, the name in the DOM of the div that will hold the popUpMenu for this filter */
+  popUpContainerID() {
+    return this.name + '-container';
+  }
+
+  /* Answer the div element from the DOM that will hold the popUpMenu for this filter */
+  popUpContainer() {
+    return document.getElementById(this.popUpContainerID);
+  }
+
+  /* Answer a String, the name in the DOM of the div showing clarifying text for what is selected in the 
+     popUpMenu for this filter when only one item is selected */
+  singleClarifierID() {
+    return this.name + '-single-clarifier';
+  }
+
+  /* Answer the div element from the DOM that contains text clarifying what is selected in the popUpMenu
+     for this filter when ony one item is selected in the menu*/
+  singleClarifier() {
+    return document.getElementById(this.singleClarifierID());
+  }
+
+  /* Answer the function used to sort the options in the popUpMenu */
+  sortFunction() {
+    return this.textContentSort;
+  }
+
+  textContentSort(a, b) {
+    if (a.textContent > b.textContent) {
+      return -1; // Return -1 to indicate 'a' should come before 'b'
+    }
+    if (a.textContent < b.textContent) {
+      return 1; // Return 1 to indicate 'b' should come before 'a'
+    }
+    return 0; // Return 0 if they are equal
+  }
+
+  /* Deselect this filter and clear its state */
+  clear() {
+    this.uncheck();
+  }
+
+  /* Add a function that will react to a change of the checkbox's state: it will lazy-initialize
+     the popUpMenu, lazy-initialize the text element (clarifier) that shows what is selected in 
+     the popUpMenu, show the popUpMenu and, if the checkbox is unchecked, clear any menu selections. */
+  addMenuListeners() {
+    // Add a change listener to the checkbox
+    const filterCheckbox = this.checkbox();
+    filterCheckbox.addEventListener('change', function () {
+      if (!this.popupMenu()) {
+        // popUpMenu has not yet been created; lazy-initialize it
+        this.createAndPostionPopupMenu();
+      }
+      if (!menuInfo.singleClarifier) {
+        // clarifier has not yet been created; lazy-initialize it
+        this.createSingleClarifier();
+      }
+
+      this.openPopupMenu();
+
+      if (!filterCheckbox.checked) {
+        this.clearSelected();
+        setTimeout(this.closeOtherPopUps.bind(this), 500); // is this necessary?
+      }
+    });
+  }
+
+  /* Create and return a div that acts as a pop-up menu for this filter. It contains an unordered
+     list, which contains list items for all of the filter options. */
+  newPopUpMenu() {
+    const div = document.createElement('div');
+    div.classList.add('popup-menu');
+    div.id = this.popUpID();
+    const list = document.createElement('ul');
+    const closeItem = this.newCloseMenuItem();
+    list.appendChild(closeItem);
+    this.options.forEach((option) => {
+      const item = this.newMenuItem(option);
+      list.appendChild(item);
+    });
+    div.appendChild(list);
+    // div.style.display = 'block'; // show the menu
+    return div;
+  }
+
+  /* Create and return a list item for the top of the menu that has a couple of anchors
+     for the user to click on to close the entire menu. */
+  newCloseMenuItem() {
+    const closeText = document.createElement('a');
+    closeText.href = '#';
+    closeText.classList.add('close-text');
+    closeText.textContent = 'Close';
+    closeText.addEventListener('click', function (event) {
+      this.closeMenu(event);
+    });
+
+    const closeX = document.createElement('a');
+    closeX.href = '#';
+    closeX.classList.add('close-x');
+    closeX.textContent = 'X';
+    closeX.addEventListener('click', function (event) {
+      this.closeMenu(event);
+    });
+
+    const listItem = document.createElement('li');
+    listItem.id = 'close-menu-list-item';
+    listItem.appendChild(closeText);
+    listItem.appendChild(closeX);
+    return listItem;
+  }
+
+  /* Close this filter's popUpMenu */
+  closeMenu(event) {
+    event.preventDefault();
+    this.closePopUpMenu();
+  }
+
+  /* Show the popUpMenu for this filter in the DOM, hiding all other popUpMenus */
+  openPopUpMenu() {
+    this.closeOtherPopUps();
+    this.popUpMenu().style.display = 'block';
+  }
+
+  /* Hide the popUpMenu for this filter in the DOM */
+  closePopUpMenu() {
+    this.popUpMenu().style.display = 'none';
+  }
+
+  /* Create anew the div that serves as the popUpMenu for this filter and position it just to the
+     right of the checkbox label */
+  createAndPostionPopupMenu() {
+    this.closeOtherPopUps();
+
+    const popUpDiv = this.newPopUpMenu();
+    const labelRect = this.label().getBoundingClientRect();
+    popUpDiv.style.position = 'absolute';
+    popUpDiv.style.top = labelRect.top + 'px';
+    popUpDiv.style.left = labelRect.right + 10 + 'px';
+
+    const container = this.popUpContainer();
+    container.appendChild(popUpDiv);
+  }
+
+  /* Search the DOM for all popUpMenus. Close them all so only the popUpMenu for this filter
+     can show. */
+  closeOtherPopUps() {
+    const allPopUps = document.querySelectorAll('.popup-menu');
+    const myPopUp = this.popUpMenu();
+    allPopUps.forEach((popUp) => {
+      if (popUp !== myPopUp) {
+        popUp.style.display = 'none';
+      }
+    });
+  }
+
+  /* Answer the String that is the display style for the single clarifier of this filter. 
+     Single choice menus should always show their single clarifier */
+  singleClarifierDisplayStyle() {
+    return 'inline-block';
+  }
+
+  /* The single clarifier div does not yet exist in the DOM. Create it and add it to the popUpMenu container
+     for this filter */
+  createSingleClarifier() {
+    const clarifier = document.createElement('div');
+    clarifier.id = this.singleClarifierID();
+    clarifier.classList.add('single-clarifier');
+    clarifier.textContent = '(' + this.selected[0] + ')';
+    clarifier.style.display = this.singleClarifierDisplayStyle();
+
+    this.popUpContainer().appendChild(clarifier);
+  }
+
+  // End Filter class
+}
+
+export class MultipleChoiceFilter extends SingleChoiceMenuFilter {
+  /* Answer a String, the name in the DOM of the div containing the div showing clarifying text for 
+     what is selected in the popUpMenu for this filter and how the selections are combined when more 
+     than one item is selected */
+  combinerID() {
+    return this.name + '-combiner';
+  }
+
+  /* Answer the div element from the DOM that contains the div shows clarifying text for what is selected in the 
+     popUpMenu for this filter and how the selections are combined when more than one item is selected */
+  combiner() {
+    return document.getElementById(this.combinerID());
+  }
+
+  /* Answer a String, the name in the DOM of the div showing clarifying text for what is selected in the 
+     popUpMenu for this filter and how the selections are combined when more than one item is selected */
+  combinerClarifierID() {
+    return this.name + '-combiner-clarifier';
+  }
+
+  /* Answer the div element from the DOM that shows clarifying text for what is selected in the 
+     popUpMenu for this filter and how the selections are combined when more than one item is selected */
+  combinerClarifier() {
+    return document.getElementById(this.combinerClarifierID());
+  }
+
+  /* Add a function that will react to a change of the checkbox's state: it will lazy-initialize
+     the popUpMenu, lazy-initialize any refinements of the filter, like and/or radio buttons and text 
+     clarifying what is selected in the popUpMenu, show the popUpMenu and, if the checkbox is unchecked, 
+     clear any menu selections. 
+     This overrides the superclass function of the same name because this one adds a combiner clarifier*/
+  addMenuListeners() {
+    // Add a change listener to the checkbox
+    const filterCheckbox = this.checkbox();
+    filterCheckbox.addEventListener('change', function () {
+      if (!this.popupMenu()) {
+        // popUpMenu has not yet been created; lazy-initialize it
+        this.createAndPostionPopupMenu();
+      }
+      if (!this.combiner()) {
+        // combiner has not yet been created; lazy-initialize it
+        this.createCombiner();
+      }
+      if (!this.singleClarifier()) {
+        // clarifier has not yet been created; lazy-initialize it
+        this.createSingleClarifier();
+      }
+
+      this.openPopupMenu();
+
+      if (!filterCheckbox.checked) {
+        this.clearSelected();
+        setTimeout(this.closeOtherPopUps.bind(this), 500); // is this necessary? Other popUps are closed during openPopUp()
+      }
+    });
+  }
+
+  /* Answer the String used to combine options for this filter. Because we are Or-Only, the only way to
+     combine options is with 'or' */
+  combineUsing() {
+    return 'or';
+  }
+
+  /* Answer the String that is the display style for the single clarifier of this filter. 
+     This will depend on how many items are selected in the popUpMenu. If only one, show the 
+     clarifier. If zero, displaying it is not necessary. If more than one, hide the sinble clarfier
+     and show a more detailed combiner clarifier */
+  singleClarifierDisplayStyle() {
+    if (this.selected.length === 1) {
+      return 'inline-block';
+    }
+    return 'none';
+  }
+
+  /* Answer the String that is the display style for the combiner clarifier of this filter. 
+     This will depend on how many items are selected in the popUpMenu. If more than one, show the 
+     clarifier. Otherwiser, show either the singleClarifier (for one selection) or no clarifier 
+     at all (for no selection). */
+  combinerDisplayStyle() {
+    if (menuInfo.selected.length > 1) {
+      return 'inline-block';
+    }
+    return 'none';
+  }
+
+  createCombiner() {
+    const combiner = document.createElement('div');
+    combiner.id = this.combinerID();
+    combiner.classList.add('combiner');
+
+    combiner.appendChild(this.newCombinerClarifier());
+    combiner.style.display = this.combinerDisplayStyle();
+
+    this.popUpContainer().appendChild(combiner);
+  }
+
+  newCombinerClarifier() {
+    const combinerClarifier = document.createElement('div');
+    combinerClarifier.id = this.combinerClarifierID();
+    combinerClarifier.classList.add('clarifier');
+    combinerClarifier.textContent =
+      '(' + this.selected.join(' ' + this.combineUsing() + ' ') + ')';
+    combinerClarifier.style.display = 'inline-block';
+
+    return combinerClarifier;
+  }
+  /* End MultpleChoiceFilter class */
+}
+
+/* A Filter that allows multiple choice selections in the popUpMenu and also allows those choices to be combined
+   with either 'and' or 'or' */
+export class AndOrMultipleChoiceFilter extends MultipleChoiceFilter {
+  /* Override the superclass constructor because this filter allows the combiner to be set by the user */
+  constructor(name, options) {
+    super(name, options);
+    this.combineUsing = 'and'; // default combiner choice
+  }
+
+  /* Answer how to combine the options when there is more than one selected in the popUpMenu */
+  combineUsing() {
+    return this.combineUsing;
+  }
+
+  /* In response to a radio button selection, set how to combine the options when there is more than one selected in the popUpMenu*/
+  setCombineUsing(aString) {
+    this.combineUsing = aString;
+    this.combinerClarifier().textContent =
+      '(' + this.selected.join(' ' + aString + ' ') + ')';
+  }
+
+  /* Create and return a single radio button with the choice of how to combine the filter options for this filter when
+     more than one item is selected in the popUpMenu */
+  newCombinationChoice(choiceString) {
+    const choice = document.createElement('input');
+    choice.type = 'radio';
+    choice.id = this.name + '-' + choiceString;
+    choice.name = this.name + '-combine-using';
+    choice.value = choiceString;
+    choice.checked = true;
+    choice.addEventListener('change', function (event) {
+      this.setCombineUsing(event.target.value);
+    });
+    return choice;
+  }
+
+  /* Create and return the label for a radio button that allows the choice of how to combine the filter options for 
+    this filter when more than one item is selected in the popUpMenu */
+  newCombinationLabel(choice, labelString) {
+    const label = document.createElement('label');
+    label.for = choice.id;
+    label.textContent = labelString;
+    return label;
+  }
+
+  /* Override the superclas method for creating a combiner. This one is more complicated because we allow the user
+     to choose how to combine the options in the popUpMenu: either with 'and' or 'or'. We add the radio buttons for
+     those choices before the combiner clarifier. */
+  createCombiner() {
+    const combiner = document.createElement('div');
+    combiner.id = this.combinerID();
+    combiner.classList.add('combiner');
+    combiner.textContent = '- combine using: ';
+
+    const andChoice = this.newCombinationChoice('and');
+    const andLabel = this.newCombinationLabel(andChoice, ' And ');
+
+    const orChoice = this.newCombinationChoice('or');
+    const orLabel = this.newCombinationLabel(orChoice, ' Or ');
+
+    combiner.appendChild(andChoice);
+    combiner.appendChild(andLabel);
+    combiner.appendChild(orChoice);
+    combiner.appendChild(orLabel);
+    combiner.appendChild(newCombinerClarifier());
+
+    this.popUpContainer().appendChild(combiner);
+  }
+}
+
 const allMenuInfo = {
   movieGenreMenuInfo: {
     checkbox: () => document.querySelector('#movie-genre-filter-checkbox'),
@@ -420,25 +826,6 @@ async function getGenres(isTV = false) {
 async function getLanguages() {
   const languages = await fetchAPIData('configuration/languages');
   return languages;
-}
-
-function getSortCriteria() {
-  const sortCriteria = [];
-  sortCriteria.push('original_title.asc');
-  sortCriteria.push('original_title.desc');
-  sortCriteria.push('popularity.asc');
-  sortCriteria.push('popularity.desc');
-  sortCriteria.push('primary_release_date.asc');
-  sortCriteria.push('primary_release_date.desc');
-  sortCriteria.push('revenue.asc');
-  sortCriteria.push('revenue.desc');
-  sortCriteria.push('title.asc');
-  sortCriteria.push('title.desc');
-  sortCriteria.push('vote_average.asc');
-  sortCriteria.push('vote_average.desc');
-  sortCriteria.push('vote_count.asc');
-  sortCriteria.push('vote_count.desc');
-  return sortCriteria;
 }
 
 function createMenuItem(title, menuInfo) {
