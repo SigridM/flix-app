@@ -9,6 +9,7 @@ export class Filter {
   constructor(name, options) {
     this.name = name;
     this.options = options;
+    this.addChangeListener();
   }
 
   /* Answer a String, the name in the DOM of the checkbox for this filter */
@@ -30,11 +31,58 @@ export class Filter {
   clear() {
     this.uncheck();
   }
+
+  /* Answer a Boolean, whether this filter is active */
+  isFiltered() {
+    return this.checkbox().checked;
+  }
+
+  /* Set the checked state of this filter's checkbox to aBoolean */
+  setFiltered(aBoolean) {
+    this.checkbox().checked = aBoolean;
+  }
+
+  /* Add a function that will react to a change of the checkbox's state: for a simple filter, just close any other
+     popUpMenus on the page */
+  addChangeListener() {
+    const filterCheckbox = this.checkbox();
+    filterCheckbox.addEventListener('change', function () {
+      this.closeOtherPopUps();
+    });
+  }
+
+  /* For compatibility with menu filters, answer the popUpMenu, which is null for simple filters */
+  popUpMenu() {
+    return null;
+  }
+
+  /* Search the DOM for all popUpMenus. Close them all so only the popUpMenu for this filter (if there is one)
+     can show. */
+  closeOtherPopUps() {
+    const allPopUps = document.querySelectorAll('.popup-menu');
+    const myPopUp = this.popUpMenu();
+    allPopUps.forEach((popUp) => {
+      if (popUp !== myPopUp) {
+        popUp.style.display = 'none';
+      }
+    });
+  }
+
+  /* End Filter class */
 }
 
 /* A Filter that displays a popUpMenu when the checkbox is checked, but only one option at a time can be
    selected in the menu */
 export class SingleChoiceMenuFilter extends Filter {
+  constructor(name, options) {
+    super(name, options);
+    this.setSelected([]); // this will only ever have at most one item in it, but subclasses will use for multiple selections
+  }
+
+  /* Answer an Array of all the Strings selected in the popUpMenu */
+  getSelected() {
+    return this.selected;
+  }
   /* Answer a String, the name in the DOM of the popUpMenu for this filter*/
   popUpID() {
     return this.name + '-popupMenu';
@@ -82,6 +130,7 @@ export class SingleChoiceMenuFilter extends Filter {
     return this.textContentSort;
   }
 
+  /* Sort listItem alphabetically by their textContent */
   textContentSort(a, b) {
     if (a.textContent > b.textContent) {
       return -1; // Return -1 to indicate 'a' should come before 'b'
@@ -94,13 +143,109 @@ export class SingleChoiceMenuFilter extends Filter {
 
   /* Deselect this filter and clear its state */
   clear() {
+    this.clearSelected();
     this.uncheck();
   }
 
-  /* Add a function that will react to a change of the checkbox's state: it will lazy-initialize
-     the popUpMenu, lazy-initialize the text element (clarifier) that shows what is selected in 
-     the popUpMenu, show the popUpMenu and, if the checkbox is unchecked, clear any menu selections. */
-  addMenuListeners() {
+  /* Unselect everything in the popUpMenu and rearrane the popUpMenu according to the sort function */
+  clearSelected() {
+    this.getSelectedListItems().forEach((ea) => {
+      ea.classList.remove('selected'); // turn off selected
+    });
+
+    this.moveSelectedToTop(); // reorder all the unselected; reset the selected instance variable
+  }
+
+  /* Answer an Array of all of the selected listItems in the popUpMenu */
+  getSelectedListItems() {
+    const popupMenu = this.popupMenu();
+    const ul = popupMenu.querySelector('ul');
+    return Array.from(ul.querySelectorAll('.selected'));
+  }
+
+  /* Answer an Array of all of the unselected listItems in the popUpMenu, not including the close menu item */
+  getUnselectedListItems() {
+    const popupMenu = this.popupMenu();
+    const ul = popupMenu.querySelector('ul');
+    return Array.from(
+      ul.querySelectorAll('a:not(.selected):not(.close-x):not(.close-text)')
+    );
+  }
+
+  /* Set the selected text to the strings in the given Array */
+  setSelected(anArray) {
+    this.selected = anArray;
+  }
+
+  /* The selection in the popUpMenu has changed. Rearrange the popUpMenu items so the selected are at the top, 
+     the unselected at the bottom, and if there are both selected and unselected, a separator line in between them. 
+     Keep the close menu item at the very top. Sort both the selected and unselected according to the sort function.  
+     Modify the clarifying text to reflect the current state of the selection. */
+  moveSelectedToTop() {
+    const popupMenu = this.popupMenu();
+    const ul = popupMenu.querySelector('ul');
+
+    // Sort the items in reverse alphabetical order so they can be re-added from the bottom up
+    let selectedItems = getSelectedListItems().sort(this.sortFunction);
+    let unselectedItems = this.getUnselectedListItems().sort(this.sortFunction);
+
+    // Remove the unselected items and re-add them in alphabetical order
+    unselectedItems.forEach((ea) => {
+      ul.removeChild(ea.parentNode);
+      ul.insertBefore(ea.parentNode, ul.firstChild);
+    });
+
+    // Remove the selected items and re-add them in alphabetical order above the unselected items
+    selectedItems.forEach((ea) => {
+      ul.removeChild(ea.parentNode);
+      ul.insertBefore(ea.parentNode, ul.firstChild);
+    });
+
+    // Make sure the close menu item is at the very top
+    const closeMenuItem = ul.querySelector('#close-menu-list-item');
+    ul.removeChild(closeMenuItem);
+    ul.insertBefore(closeMenuItem, ul.firstChild);
+
+    // Check or uncheck the checkbox associated with this menu based on whether there
+    // are any selected items
+    this.checkbox().checked = selectedItems.length > 0;
+
+    // Add a separator line if needed
+    // First remove the old separator, if there is one
+    const separator = ul.querySelector('.separator');
+    if (separator) {
+      ul.removeChild(separator);
+    }
+
+    // Add a separator if there are any selected
+    if (selectedItems.length > 0) {
+      const lastSelectedItem = selectedItems[0]; //selectedItems are in reverse alphabetical order;
+      const nextListItem = lastSelectedItem.parentNode.nextElementSibling;
+
+      // if there are unselected items
+      if (nextListItem) {
+        // Add a separator line
+        const separator = document.createElement('li');
+        separator.className = 'separator';
+        ul.insertBefore(separator, nextListItem);
+      }
+    }
+
+    this.setSelected(
+      selectedItems
+        .sort(this.sortFunction)
+        .reverse()
+        .map((ea) => ea.textContent)
+    );
+
+    this.clarifySelected();
+  }
+
+  /* Add a function that will react to a change of the checkbox's state: for a menu filter, it will 
+     lazy-initialize the popUpMenu, lazy-initialize the text element (clarifier) that shows what is 
+     selected in the popUpMenu, show the popUpMenu and, if the checkbox is unchecked, clear any menu 
+     selections. */
+  addChangeListener() {
     // Add a change listener to the checkbox
     const filterCheckbox = this.checkbox();
     filterCheckbox.addEventListener('change', function () {
@@ -198,22 +343,22 @@ export class SingleChoiceMenuFilter extends Filter {
     container.appendChild(popUpDiv);
   }
 
-  /* Search the DOM for all popUpMenus. Close them all so only the popUpMenu for this filter
-     can show. */
-  closeOtherPopUps() {
-    const allPopUps = document.querySelectorAll('.popup-menu');
-    const myPopUp = this.popUpMenu();
-    allPopUps.forEach((popUp) => {
-      if (popUp !== myPopUp) {
-        popUp.style.display = 'none';
-      }
-    });
-  }
-
   /* Answer the String that is the display style for the single clarifier of this filter. 
      Single choice menus should always show their single clarifier */
   singleClarifierDisplayStyle() {
     return 'inline-block';
+  }
+
+  /* Set the content and display style of the div that clarifies what is selected in the popUpMenu */
+  clarifySelected() {
+    const clarifier = document.getElementById(this.singleClarifierID());
+    clarifier.textContent = this.singleClarifierContent();
+    clarifier.style.display = this.singleClarifierDisplayStyle();
+  }
+
+  /* Answer a String, the text that goes into the single clarifier */
+  singleClarifierContent() {
+    return '(' + this.getSelected()[0] + ')';
   }
 
   /* The single clarifier div does not yet exist in the DOM. Create it and add it to the popUpMenu container
@@ -222,13 +367,12 @@ export class SingleChoiceMenuFilter extends Filter {
     const clarifier = document.createElement('div');
     clarifier.id = this.singleClarifierID();
     clarifier.classList.add('single-clarifier');
-    clarifier.textContent = '(' + this.selected[0] + ')';
-    clarifier.style.display = this.singleClarifierDisplayStyle();
+    this.clarifySelected();
 
     this.popUpContainer().appendChild(clarifier);
   }
 
-  // End Filter class
+  // End SingleChoiceMenuFilter class
 }
 
 export class MultipleChoiceFilter extends SingleChoiceMenuFilter {
@@ -262,7 +406,7 @@ export class MultipleChoiceFilter extends SingleChoiceMenuFilter {
      clarifying what is selected in the popUpMenu, show the popUpMenu and, if the checkbox is unchecked, 
      clear any menu selections. 
      This overrides the superclass function of the same name because this one adds a combiner clarifier*/
-  addMenuListeners() {
+  addChangeListener() {
     // Add a change listener to the checkbox
     const filterCheckbox = this.checkbox();
     filterCheckbox.addEventListener('change', function () {
@@ -294,12 +438,21 @@ export class MultipleChoiceFilter extends SingleChoiceMenuFilter {
     return 'or';
   }
 
+  /* Answer a String, the character combination that is used in the API to represent how options are joined */
+  getJoinString() {
+    const andJoinString = '%2C';
+    const orJoinString = '%7C';
+    if (this.combineUsing() === 'and') {
+      return andJoinString;
+    }
+    return orJoinString;
+  }
   /* Answer the String that is the display style for the single clarifier of this filter. 
      This will depend on how many items are selected in the popUpMenu. If only one, show the 
-     clarifier. If zero, displaying it is not necessary. If more than one, hide the sinble clarfier
+     clarifier. If zero, displaying it is not necessary. If more than one, hide the single clarfier
      and show a more detailed combiner clarifier */
   singleClarifierDisplayStyle() {
-    if (this.selected.length === 1) {
+    if (this.getSelected().length === 1) {
       return 'inline-block';
     }
     return 'none';
@@ -316,6 +469,29 @@ export class MultipleChoiceFilter extends SingleChoiceMenuFilter {
     return 'none';
   }
 
+  /* Show clarifying text in the DOM for how multiple selections will be combined */
+  clarifyCombinedSelected() {
+    const combinerClarifier = this.combinerClarifier();
+    combinerClarifier.textContent = this.combinerClarifierText();
+    combinerClarifier.style.display = 'inline-block';
+  }
+
+  /* Answer a String that is the clarifying text for how multiple selections will be combined */
+  combinerClarifierText() {
+    return '(' + this.getSelected().join(' ' + this.combineUsing() + ' ') + ')';
+  }
+
+  /* Set the content and display style of the divs that clarifies what is selected in the popUpMenu. 
+     This can be the single clarifier as in the superclass, and also the combiner clarifier if there
+     is more than one selection */
+  clarifySelected() {
+    super.clarifySelected();
+    this.clarifyCombinedSelected();
+    this.combiner().style.display = this.combinerDisplayStyle();
+  }
+
+  /* Create and add to the DOM a div that holds the combiner clarifier (a div that, in turn, shows the
+     user how their multiple selections in the popUpMenu will be combined) */
   createCombiner() {
     const combiner = document.createElement('div');
     combiner.id = this.combinerID();
@@ -327,14 +503,13 @@ export class MultipleChoiceFilter extends SingleChoiceMenuFilter {
     this.popUpContainer().appendChild(combiner);
   }
 
+  /* Create and return a div that will hold the text showing the user how their multiple choices in the
+     popUpMenu will be combined */
   newCombinerClarifier() {
     const combinerClarifier = document.createElement('div');
     combinerClarifier.id = this.combinerClarifierID();
     combinerClarifier.classList.add('clarifier');
-    combinerClarifier.textContent =
-      '(' + this.selected.join(' ' + this.combineUsing() + ' ') + ')';
-    combinerClarifier.style.display = 'inline-block';
-
+    this.clarifyCombinedSelected();
     return combinerClarifier;
   }
   /* End MultpleChoiceFilter class */
@@ -357,8 +532,7 @@ export class AndOrMultipleChoiceFilter extends MultipleChoiceFilter {
   /* In response to a radio button selection, set how to combine the options when there is more than one selected in the popUpMenu*/
   setCombineUsing(aString) {
     this.combineUsing = aString;
-    this.combinerClarifier().textContent =
-      '(' + this.selected.join(' ' + aString + ' ') + ')';
+    this.combinerClarifier().textContent = combinerClarifierText();
   }
 
   /* Create and return a single radio button with the choice of how to combine the filter options for this filter when
@@ -387,7 +561,7 @@ export class AndOrMultipleChoiceFilter extends MultipleChoiceFilter {
 
   /* Override the superclas method for creating a combiner. This one is more complicated because we allow the user
      to choose how to combine the options in the popUpMenu: either with 'and' or 'or'. We add the radio buttons for
-     those choices before the combiner clarifier. */
+     those choices before adding the combiner clarifier. */
   createCombiner() {
     const combiner = document.createElement('div');
     combiner.id = this.combinerID();
@@ -408,6 +582,8 @@ export class AndOrMultipleChoiceFilter extends MultipleChoiceFilter {
 
     this.popUpContainer().appendChild(combiner);
   }
+
+  /* End AndOrMultipleChoiceFilter */
 }
 
 const allMenuInfo = {
@@ -620,14 +796,14 @@ function getJoinStringFor(menuInfo) {
   const radioButtons = menuInfo.combiner.querySelectorAll(
     'input[type="radio"]'
   );
-  let selectedRadiobuttonValue = null;
+  let selectedRadioButtonValue = null;
   radioButtons.forEach((ea) => {
     if (ea.checked) {
-      selectedRadiobuttonValue = ea.value;
+      selectedRadioButtonValue = ea.value;
     }
   });
 
-  if ((selectedRadiobuttonValue = 'and')) {
+  if (selectedRadioButtonValue === 'and') {
     return andJoinString;
   }
   return orJoinString;
