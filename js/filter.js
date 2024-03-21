@@ -6,10 +6,19 @@ import { ExtendedMap } from './extensions.js';
 
 /* A simple Boolean filter with a Checkbox  */
 export class Filter {
-  constructor(name, options) {
+  constructor(name) {
     this.name = name;
-    this.options = options;
     this.addChangeListener();
+  }
+
+  /* Answer a String, the name in the DOM of the div element that encloses this entire filter */
+  enclosingDivID() {
+    return this.name + '-div';
+  }
+
+  /* Answer the div element from the DOM that encloses this entire filter */
+  enclosingDiv() {
+    return document.getElementById(this.enclosingDivID);
   }
 
   /* Answer a String, the name in the DOM of the checkbox for this filter */
@@ -68,6 +77,14 @@ export class Filter {
     });
   }
 
+  show() {
+    this.enclosingDiv.style.display = 'block';
+  }
+
+  hide() {
+    this.enclosingDiv.style.display = 'none';
+  }
+
   /* End Filter class */
 }
 
@@ -75,13 +92,19 @@ export class Filter {
    selected in the menu */
 export class SingleChoiceMenuFilter extends Filter {
   constructor(name, options) {
-    super(name, options);
+    super(name);
+    this.options = options;
     this.setSelected([]); // this will only ever have at most one item in it, but subclasses will use for multiple selections
   }
 
   /* Answer an Array of all the Strings selected in the popUpMenu */
   getSelected() {
     return this.selected;
+  }
+
+  /* Answer a Boolean, whether any of the popUpMenuItems are selected */
+  hasSelected() {
+    return this.getSelected().length > 0;
   }
   /* Answer a String, the name in the DOM of the popUpMenu for this filter*/
   popUpID() {
@@ -149,15 +172,15 @@ export class SingleChoiceMenuFilter extends Filter {
 
   /* Unselect everything in the popUpMenu and rearrane the popUpMenu according to the sort function */
   clearSelected() {
-    this.getSelectedListItems().forEach((ea) => {
+    this.getSelectedListItemAnchors().forEach((ea) => {
       ea.classList.remove('selected'); // turn off selected
     });
 
     this.moveSelectedToTop(); // reorder all the unselected; reset the selected instance variable
   }
 
-  /* Answer an Array of all of the selected listItems in the popUpMenu */
-  getSelectedListItems() {
+  /* Answer an Array of all of the selected listItem anchors in the popUpMenu */
+  getSelectedListItemAnchors() {
     const popupMenu = this.popupMenu();
     const ul = popupMenu.querySelector('ul');
     return Array.from(ul.querySelectorAll('.selected'));
@@ -311,6 +334,37 @@ export class SingleChoiceMenuFilter extends Filter {
     return listItem;
   }
 
+  /* Create and return a listItem containing an anchor that can be clicked whose text content is the given filter optionText, 
+     a String */
+  newMenuItem(optionText) {
+    const listItem = document.createElement('li');
+    const anchor = document.createElement('a');
+
+    anchor.href = '#';
+    anchor.classList.add('filter-menu-item');
+    anchor.textContent = optionText;
+
+    anchor.addEventListener('click', function (event) {
+      event.preventDefault();
+      this.menuItemSelected(event.target);
+      this.moveSelectedToTop();
+    });
+    listItem.appendChild(anchor);
+    return listItem;
+  }
+
+  /* Respond to a list item being selected because its anchor was clicked. For a single choice menu filter,
+     this means deselecting all selected items and toggling the clicked-on item (selecting it if it wasn't) */
+  menuItemSelected(listItemAnchor) {
+    wasSelected = listItemAnchor.classList.contains('selected');
+    this.getSelectedListItemAnchors().forEach((ea) => {
+      ea.classList.remove('selected'); // turn selection off
+    });
+    if (!wasSelected) {
+      listItemAnchor.classList.add('selected'); // turn selection on
+    }
+  }
+
   /* Close this filter's popUpMenu */
   closeMenu(event) {
     event.preventDefault();
@@ -374,8 +428,9 @@ export class SingleChoiceMenuFilter extends Filter {
 
   // End SingleChoiceMenuFilter class
 }
-
-export class MultipleChoiceFilter extends SingleChoiceMenuFilter {
+/* MultipleChoiceMenuFilter allows multiple selections in its popUpMenu and shows how those selections will be combined
+   in the final filter. By default, they will be combined using 'or'. */
+export class MultipleChoiceMenuFilter extends SingleChoiceMenuFilter {
   /* Answer a String, the name in the DOM of the div containing the div showing clarifying text for 
      what is selected in the popUpMenu for this filter and how the selections are combined when more 
      than one item is selected */
@@ -430,6 +485,12 @@ export class MultipleChoiceFilter extends SingleChoiceMenuFilter {
         setTimeout(this.closeOtherPopUps.bind(this), 500); // is this necessary? Other popUps are closed during openPopUp()
       }
     });
+  }
+
+  /* Respond to a list item being selected because its anchor was clicked. For a multiple choice menu filter,
+     this means simply toggling the selection state of the clicked-on anchor */
+  menuItemSelected(listItemAnchor) {
+    listItemAnchor.classList.toggle('selected');
   }
 
   /* Answer the String used to combine options for this filter. Because we are Or-Only, the only way to
@@ -517,7 +578,7 @@ export class MultipleChoiceFilter extends SingleChoiceMenuFilter {
 
 /* A Filter that allows multiple choice selections in the popUpMenu and also allows those choices to be combined
    with either 'and' or 'or' */
-export class AndOrMultipleChoiceFilter extends MultipleChoiceFilter {
+export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
   /* Override the superclass constructor because this filter allows the combiner to be set by the user */
   constructor(name, options) {
     super(name, options);
@@ -628,6 +689,8 @@ const allMenuInfo = {
   },
 };
 
+const allFilters = new ExtendedMap();
+
 export function keywordResultInfo(isTV) {
   return new KeywordSearchDetailReturnInfo(
     isTV,
@@ -638,6 +701,38 @@ export function keywordResultInfo(isTV) {
     getSelectedLanguages(),
     !includeAdult(),
     sortBy()
+  );
+}
+
+function createFilters() {
+  allFilters.set(
+    'movieGenres',
+    new AndOrMultipleChoiceMenuFilter(
+      'movie-genre',
+      global.lists.genres.movies.map((ea) => ea.name)
+    )
+  );
+  allFilters.set(
+    'tvGenres',
+    new AndOrMultipleChoiceMenuFilter(
+      'tv-genre',
+      global.lists.genres.tv.map((ea) => ea.name)
+    )
+  );
+  allFilters.set('adult', new Filter('adult'));
+  allFilters.set(
+    'languages',
+    new MultipleChoiceMenuFilter(
+      'language',
+      global.lists.languages.map((ea) => ea.english_name)
+    )
+  );
+  allFilters.set(
+    'sort',
+    new SingleChoiceMenuFilter(
+      'sort-by',
+      Array.from(global.lists.sortCriteria.values())
+    )
   );
 }
 
@@ -657,17 +752,18 @@ export async function addFilterListeners() {
     }
   });
   await fillLists();
+  createFilters(); // these add their own listeners
 
-  addMenuListenersTo(allMenuInfo.movieGenreMenuInfo);
-  addMenuListenersTo(allMenuInfo.tvGenreMenuInfo);
-  addMenuListenersTo(allMenuInfo.languageMenuInfo);
-  addMenuListenersTo(allMenuInfo.sortMenuInfo);
+  // addMenuListenersTo(allMenuInfo.movieGenreMenuInfo);
+  // addMenuListenersTo(allMenuInfo.tvGenreMenuInfo);
+  // addMenuListenersTo(allMenuInfo.languageMenuInfo);
+  // addMenuListenersTo(allMenuInfo.sortMenuInfo);
 
-  document
-    .querySelector('#adult-filter-checkbox')
-    .addEventListener('change', function () {
-      closeAllPopups();
-    });
+  // document
+  //   .querySelector('#adult-filter-checkbox')
+  //   .addEventListener('change', function () {
+  //     closeAllPopups();
+  //   });
   // document
   //   .querySelector('#adult-filter-label')
   //   .addEventListener('change', function () {
@@ -678,18 +774,19 @@ export async function addFilterListeners() {
 }
 
 function clearCheckboxes() {
-  [
-    allMenuInfo.movieGenreMenuInfo,
-    allMenuInfo.languageMenuInfo,
-    allMenuInfo.sortMenuInfo,
-    allMenuInfo.tvGenreMenuInfo,
-  ].forEach((menuInfo) => {
-    if (menuInfo.popupMenu) {
-      clearSelected(menuInfo);
-      menuInfo.checkbox().checked = false;
-    }
-  });
-  document.querySelector('#adult-filter-checkbox').checked = false;
+  allFilters.forEach((filter) => filter.clear());
+  // [
+  //   allMenuInfo.movieGenreMenuInfo,
+  //   allMenuInfo.languageMenuInfo,
+  //   allMenuInfo.sortMenuInfo,
+  //   allMenuInfo.tvGenreMenuInfo,
+  // ].forEach((menuInfo) => {
+  //   if (menuInfo.popupMenu) {
+  //     clearSelected(menuInfo);
+  //     menuInfo.checkbox().checked = false;
+  //   }
+  // });
+  // document.querySelector('#adult-filter-checkbox').checked = false;
 }
 
 function addRadioButtonListeners() {
@@ -738,17 +835,39 @@ function hideOrShowFilterContainer(titleChecked) {
 }
 function hideUnusedGenreFilter(isTV) {
   closeAllPopups();
-  const movieGenreFilter = document.querySelector('#movie-genre-div');
-  const tvGenreFilter = document.querySelector('#tv-genre-div');
-  if (isTV) {
-    movieGenreFilter.style.display = 'none';
-    tvGenreFilter.style.display = 'block';
-  } else {
-    movieGenreFilter.style.display = 'block';
-    tvGenreFilter.style.display = 'none';
-  }
+  // const movieGenreFilter = document.querySelector('#movie-genre-div');
+  // const tvGenreFilter = document.querySelector('#tv-genre-div');
+  // if (isTV) {
+  //   allFilters.get('movieGenres').hide();
+  //   allFilters.get('tvGenres').show();
+
+  //   // movieGenreFilter.style.display = 'none';
+  //   // tvGenreFilter.style.display = 'block';
+  // } else {
+  //   allFilters.get('movieGenres').show();
+  //   allFilters.get('tvGenres').hide();
+  //   // movieGenreFilter.style.display = 'block';
+  //   // tvGenreFilter.style.display = 'none';
+  // }
+  getGenreFilter(isTV).show();
+  getGenreFilter(!isTV).hide();
 }
 
+function getGenreFilter(isTV) {
+  return isTV ? allFilters.get('tvGenres') : allFilters.get('movieGenres');
+}
+
+function getLanguageFilter() {
+  return allFilters.get('languages');
+}
+
+function getAdultFilter() {
+  return allFilters.get('adult');
+}
+
+function getSortFilter() {
+  return allFilters.get('sort');
+}
 export async function getFilterResults(isTV = false) {
   const results = await doFilter(isTV);
   return results;
@@ -757,27 +876,37 @@ export async function getFilterResults(isTV = false) {
 async function doFilter(isTV) {
   closeAllPopups();
 
-  const genreInfo = isTV
-    ? allMenuInfo.tvGenreMenuInfo
-    : allMenuInfo.movieGenreMenuInfo;
+  // const genreInfo = isTV
+  // ? allMenuInfo.tvGenreMenuInfo
+  // : allMenuInfo.movieGenreMenuInfo;
+
   let filters = '';
-  const genres = getSelectedGenreCodes(isTV);
-  if (genres.length > 0) {
-    filters += '&with_genres=' + genres.join(getJoinStringFor(genreInfo));
+
+  const genreFilter = getGenreFilter(isTV);
+  if (genreFilter.hasSelected()) {
+    const genres = getSelectedGenreCodes(isTV);
+    filters += '&with_genres=' + genres.join(genreFilter.getJoinString());
   }
-  const languages = getSelectedLanguageCodes();
-  if (languages.length > 0) {
+
+  if (getLanguageFilter().hasSelected()) {
+    const languages = getSelectedLanguageCodes();
     filters += '&with_original_language=' + languages.join('|');
   }
-  filters += '&include_adult=' + includeAdult();
 
-  filters += hasSort() ? '&sort_by=' + sortBy() : '';
+  if (getAdultFilter.isFiltered()) {
+    filters += '&include_adult=' + includeAdult();
+  }
+
+  if (getSortFilter().hasSelected()) {
+    filters += '&sort_by=' + sortBy();
+  }
   const results = await discoverAPIData(filters);
   return results;
 }
 
 function hasSort() {
-  return allMenuInfo.sortMenuInfo.selected.length > 0;
+  return getSortFilter().hasSelected();
+  // return allMenuInfo.sortMenuInfo.selected.length > 0;
 }
 
 function sortBy() {
@@ -787,26 +916,6 @@ function sortBy() {
   return global.lists.sortCriteria.getKeyByValue(
     allMenuInfo.sortMenuInfo.selected[0]
   );
-}
-
-function getJoinStringFor(menuInfo) {
-  const andJoinString = '%2C';
-  const orJoinString = '%7C';
-
-  const radioButtons = menuInfo.combiner.querySelectorAll(
-    'input[type="radio"]'
-  );
-  let selectedRadioButtonValue = null;
-  radioButtons.forEach((ea) => {
-    if (ea.checked) {
-      selectedRadioButtonValue = ea.value;
-    }
-  });
-
-  if (selectedRadioButtonValue === 'and') {
-    return andJoinString;
-  }
-  return orJoinString;
 }
 
 export function setSelectedLanguages(languages) {
