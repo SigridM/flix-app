@@ -3,694 +3,67 @@ import { global } from './globals.js';
 import { KeywordSearchDetailReturnInfo } from './detailReturn.js';
 import { clearSearchResults } from './search.js';
 import { ExtendedMap } from './extensions.js';
-
-/* A simple Boolean filter with a Checkbox  */
-export class Filter {
-  constructor(name) {
-    this.name = name;
-    this.addChangeListener();
-  }
-
-  /* Answer a String, the name in the DOM of the div element that encloses this entire filter */
-  enclosingDivID() {
-    return this.name + '-div';
-  }
-
-  /* Answer the div element from the DOM that encloses this entire filter */
-  enclosingDiv() {
-    return document.getElementById(this.enclosingDivID);
-  }
-
-  /* Answer a String, the name in the DOM of the checkbox for this filter */
-  checkboxID() {
-    return this.name + '-filter-checkbox';
-  }
-
-  /* Answer the input element from the DOM that is the checkbox for this filter */
-  checkbox() {
-    return document.getElementById(this.checkboxID());
-  }
-
-  /* Uncheck the checkbox */
-  uncheck() {
-    this.checkbox().checked = false;
-  }
-
-  /* Deselect this filter and clear its state */
-  clear() {
-    this.uncheck();
-  }
-
-  /* Answer a Boolean, whether this filter is active */
-  isFiltered() {
-    return this.checkbox().checked;
-  }
-
-  /* Set the checked state of this filter's checkbox to aBoolean */
-  setFiltered(aBoolean) {
-    this.checkbox().checked = aBoolean;
-  }
-
-  /* Add a function that will react to a change of the checkbox's state: for a simple filter, just close any other
-     popUpMenus on the page */
-  addChangeListener() {
-    const filterCheckbox = this.checkbox();
-    filterCheckbox.addEventListener('change', function () {
-      this.closeOtherPopUps();
-    });
-  }
-
-  /* For compatibility with menu filters, answer the popUpMenu, which is null for simple filters */
-  popUpMenu() {
-    return null;
-  }
-
-  /* Search the DOM for all popUpMenus. Close them all so only the popUpMenu for this filter (if there is one)
-     can show. */
-  closeOtherPopUps() {
-    const allPopUps = document.querySelectorAll('.popup-menu');
-    const myPopUp = this.popUpMenu();
-    allPopUps.forEach((popUp) => {
-      if (popUp !== myPopUp) {
-        popUp.style.display = 'none';
-      }
-    });
-  }
-
-  show() {
-    this.enclosingDiv.style.display = 'block';
-  }
-
-  hide() {
-    this.enclosingDiv.style.display = 'none';
-  }
-
-  /* End Filter class */
-}
-
-/* A Filter that displays a popUpMenu when the checkbox is checked, but only one option at a time can be
-   selected in the menu */
-export class SingleChoiceMenuFilter extends Filter {
-  constructor(name, options) {
-    super(name);
-    this.options = options;
-    this.setSelected([]); // this will only ever have at most one item in it, but subclasses will use for multiple selections
-  }
-
-  /* Answer an Array of all the Strings selected in the popUpMenu */
-  getSelected() {
-    return this.selected;
-  }
-
-  /* Answer a Boolean, whether any of the popUpMenuItems are selected */
-  hasSelected() {
-    return this.getSelected().length > 0;
-  }
-  /* Answer a String, the name in the DOM of the popUpMenu for this filter*/
-  popUpID() {
-    return this.name + '-popupMenu';
-  }
-
-  /* Answer the div element from the DOM behaves as a popUpMenu for this filter */
-  popUpMenu() {
-    return document.getElementById(this.popUpID());
-  }
-
-  /* Answer a String, the name in the DOM of the interactive checkbox label for this filter */
-  labelID() {
-    return this.name + '-label';
-  }
-
-  /* Answer the anchor element from the DOM serves as the interactive label for the checkbox of this filter */
-  label() {
-    return document.getElementById(this.labelID);
-  }
-
-  /* Answer a String, the name in the DOM of the div that will hold the popUpMenu for this filter */
-  popUpContainerID() {
-    return this.name + '-container';
-  }
-
-  /* Answer the div element from the DOM that will hold the popUpMenu for this filter */
-  popUpContainer() {
-    return document.getElementById(this.popUpContainerID);
-  }
-
-  /* Answer a String, the name in the DOM of the div showing clarifying text for what is selected in the 
-     popUpMenu for this filter when only one item is selected */
-  singleClarifierID() {
-    return this.name + '-single-clarifier';
-  }
-
-  /* Answer the div element from the DOM that contains text clarifying what is selected in the popUpMenu
-     for this filter when ony one item is selected in the menu*/
-  singleClarifier() {
-    return document.getElementById(this.singleClarifierID());
-  }
-
-  /* Answer the function used to sort the options in the popUpMenu */
-  sortFunction() {
-    return this.textContentSort;
-  }
-
-  /* Sort listItem alphabetically by their textContent */
-  textContentSort(a, b) {
-    if (a.textContent > b.textContent) {
-      return -1; // Return -1 to indicate 'a' should come before 'b'
-    }
-    if (a.textContent < b.textContent) {
-      return 1; // Return 1 to indicate 'b' should come before 'a'
-    }
-    return 0; // Return 0 if they are equal
-  }
-
-  /* Deselect this filter and clear its state */
-  clear() {
-    this.clearSelected();
-    this.uncheck();
-  }
-
-  /* Unselect everything in the popUpMenu and rearrane the popUpMenu according to the sort function */
-  clearSelected() {
-    this.getSelectedListItemAnchors().forEach((ea) => {
-      ea.classList.remove('selected'); // turn off selected
-    });
-
-    this.moveSelectedToTop(); // reorder all the unselected; reset the selected instance variable
-  }
-
-  /* Answer an Array of all of the selected listItem anchors in the popUpMenu */
-  getSelectedListItemAnchors() {
-    const popupMenu = this.popupMenu();
-    const ul = popupMenu.querySelector('ul');
-    return Array.from(ul.querySelectorAll('.selected'));
-  }
-
-  /* Answer an Array of all of the unselected listItems in the popUpMenu, not including the close menu item */
-  getUnselectedListItems() {
-    const popupMenu = this.popupMenu();
-    const ul = popupMenu.querySelector('ul');
-    return Array.from(
-      ul.querySelectorAll('a:not(.selected):not(.close-x):not(.close-text)')
-    );
-  }
-
-  /* Set the selected text to the strings in the given Array */
-  setSelected(anArray) {
-    this.selected = anArray;
-  }
-
-  /* The selection in the popUpMenu has changed. Rearrange the popUpMenu items so the selected are at the top, 
-     the unselected at the bottom, and if there are both selected and unselected, a separator line in between them. 
-     Keep the close menu item at the very top. Sort both the selected and unselected according to the sort function.  
-     Modify the clarifying text to reflect the current state of the selection. */
-  moveSelectedToTop() {
-    const popupMenu = this.popupMenu();
-    const ul = popupMenu.querySelector('ul');
-
-    // Sort the items in reverse alphabetical order so they can be re-added from the bottom up
-    let selectedItems = getSelectedListItems().sort(this.sortFunction);
-    let unselectedItems = this.getUnselectedListItems().sort(this.sortFunction);
-
-    // Remove the unselected items and re-add them in alphabetical order
-    unselectedItems.forEach((ea) => {
-      ul.removeChild(ea.parentNode);
-      ul.insertBefore(ea.parentNode, ul.firstChild);
-    });
-
-    // Remove the selected items and re-add them in alphabetical order above the unselected items
-    selectedItems.forEach((ea) => {
-      ul.removeChild(ea.parentNode);
-      ul.insertBefore(ea.parentNode, ul.firstChild);
-    });
-
-    // Make sure the close menu item is at the very top
-    const closeMenuItem = ul.querySelector('#close-menu-list-item');
-    ul.removeChild(closeMenuItem);
-    ul.insertBefore(closeMenuItem, ul.firstChild);
-
-    // Check or uncheck the checkbox associated with this menu based on whether there
-    // are any selected items
-    this.checkbox().checked = selectedItems.length > 0;
-
-    // Add a separator line if needed
-    // First remove the old separator, if there is one
-    const separator = ul.querySelector('.separator');
-    if (separator) {
-      ul.removeChild(separator);
-    }
-
-    // Add a separator if there are any selected
-    if (selectedItems.length > 0) {
-      const lastSelectedItem = selectedItems[0]; //selectedItems are in reverse alphabetical order;
-      const nextListItem = lastSelectedItem.parentNode.nextElementSibling;
-
-      // if there are unselected items
-      if (nextListItem) {
-        // Add a separator line
-        const separator = document.createElement('li');
-        separator.className = 'separator';
-        ul.insertBefore(separator, nextListItem);
-      }
-    }
-
-    this.setSelected(
-      selectedItems
-        .sort(this.sortFunction)
-        .reverse()
-        .map((ea) => ea.textContent)
-    );
-
-    this.clarifySelected();
-  }
-
-  /* Add a function that will react to a change of the checkbox's state: for a menu filter, it will 
-     lazy-initialize the popUpMenu, lazy-initialize the text element (clarifier) that shows what is 
-     selected in the popUpMenu, show the popUpMenu and, if the checkbox is unchecked, clear any menu 
-     selections. */
-  addChangeListener() {
-    // Add a change listener to the checkbox
-    const filterCheckbox = this.checkbox();
-    filterCheckbox.addEventListener('change', function () {
-      if (!this.popupMenu()) {
-        // popUpMenu has not yet been created; lazy-initialize it
-        this.createAndPostionPopupMenu();
-      }
-      if (!menuInfo.singleClarifier) {
-        // clarifier has not yet been created; lazy-initialize it
-        this.createSingleClarifier();
-      }
-
-      this.openPopupMenu();
-
-      if (!filterCheckbox.checked) {
-        this.clearSelected();
-        setTimeout(this.closeOtherPopUps.bind(this), 500); // is this necessary?
-      }
-    });
-  }
-
-  /* Create and return a div that acts as a pop-up menu for this filter. It contains an unordered
-     list, which contains list items for all of the filter options. */
-  newPopUpMenu() {
-    const div = document.createElement('div');
-    div.classList.add('popup-menu');
-    div.id = this.popUpID();
-    const list = document.createElement('ul');
-    const closeItem = this.newCloseMenuItem();
-    list.appendChild(closeItem);
-    this.options.forEach((option) => {
-      const item = this.newMenuItem(option);
-      list.appendChild(item);
-    });
-    div.appendChild(list);
-    // div.style.display = 'block'; // show the menu
-    return div;
-  }
-
-  /* Create and return a list item for the top of the menu that has a couple of anchors
-     for the user to click on to close the entire menu. */
-  newCloseMenuItem() {
-    const closeText = document.createElement('a');
-    closeText.href = '#';
-    closeText.classList.add('close-text');
-    closeText.textContent = 'Close';
-    closeText.addEventListener('click', function (event) {
-      this.closeMenu(event);
-    });
-
-    const closeX = document.createElement('a');
-    closeX.href = '#';
-    closeX.classList.add('close-x');
-    closeX.textContent = 'X';
-    closeX.addEventListener('click', function (event) {
-      this.closeMenu(event);
-    });
-
-    const listItem = document.createElement('li');
-    listItem.id = 'close-menu-list-item';
-    listItem.appendChild(closeText);
-    listItem.appendChild(closeX);
-    return listItem;
-  }
-
-  /* Create and return a listItem containing an anchor that can be clicked whose text content is the given filter optionText, 
-     a String */
-  newMenuItem(optionText) {
-    const listItem = document.createElement('li');
-    const anchor = document.createElement('a');
-
-    anchor.href = '#';
-    anchor.classList.add('filter-menu-item');
-    anchor.textContent = optionText;
-
-    anchor.addEventListener('click', function (event) {
-      event.preventDefault();
-      this.menuItemSelected(event.target);
-      this.moveSelectedToTop();
-    });
-    listItem.appendChild(anchor);
-    return listItem;
-  }
-
-  /* Respond to a list item being selected because its anchor was clicked. For a single choice menu filter,
-     this means deselecting all selected items and toggling the clicked-on item (selecting it if it wasn't) */
-  menuItemSelected(listItemAnchor) {
-    wasSelected = listItemAnchor.classList.contains('selected');
-    this.getSelectedListItemAnchors().forEach((ea) => {
-      ea.classList.remove('selected'); // turn selection off
-    });
-    if (!wasSelected) {
-      listItemAnchor.classList.add('selected'); // turn selection on
-    }
-  }
-
-  /* Close this filter's popUpMenu */
-  closeMenu(event) {
-    event.preventDefault();
-    this.closePopUpMenu();
-  }
-
-  /* Show the popUpMenu for this filter in the DOM, hiding all other popUpMenus */
-  openPopUpMenu() {
-    this.closeOtherPopUps();
-    this.popUpMenu().style.display = 'block';
-  }
-
-  /* Hide the popUpMenu for this filter in the DOM */
-  closePopUpMenu() {
-    this.popUpMenu().style.display = 'none';
-  }
-
-  /* Create anew the div that serves as the popUpMenu for this filter and position it just to the
-     right of the checkbox label */
-  createAndPostionPopupMenu() {
-    this.closeOtherPopUps();
-
-    const popUpDiv = this.newPopUpMenu();
-    const labelRect = this.label().getBoundingClientRect();
-    popUpDiv.style.position = 'absolute';
-    popUpDiv.style.top = labelRect.top + 'px';
-    popUpDiv.style.left = labelRect.right + 10 + 'px';
-
-    const container = this.popUpContainer();
-    container.appendChild(popUpDiv);
-  }
-
-  /* Answer the String that is the display style for the single clarifier of this filter. 
-     Single choice menus should always show their single clarifier */
-  singleClarifierDisplayStyle() {
-    return 'inline-block';
-  }
-
-  /* Set the content and display style of the div that clarifies what is selected in the popUpMenu */
-  clarifySelected() {
-    const clarifier = document.getElementById(this.singleClarifierID());
-    clarifier.textContent = this.singleClarifierContent();
-    clarifier.style.display = this.singleClarifierDisplayStyle();
-  }
-
-  /* Answer a String, the text that goes into the single clarifier */
-  singleClarifierContent() {
-    return '(' + this.getSelected()[0] + ')';
-  }
-
-  /* The single clarifier div does not yet exist in the DOM. Create it and add it to the popUpMenu container
-     for this filter */
-  createSingleClarifier() {
-    const clarifier = document.createElement('div');
-    clarifier.id = this.singleClarifierID();
-    clarifier.classList.add('single-clarifier');
-    this.clarifySelected();
-
-    this.popUpContainer().appendChild(clarifier);
-  }
-
-  // End SingleChoiceMenuFilter class
-}
-/* MultipleChoiceMenuFilter allows multiple selections in its popUpMenu and shows how those selections will be combined
-   in the final filter. By default, they will be combined using 'or'. */
-export class MultipleChoiceMenuFilter extends SingleChoiceMenuFilter {
-  /* Answer a String, the name in the DOM of the div containing the div showing clarifying text for 
-     what is selected in the popUpMenu for this filter and how the selections are combined when more 
-     than one item is selected */
-  combinerID() {
-    return this.name + '-combiner';
-  }
-
-  /* Answer the div element from the DOM that contains the div shows clarifying text for what is selected in the 
-     popUpMenu for this filter and how the selections are combined when more than one item is selected */
-  combiner() {
-    return document.getElementById(this.combinerID());
-  }
-
-  /* Answer a String, the name in the DOM of the div showing clarifying text for what is selected in the 
-     popUpMenu for this filter and how the selections are combined when more than one item is selected */
-  combinerClarifierID() {
-    return this.name + '-combiner-clarifier';
-  }
-
-  /* Answer the div element from the DOM that shows clarifying text for what is selected in the 
-     popUpMenu for this filter and how the selections are combined when more than one item is selected */
-  combinerClarifier() {
-    return document.getElementById(this.combinerClarifierID());
-  }
-
-  /* Add a function that will react to a change of the checkbox's state: it will lazy-initialize
-     the popUpMenu, lazy-initialize any refinements of the filter, like and/or radio buttons and text 
-     clarifying what is selected in the popUpMenu, show the popUpMenu and, if the checkbox is unchecked, 
-     clear any menu selections. 
-     This overrides the superclass function of the same name because this one adds a combiner clarifier*/
-  addChangeListener() {
-    // Add a change listener to the checkbox
-    const filterCheckbox = this.checkbox();
-    filterCheckbox.addEventListener('change', function () {
-      if (!this.popupMenu()) {
-        // popUpMenu has not yet been created; lazy-initialize it
-        this.createAndPostionPopupMenu();
-      }
-      if (!this.combiner()) {
-        // combiner has not yet been created; lazy-initialize it
-        this.createCombiner();
-      }
-      if (!this.singleClarifier()) {
-        // clarifier has not yet been created; lazy-initialize it
-        this.createSingleClarifier();
-      }
-
-      this.openPopupMenu();
-
-      if (!filterCheckbox.checked) {
-        this.clearSelected();
-        setTimeout(this.closeOtherPopUps.bind(this), 500); // is this necessary? Other popUps are closed during openPopUp()
-      }
-    });
-  }
-
-  /* Respond to a list item being selected because its anchor was clicked. For a multiple choice menu filter,
-     this means simply toggling the selection state of the clicked-on anchor */
-  menuItemSelected(listItemAnchor) {
-    listItemAnchor.classList.toggle('selected');
-  }
-
-  /* Answer the String used to combine options for this filter. Because we are Or-Only, the only way to
-     combine options is with 'or' */
-  combineUsing() {
-    return 'or';
-  }
-
-  /* Answer a String, the character combination that is used in the API to represent how options are joined */
-  getJoinString() {
-    const andJoinString = '%2C';
-    const orJoinString = '%7C';
-    if (this.combineUsing() === 'and') {
-      return andJoinString;
-    }
-    return orJoinString;
-  }
-  /* Answer the String that is the display style for the single clarifier of this filter. 
-     This will depend on how many items are selected in the popUpMenu. If only one, show the 
-     clarifier. If zero, displaying it is not necessary. If more than one, hide the single clarfier
-     and show a more detailed combiner clarifier */
-  singleClarifierDisplayStyle() {
-    if (this.getSelected().length === 1) {
-      return 'inline-block';
-    }
-    return 'none';
-  }
-
-  /* Answer the String that is the display style for the combiner clarifier of this filter. 
-     This will depend on how many items are selected in the popUpMenu. If more than one, show the 
-     clarifier. Otherwiser, show either the singleClarifier (for one selection) or no clarifier 
-     at all (for no selection). */
-  combinerDisplayStyle() {
-    if (menuInfo.selected.length > 1) {
-      return 'inline-block';
-    }
-    return 'none';
-  }
-
-  /* Show clarifying text in the DOM for how multiple selections will be combined */
-  clarifyCombinedSelected() {
-    const combinerClarifier = this.combinerClarifier();
-    combinerClarifier.textContent = this.combinerClarifierText();
-    combinerClarifier.style.display = 'inline-block';
-  }
-
-  /* Answer a String that is the clarifying text for how multiple selections will be combined */
-  combinerClarifierText() {
-    return '(' + this.getSelected().join(' ' + this.combineUsing() + ' ') + ')';
-  }
-
-  /* Set the content and display style of the divs that clarifies what is selected in the popUpMenu. 
-     This can be the single clarifier as in the superclass, and also the combiner clarifier if there
-     is more than one selection */
-  clarifySelected() {
-    super.clarifySelected();
-    this.clarifyCombinedSelected();
-    this.combiner().style.display = this.combinerDisplayStyle();
-  }
-
-  /* Create and add to the DOM a div that holds the combiner clarifier (a div that, in turn, shows the
-     user how their multiple selections in the popUpMenu will be combined) */
-  createCombiner() {
-    const combiner = document.createElement('div');
-    combiner.id = this.combinerID();
-    combiner.classList.add('combiner');
-
-    combiner.appendChild(this.newCombinerClarifier());
-    combiner.style.display = this.combinerDisplayStyle();
-
-    this.popUpContainer().appendChild(combiner);
-  }
-
-  /* Create and return a div that will hold the text showing the user how their multiple choices in the
-     popUpMenu will be combined */
-  newCombinerClarifier() {
-    const combinerClarifier = document.createElement('div');
-    combinerClarifier.id = this.combinerClarifierID();
-    combinerClarifier.classList.add('clarifier');
-    this.clarifyCombinedSelected();
-    return combinerClarifier;
-  }
-  /* End MultpleChoiceFilter class */
-}
-
-/* A Filter that allows multiple choice selections in the popUpMenu and also allows those choices to be combined
-   with either 'and' or 'or' */
-export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
-  /* Override the superclass constructor because this filter allows the combiner to be set by the user */
-  constructor(name, options) {
-    super(name, options);
-    this.combineUsing = 'and'; // default combiner choice
-  }
-
-  /* Answer how to combine the options when there is more than one selected in the popUpMenu */
-  combineUsing() {
-    return this.combineUsing;
-  }
-
-  /* In response to a radio button selection, set how to combine the options when there is more than one selected in the popUpMenu*/
-  setCombineUsing(aString) {
-    this.combineUsing = aString;
-    this.combinerClarifier().textContent = combinerClarifierText();
-  }
-
-  /* Create and return a single radio button with the choice of how to combine the filter options for this filter when
-     more than one item is selected in the popUpMenu */
-  newCombinationChoice(choiceString) {
-    const choice = document.createElement('input');
-    choice.type = 'radio';
-    choice.id = this.name + '-' + choiceString;
-    choice.name = this.name + '-combine-using';
-    choice.value = choiceString;
-    choice.checked = true;
-    choice.addEventListener('change', function (event) {
-      this.setCombineUsing(event.target.value);
-    });
-    return choice;
-  }
-
-  /* Create and return the label for a radio button that allows the choice of how to combine the filter options for 
-    this filter when more than one item is selected in the popUpMenu */
-  newCombinationLabel(choice, labelString) {
-    const label = document.createElement('label');
-    label.for = choice.id;
-    label.textContent = labelString;
-    return label;
-  }
-
-  /* Override the superclas method for creating a combiner. This one is more complicated because we allow the user
-     to choose how to combine the options in the popUpMenu: either with 'and' or 'or'. We add the radio buttons for
-     those choices before adding the combiner clarifier. */
-  createCombiner() {
-    const combiner = document.createElement('div');
-    combiner.id = this.combinerID();
-    combiner.classList.add('combiner');
-    combiner.textContent = '- combine using: ';
-
-    const andChoice = this.newCombinationChoice('and');
-    const andLabel = this.newCombinationLabel(andChoice, ' And ');
-
-    const orChoice = this.newCombinationChoice('or');
-    const orLabel = this.newCombinationLabel(orChoice, ' Or ');
-
-    combiner.appendChild(andChoice);
-    combiner.appendChild(andLabel);
-    combiner.appendChild(orChoice);
-    combiner.appendChild(orLabel);
-    combiner.appendChild(newCombinerClarifier());
-
-    this.popUpContainer().appendChild(combiner);
-  }
-
-  /* End AndOrMultipleChoiceFilter */
-}
-
-const allMenuInfo = {
-  movieGenreMenuInfo: {
-    checkbox: () => document.querySelector('#movie-genre-filter-checkbox'),
-    popupName: 'movie-genre-popup-menu',
-    label: () => document.querySelector('#movie-genre-label'),
-    container: () => document.querySelector('#movie-genre-container'),
-    isExlcusive: false,
-    orOnly: false,
-    selected: [],
-    sortFunction: textContentSort,
-  },
-  tvGenreMenuInfo: {
-    checkbox: () => document.querySelector('#tv-genre-filter-checkbox'),
-    popupName: 'tv-genre-popup-menu',
-    label: () => document.querySelector('#tv-genre-label'),
-    container: () => document.querySelector('#tv-genre-container'),
-    isExlcusive: false,
-    orOnly: false,
-    selected: [],
-    sortFunction: textContentSort,
-  },
-  languageMenuInfo: {
-    checkbox: () => document.querySelector('#language-filter-checkbox'),
-    popupName: 'language-popup-menu',
-    label: () => document.querySelector('#language-label'),
-    container: () => document.querySelector('#language-container'),
-    isExlcusive: false,
-    orOnly: true,
-    selected: [],
-    sortFunction: textContentSort,
-  },
-  sortMenuInfo: {
-    checkbox: () => document.querySelector('#sort-by-checkbox'),
-    popupName: 'sort-by-popup-menu',
-    label: () => document.querySelector('#sort-by-label'),
-    container: () => document.querySelector('#sort-by-container'),
-    isExlcusive: true,
-    selected: [],
-    sortFunction: textContentSort,
-  },
-};
+import {
+  Filter,
+  MultipleChoiceMenuFilter,
+  SingleChoiceMenuFilter,
+  AndOrMultipleChoiceMenuFilter,
+} from './filterClasses.js';
 
 const allFilters = new ExtendedMap();
 
+/* Keep all the string constants in one place */
+const stringConstants = {
+  // Keys into the allFilters dictionary (Map)
+  movieGenreKey: 'movieGenres',
+  tvGenreKey: 'tvGenres',
+  adultKey: 'adult',
+  languagesKey: 'languages',
+  sortKey: 'sort',
+
+  // BaseIDs used when creating the filters, consistent with the html and css docs
+  movieGenreBaseID: 'movie-genre',
+  tvGenreBaseID: 'tv-genre',
+  adultBaseID: 'adult',
+  languageBaseID: 'language',
+  sortBaseID: 'sort-by',
+
+  // Styles for hiding and showing elements
+  blockStyle: 'block',
+  hiddenStyle: 'none',
+
+  // IDs in the html docs for finding elements in the DOM
+  filterTitleID: 'filter-title',
+  filterContainerID: 'filter-container',
+  filterListID: 'all-filters',
+
+  movieRadioButtonID: 'movie-radio-button',
+  tvRadioButtonID: 'tv-radio-button',
+  keywordRadioButtonID: 'search-by-keyword',
+  titleRadioButtonID: 'search-by-title',
+
+  // Event names
+  changeEvent: 'change',
+  clickEvent: 'click',
+
+  // Beginnings of parameters used in the API for fetching filtered data
+  genreAPIParam: '&with_genres=',
+  languageAPIParam: '&with_original_language=',
+  adultAPIParam: '&include_adult=',
+  sortAPIParam: '&sort_by=',
+
+  // The class for finding popUpMenus
+  popUpClassName: 'popup-menu',
+
+  // The fetch endpoints into the API for accessing lists
+  tvGenreAPIEndpoint: `genre/tv/list`,
+  movieGenreAPIEndpoint: `genre/movie/list`,
+  languagesAPIEndoint: 'configuration/languages',
+};
+
+/* Create and return a new DetailReturnInfo that is specific to a keyword search.
+   This allows the user to come back to this specific state of a search after
+   visiting the detail page for a specific movie or tv show. */
 export function keywordResultInfo(isTV) {
   return new KeywordSearchDetailReturnInfo(
     isTV,
@@ -704,335 +77,357 @@ export function keywordResultInfo(isTV) {
   );
 }
 
+/* Create and store the filter objects for all the different ways of filtering 
+   a keyword search */
 function createFilters() {
   allFilters.set(
-    'movieGenres',
+    stringConstants.movieGenreKey,
     new AndOrMultipleChoiceMenuFilter(
-      'movie-genre',
+      stringConstants.movieGenreBaseID,
       global.lists.genres.movies.map((ea) => ea.name)
     )
   );
   allFilters.set(
-    'tvGenres',
+    stringConstants.tvGenreKey,
     new AndOrMultipleChoiceMenuFilter(
-      'tv-genre',
+      stringConstants.tvGenreBaseID,
       global.lists.genres.tv.map((ea) => ea.name)
     )
   );
-  allFilters.set('adult', new Filter('adult'));
   allFilters.set(
-    'languages',
+    stringConstants.adultKey,
+    new Filter(stringConstants.adultBaseID)
+  );
+  allFilters.set(
+    stringConstants.languagesKey,
     new MultipleChoiceMenuFilter(
-      'language',
+      stringConstants.languageBaseID,
       global.lists.languages.map((ea) => ea.english_name)
     )
   );
   allFilters.set(
-    'sort',
+    stringConstants.sortKey,
     new SingleChoiceMenuFilter(
-      'sort-by',
+      stringConstants.sortBaseID,
       Array.from(global.lists.sortCriteria.values())
     )
   );
 }
 
+/* Show in the DOM all of the filters; this requires showing both
+   the filterContainer and the fliterList, the latter of which can
+   be hidden independently. */
 export function showFilters() {
-  document.querySelector('#filter-container').style.display = 'block';
-  document.querySelector('#all-filters').style.display = 'block';
+  showAsBlock(filterContainer());
+  showAsBlock(filterList());
 }
 
+/* Either show or hide the given element, depending on whether
+   it was currently showing. */
+function toggleBlockVisibilityOf(element) {
+  isShowing(element) ? hide(element) : showAsBlock(element);
+}
+
+/* Show the given element in the DOM using the block display style */
+function showAsBlock(element) {
+  element.style.display = stringConstants.blockStyle;
+}
+
+/* Hide the given element in the DOM */
+function hide(element) {
+  element.style.display = stringConstants.hiddenStyle;
+}
+
+/* Answer a Boolean: whether the given element is showing in the DOM */
+function isShowing(element) {
+  return element.style.display !== stringConstants.hiddenStyle;
+}
+
+/* Answer the element in the DOM that shows the filter title */
+function filterTitle() {
+  return document.getElementById(stringConstants.filterTitleID);
+}
+
+/* Answer the element in the DOM that holds both the filter list
+   and the filter title */
+function filterContainer() {
+  return document.getElementById(stringConstants.filterContainerID);
+}
+
+/* Answer the element in the DOM that contains the list of filters */
+function filterList() {
+  return document.getElementById(stringConstants.filterListID);
+}
+
+/* Add the listeners that will respond to user events: when the filter
+   title is clicked, hide or show the filter list; fill the global lists
+   from the API; create the filters; and respond to changes in the radio buttons */
 export async function addFilterListeners() {
-  const filterTitle = document.querySelector('#filter-title');
-  filterTitle.addEventListener('click', function (event) {
-    const filterHolder = document.querySelector('#all-filters');
-    if (filterHolder.style.display === 'block') {
-      filterHolder.style.display = 'none';
-    } else {
-      filterHolder.style.display = 'block';
-    }
+  filterTitle().addEventListener(stringConstants.clickEvent, () => {
+    toggleBlockVisibilityOf(filterList());
   });
   await fillLists();
-  createFilters(); // these add their own listeners
-
-  // addMenuListenersTo(allMenuInfo.movieGenreMenuInfo);
-  // addMenuListenersTo(allMenuInfo.tvGenreMenuInfo);
-  // addMenuListenersTo(allMenuInfo.languageMenuInfo);
-  // addMenuListenersTo(allMenuInfo.sortMenuInfo);
-
-  // document
-  //   .querySelector('#adult-filter-checkbox')
-  //   .addEventListener('change', function () {
-  //     closeAllPopups();
-  //   });
-  // document
-  //   .querySelector('#adult-filter-label')
-  //   .addEventListener('change', function () {
-  //     closeAllPopups();
-  //   });
+  createFilters(); // these add their own listeners when created
 
   addRadioButtonListeners();
+
+  if (!isKeywordSearch()) {
+    hide(filterContainer());
+    hide(filterList());
+  }
 }
 
+/* Uncheck all the filter radio buttons */
 function clearCheckboxes() {
   allFilters.forEach((filter) => filter.clear());
-  // [
-  //   allMenuInfo.movieGenreMenuInfo,
-  //   allMenuInfo.languageMenuInfo,
-  //   allMenuInfo.sortMenuInfo,
-  //   allMenuInfo.tvGenreMenuInfo,
-  // ].forEach((menuInfo) => {
-  //   if (menuInfo.popupMenu) {
-  //     clearSelected(menuInfo);
-  //     menuInfo.checkbox().checked = false;
-  //   }
-  // });
-  // document.querySelector('#adult-filter-checkbox').checked = false;
 }
 
+/* Answer the element in the DOM that the user clicks on to search for movies */
+function movieRadioButton() {
+  return document.getElementById(stringConstants.movieRadioButtonID);
+}
+
+/* Answer the element in the DOM that the user clicks on to search for tv shows */
+function tvRadioButton() {
+  return document.getElementById(stringConstants.tvRadioButtonID);
+}
+
+/* Answer the element in the DOM that the user clicks on to search by keyword 
+   and filter search results */
+function keywordRadioButton() {
+  return document.getElementById(stringConstants.keywordRadioButtonID);
+}
+
+/* Answer the element in the DOM that the user clicks on to search by title */
+function titleRadioButton() {
+  return document.getElementById(stringConstants.titleRadioButtonID);
+}
+
+function isKeywordSearch() {
+  return keywordRadioButton().checked;
+}
+
+/* Add the listeners that respond to clicks on radio buttons. When switching
+   between movie and tv, clear all the search results and uncheck all the filter
+   checkboxes. Also, hide whichever genre filter (tv or movie) is not selected.
+   When switching between title and keyword search, clear all the search results
+   and if a title search, hide the filters or, if a keyword search, show the filters. */
 function addRadioButtonListeners() {
   // TV vs. Movie
-  const movieRadioButton = document
-    .querySelector('#search-radio-button-panel')
-    .querySelector('#movie');
-  movieRadioButton.addEventListener('change', function (event) {
+  movieRadioButton().addEventListener(stringConstants.changeEvent, (event) => {
     clearSearchResults();
-    clearCheckboxes();
-    hideUnusedGenreFilter(!movieRadioButton.checked);
+    if (isKeywordSearch()) {
+      clearCheckboxes();
+      hideUnusedGenreFilter(!event.target.checked);
+    }
   });
 
-  const tvRadioButton = document
-    .querySelector('#search-radio-button-panel')
-    .querySelector('#tv');
-  tvRadioButton.addEventListener('change', function (event) {
+  tvRadioButton().addEventListener(stringConstants.changeEvent, (event) => {
     clearSearchResults();
-    clearCheckboxes();
-    hideUnusedGenreFilter(tvRadioButton.checked);
+    if (isKeywordSearch()) {
+      clearCheckboxes();
+      hideUnusedGenreFilter(event.target.checked);
+    }
   });
 
   hideUnusedGenreFilter(tvRadioButton.checked);
 
   // Keyword vs. Title
-  const keywordRadioButton = document.querySelector('#search-by-keyword');
-  keywordRadioButton.addEventListener('change', function (event) {
+  keywordRadioButton().addEventListener(
+    stringConstants.changeEvent,
+    (event) => {
+      clearSearchResults();
+      hideFilterContainerIf(!event.target.checked);
+    }
+  );
+
+  titleRadioButton().addEventListener(stringConstants.changeEvent, (event) => {
     clearSearchResults();
-    hideOrShowFilterContainer(!keywordRadioButton.checked);
+    hideFilterContainerIf(event.target.checked);
   });
 
-  const titleRadioButton = document.querySelector('#search-by-title');
-  titleRadioButton.addEventListener('change', function (event) {
-    clearSearchResults();
-    hideOrShowFilterContainer(titleRadioButton.checked);
-  });
-
-  hideOrShowFilterContainer(titleRadioButton.checked);
+  hideFilterContainerIf(titleRadioButton.checked);
 }
 
-function hideOrShowFilterContainer(titleChecked) {
-  const filterContainer = document.querySelector('#filter-container');
-  titleChecked
-    ? (filterContainer.style.display = 'none')
-    : (filterContainer.style.display = 'block');
+/* If a title search is chosen (titleChecked is true), hide the filters; otherwise, show them */
+function hideFilterContainerIf(titleChecked) {
+  titleChecked ? hide(filterContainer()) : showAsBlock(filterContainer());
 }
+
+/* If doing a TV search, hide the movie genre filter and vice versa. Close
+   any open popUpMenus when switching. */
 function hideUnusedGenreFilter(isTV) {
   closeAllPopups();
-  // const movieGenreFilter = document.querySelector('#movie-genre-div');
-  // const tvGenreFilter = document.querySelector('#tv-genre-div');
-  // if (isTV) {
-  //   allFilters.get('movieGenres').hide();
-  //   allFilters.get('tvGenres').show();
-
-  //   // movieGenreFilter.style.display = 'none';
-  //   // tvGenreFilter.style.display = 'block';
-  // } else {
-  //   allFilters.get('movieGenres').show();
-  //   allFilters.get('tvGenres').hide();
-  //   // movieGenreFilter.style.display = 'block';
-  //   // tvGenreFilter.style.display = 'none';
-  // }
   getGenreFilter(isTV).show();
   getGenreFilter(!isTV).hide();
 }
 
+/* Answer the correct genre filter, depending on whether the user is searching
+   for TV shows or movies. */
 function getGenreFilter(isTV) {
-  return isTV ? allFilters.get('tvGenres') : allFilters.get('movieGenres');
+  return isTV
+    ? allFilters.get(stringConstants.tvGenreKey)
+    : allFilters.get(stringConstants.movieGenreKey);
 }
 
+/* Answer the language filter */
 function getLanguageFilter() {
-  return allFilters.get('languages');
+  return allFilters.get(stringConstants.languagesKey);
 }
 
+/* Answer the adult filter */
 function getAdultFilter() {
-  return allFilters.get('adult');
+  return allFilters.get(stringConstants.adultKey);
 }
 
+/* Answer the sort filter */
 function getSortFilter() {
-  return allFilters.get('sort');
+  return allFilters.get(stringConstants.sortKey);
 }
+
+/* Answer the results of executing a keyword search with
+   the current filter settings */
 export async function getFilterResults(isTV = false) {
   const results = await doFilter(isTV);
   return results;
 }
 
+/* Do the keyword search with the current filter settings */
 async function doFilter(isTV) {
   closeAllPopups();
 
-  // const genreInfo = isTV
-  // ? allMenuInfo.tvGenreMenuInfo
-  // : allMenuInfo.movieGenreMenuInfo;
-
+  // Build the filter parameters string
   let filters = '';
 
-  const genreFilter = getGenreFilter(isTV);
-  if (genreFilter.hasSelected()) {
-    const genres = getSelectedGenreCodes(isTV);
-    filters += '&with_genres=' + genres.join(genreFilter.getJoinString());
+  if (hasSelectedGenres(isTV)) {
+    const genreCodes = getSelectedGenreCodes(isTV);
+    filters +=
+      stringConstants.genreAPIParam + genreCodes.join(getGenreJoinString(isTV));
   }
 
-  if (getLanguageFilter().hasSelected()) {
+  if (hasSelectedLanguages()) {
     const languages = getSelectedLanguageCodes();
-    filters += '&with_original_language=' + languages.join('|');
+    filters += stringConstants.languageAPIParam + languages.join('|');
   }
 
-  if (getAdultFilter.isFiltered()) {
-    filters += '&include_adult=' + includeAdult();
+  if (filterAdult()) {
+    filters += stringConstants.adultAPIParam + includeAdult();
   }
 
-  if (getSortFilter().hasSelected()) {
-    filters += '&sort_by=' + sortBy();
+  if (hasSort()) {
+    filters += stringConstants.sortAPIParam + sortBy();
   }
+
   const results = await discoverAPIData(filters);
   return results;
 }
 
+/* Answer the API-friendly sort-by string of whichever sort criteria
+   the user has chosen */
+function sortBy() {
+  return global.lists.sortCriteria.getKeyByValue(getSortFilter().selected[0]);
+}
+
+/* The user has returned from a details page and we are restoring the last
+   search. Replace the language filter with one that has selected the specific 
+   languages last chosen by the user. */
+export function setSelectedLanguages(languages) {
+  allFilters.set(
+    stringConstants.languagesKey,
+    MultipleChoiceMenuFilter.withSelections(
+      stringConstants.languageBaseID,
+      global.lists.languages.map((ea) => ea.english_name),
+      languages
+    )
+  );
+}
+
+/* The user has returned from a details page and we are restoring the last
+   search. Replace the sort filter with one that has selected the specific 
+   sort criteria last chosen by the user. */
+export function setSortBy(sortByString) {
+  allFilters.set(
+    stringConstants.sortKey,
+    SingleChoiceMenuFilter.withSelections(
+      stringConstants.sortBaseID,
+      global.lists.sortCriteria.values(),
+      [global.lists.sortCriteria.get(sortByString)] // get the user friendly string
+    )
+  );
+}
+
+/* The user has returned from a details page and we are restoring the last
+   search. Replace the genre filter with one that has selected the specific 
+   genres and combiner last chosen by the user. */
+export function setSelectedGenres(isTV, genres, genreCombiner) {
+  const key = isTV ? stringConstants.tvGenreKey : stringConstants.movieGenreKey;
+  const id = isTV
+    ? stringConstants.tvGenreBaseID
+    : stringConstants.movieGenreBaseID;
+  const options = isTV
+    ? global.lists.genres.tv.map((ea) => ea.name)
+    : global.lists.genres.movies.map((ea) => ea.name);
+
+  // @to-do: Do I need to create the one that is not showing?
+
+  allFilters.set(
+    key,
+    AndOrMultipleChoiceMenuFilter.withSelectionsAndCombiner(
+      id,
+      options,
+      genres,
+      genreCombiner
+    )
+  );
+  hideUnusedGenreFilter(isTV); // make sure only TV genres or Movie genres are showing
+}
+
+/* The user has returned from a details page and we are restoring the last
+   search. Set the state of the excludeAdult filter to the state last 
+   chosen by the user. */
+export function setExcludeAdult(excludeAdult) {
+  getAdultFilter().setFiltered(excludeAdult);
+}
+
+/* Answer a Boolean: whether there are any genres to filter the search results by */
+export function hasSelectedGenres(isTV) {
+  return getGenreFilter(isTV).hasSelected();
+}
+
+/* Answer a Boolean: whether there are any languages to filter the search results by */
+export function hasSelectedLanguages() {
+  return getLanguageFilter().hasSelected();
+}
+
+/* Answer a Boolean: whether to filter the search results by excluding adult content */
+function filterAdult() {
+  return getAdultFilter().isFiltered();
+}
+
+/* Answer a Boolean: whether there is any sort criteria for the search results */
 function hasSort() {
   return getSortFilter().hasSelected();
-  // return allMenuInfo.sortMenuInfo.selected.length > 0;
 }
 
-function sortBy() {
-  if (!hasSort()) {
-    return '';
-  }
-  return global.lists.sortCriteria.getKeyByValue(
-    allMenuInfo.sortMenuInfo.selected[0]
-  );
-}
-
-export function setSelectedLanguages(languages) {
-  const menuInfo = allMenuInfo.languageMenuInfo;
-  let popupMenu = document.getElementById(menuInfo.popupName);
-  if (!popupMenu) {
-    createAndPostionPopupMenu(menuInfo); // also shows the menu
-    popupMenu = document.getElementById(menuInfo.popupName);
-    popupMenu.style.display = 'none'; // hide it again
-  }
-
-  if (!menuInfo.isExlcusive && !menuInfo.combiner) {
-    createCombinersFor(menuInfo);
-  }
-  if (!menuInfo.singleClarifier) {
-    createSingleClarifierFor(menuInfo);
-  }
-
-  const listItems = Array.from(popupMenu.querySelectorAll('li')).filter((li) =>
-    languages.includes(li.textContent)
-  );
-  listItems.forEach((li) => li.querySelector('a').classList.add('selected'));
-  menuInfo.selected = languages;
-
-  moveSelectedToTop(menuInfo);
-}
-
-export function setSortBy(sortByString) {
-  if (sortByString.length === 0) {
-    return;
-  }
-  const menuInfo = allMenuInfo.sortMenuInfo;
-  let popupMenu = document.getElementById(menuInfo.popupName);
-  if (!popupMenu) {
-    createAndPostionPopupMenu(menuInfo); // also shows the menu
-    popupMenu = document.getElementById(menuInfo.popupName);
-    popupMenu.style.display = 'none'; // hide it again
-  }
-
-  if (!menuInfo.isExlcusive && !menuInfo.combiner) {
-    createCombinersFor(menuInfo);
-  }
-  if (!menuInfo.singleClarifier) {
-    createSingleClarifierFor(menuInfo);
-  }
-
-  const friendlySortString = global.lists.sortCriteria.get(sortByString);
-  const listItem = Array.from(popupMenu.querySelectorAll('li')).find(
-    (li) => friendlySortString === li.textContent
-  );
-  listItem.querySelector('a').classList.add('selected');
-  menuInfo.selected = new Array(friendlySortString);
-
-  moveSelectedToTop(menuInfo);
-}
-
-export function setSelectedGenres(isTV, genres, genreCombiner) {
-  hideUnusedGenreFilter(isTV); // make sure only TV genres or Movie genres are showing
-  const menuInfo = isTV
-    ? allMenuInfo.tvGenreMenuInfo
-    : allMenuInfo.movieGenreMenuInfo;
-
-  let popupMenu = document.getElementById(menuInfo.popupName);
-  if (!popupMenu) {
-    createAndPostionPopupMenu(menuInfo); // also shows the menu
-    popupMenu = document.getElementById(menuInfo.popupName);
-    popupMenu.style.display = 'none'; // hide it again
-  }
-
-  if (!menuInfo.isExlcusive && !menuInfo.combiner) {
-    createCombinersFor(menuInfo);
-  }
-  if (!menuInfo.singleClarifier) {
-    createSingleClarifierFor(menuInfo);
-  }
-
-  const listItems = Array.from(popupMenu.querySelectorAll('li')).filter((li) =>
-    genres.includes(li.textContent)
-  );
-  listItems.forEach((li) => li.querySelector('a').classList.add('selected'));
-
-  menuInfo.selected = genres;
-
-  menuInfo.combinUsing = genreCombiner;
-
-  moveSelectedToTop(menuInfo);
-}
-
-export function hasSelectedGenres(isTV) {
-  return getSelectedGenres(isTV).length > 0;
-}
-
-export function hasSelectedLanguages() {
-  return getSelectedLanguages().length > 0;
-}
-
+/* Answer the selected genres for either TV or movies */
 function getSelectedGenres(isTV) {
-  const menuInfo = isTV
-    ? allMenuInfo.tvGenreMenuInfo
-    : allMenuInfo.movieGenreMenuInfo;
-  const popupMenu = document.getElementById(menuInfo.popupName);
-  if (!popupMenu) {
-    return [];
-  }
-  const selected = Array.from(
-    popupMenu.querySelector('ul').querySelectorAll('.selected')
-  ).map((ea) => ea.textContent);
-  return selected;
+  return getGenreFilter(isTV).getSelected();
 }
 
+/* Answer the string used by the API to join selected genres */
+function getGenreJoinString(isTV) {
+  return getGenreFilter(isTV).getJoinString();
+}
+
+/* Answer the string the user sees ('and' or 'or') for joining selected genres;
+   this is also the string sent to the details page for restoring the search on
+   return from the details page. */
 function getGenreCombineUsing(isTV) {
-  const menuInfo = isTV
-    ? allMenuInfo.tvGenreMenuInfo
-    : allMenuInfo.movieGenreMenuInfo;
-  return menuInfo.combinUsing;
+  return getGenreFilter(isTV).getCombineUsing();
 }
 
+/* Answer an Array of the API-defined genre codes for the selected genre strings, 
+   which differ depending on whether we are searching for movies or TV shows. */
 function getSelectedGenreCodes(isTV) {
   const wholeList = isTV ? global.lists.genres.tv : global.lists.genres.movies;
 
@@ -1043,19 +438,13 @@ function getSelectedGenreCodes(isTV) {
   return selectedGenreCodes;
 }
 
+/* Answer an Array of Strings: the languages selected by the user */
 function getSelectedLanguages() {
-  const popupMenu = document.getElementById(
-    allMenuInfo.languageMenuInfo.popupName
-  );
-  if (!popupMenu) {
-    return [];
-  }
-  const selected = Array.from(
-    popupMenu.querySelector('ul').querySelectorAll('.selected')
-  ).map((ea) => ea.textContent);
-  return selected;
+  return getLanguageFilter().getSelected();
 }
 
+/* Answer an Array of the API-defined language codes for the selected language
+   strings. */
 function getSelectedLanguageCodes() {
   const wholeList = global.lists.languages;
   const selectedLanguages = getSelectedLanguages();
@@ -1065,387 +454,67 @@ function getSelectedLanguageCodes() {
   return selectedLanguageCodes;
 }
 
+/* Answer a Boolean: whether to include adult content in the search */
 function includeAdult() {
-  const adultCheckbox = document.querySelector('#adult-filter-checkbox');
-  return !adultCheckbox.checked;
+  return !getAdultFilter().isFiltered();
 }
 
-export function setExcludeAdult(excludeAdult) {
-  const adultCheckbox = document.querySelector('#adult-filter-checkbox');
-  adultCheckbox.checked = excludeAdult;
-}
-
+/* Go to the API and get the lists of tv and movie genres and their API-defined
+   codes, plus the list of languages and their API-defined codes, and store them
+   in the global. Also fill in the sort criteria copied from the movie db website,
+   and store those in the global. */
 async function fillLists() {
   if (global.lists.genres.movies.length === 0) {
     const genreList = await getGenres();
     global.lists.genres.movies = genreList.genres;
-    allMenuInfo.movieGenreMenuInfo.contents = genreList.genres.map(
-      (ea) => ea.name
-    );
   }
   if (global.lists.genres.tv.length === 0) {
     const genreList = await getGenres(true);
     global.lists.genres.tv = genreList.genres;
-    allMenuInfo.tvGenreMenuInfo.contents = genreList.genres.map(
-      (ea) => ea.name
-    );
   }
   if (global.lists.languages.length === 0) {
     global.lists.languages = await getLanguages();
-    allMenuInfo.languageMenuInfo.contents = global.lists.languages
-      .map((ea) => ea.english_name)
-      .sort();
   }
   if (global.lists.sortCriteria.length === 0) {
     global.lists.sortCriteria = initSortByDictionary();
-    allMenuInfo.sortMenuInfo.contents = Array.from(
-      global.lists.sortCriteria.values()
-    );
   }
 }
+
+/* Go to the API for the list of genres and their API-defined codes and answer
+   an Array of those objects (strings and codes bundled together). There are 
+   different genres, depending on whether we're searching the tv or movie database. */
 async function getGenres(isTV = false) {
-  const endPoint = `genre/${isTV ? 'tv' : 'movie'}/list`;
+  const endPoint = isTV
+    ? stringConstants.tvGenreAPIEndpoint
+    : stringConstants.movieGenreAPIEndpoint;
   const genres = await fetchAPIData(endPoint);
   return genres;
 }
+
+/* Go to the API for the list of languages and their API-defined codes and answer
+   an Array of those objects (strings and codes bundled together). */
 async function getLanguages() {
-  const languages = await fetchAPIData('configuration/languages');
+  const languages = await fetchAPIData(stringConstants.languagesAPIEndoint);
   return languages;
 }
 
-function createMenuItem(title, menuInfo) {
-  const listItem = document.createElement('li');
-  const anchor = document.createElement('a');
-
-  anchor.href = '#';
-  anchor.classList.add('filter-menu-item');
-  anchor.textContent = title;
-  anchor.addEventListener('click', function (event) {
-    event.preventDefault();
-    if (menuInfo.isExlcusive) {
-      const wasSelected = event.target.classList.contains('selected');
-      const popupMenu = menuInfo.popupMenu;
-      const ul = popupMenu.querySelector('ul');
-      const selectedItems = Array.from(ul.querySelectorAll('.selected'));
-      selectedItems.forEach((ea) => {
-        ea.classList.remove('selected'); // turn selection off
-      });
-      if (!wasSelected) {
-        event.target.classList.add('selected'); // turn selection on
-      }
-    } else {
-      // not exclusive
-      event.target.classList.toggle('selected');
-    }
-    moveSelectedToTop(menuInfo);
-  });
-  listItem.appendChild(anchor);
-  return listItem;
-}
-
-function createCloseMenuButtonItem(menuInfo) {
-  const closeText = document.createElement('a');
-  closeText.href = '#';
-  closeText.classList.add('close-text');
-  closeText.textContent = 'Close';
-  closeText.addEventListener('click', function (event) {
-    closeMenu(menuInfo, event);
-  });
-
-  const closeX = document.createElement('a');
-  closeX.href = '#';
-  closeX.classList.add('close-x');
-  closeX.textContent = 'X';
-  closeX.addEventListener('click', function (event) {
-    closeMenu(menuInfo, event);
-  });
-
-  const listItem = document.createElement('li');
-  listItem.id = 'close-menu-list-item';
-  listItem.appendChild(closeText);
-  listItem.appendChild(closeX);
-  return listItem;
-}
-
-function createPopUpMenu(menuInfo) {
-  const div = document.createElement('div');
-  div.classList.add('popup-menu');
-  div.id = menuInfo.popupName;
-  menuInfo.popupMenu = div;
-  const list = document.createElement('ul');
-  const closeItem = createCloseMenuButtonItem(menuInfo);
-  list.appendChild(closeItem);
-  menuInfo.contents.forEach((title) => {
-    const item = createMenuItem(title, menuInfo);
-    list.appendChild(item);
-  });
-  div.appendChild(list);
-  div.style.display = 'block';
-  return div;
-}
-function createAndPostionPopupMenu(menuInfo) {
-  closeAllPopups();
-
-  const popUpDiv = createPopUpMenu(menuInfo);
-  const labelRect = menuInfo.label().getBoundingClientRect();
-  popUpDiv.style.position = 'absolute';
-  popUpDiv.style.top = labelRect.top + 'px';
-  popUpDiv.style.left = labelRect.right + 10 + 'px';
-
-  const container = menuInfo.container();
-  container.appendChild(popUpDiv);
-}
-function togglePopupMenu(menuInfo) {
-  const popupMenu = menuInfo.popupMenu;
-  const show = popupMenu.style.display === 'none'; // was hidden; will show
-
-  closeAllPopups();
-
-  if (show) {
-    popupMenu.style.display = 'block';
-  }
-}
-function clearSelected(menuInfo) {
-  const popupMenu = menuInfo.popupMenu;
-  const ul = popupMenu.querySelector('ul');
-
-  let selectedItems = Array.from(ul.querySelectorAll('.selected'));
-  selectedItems.forEach((ea) => {
-    ea.classList.remove('selected'); // turn off selected
-  });
-
-  moveSelectedToTop(menuInfo); // reorder all the unselected
-}
-function moveSelectedToTop(menuInfo) {
-  const popupMenu = menuInfo.popupMenu;
-  const ul = popupMenu.querySelector('ul');
-
-  // Sort the items in reverse alphabetical order so they can be re-added from the bottom up
-  let selectedItems = Array.from(ul.querySelectorAll('.selected')).sort(
-    menuInfo.sortFunction
+/* Find and answer all of the popUpMenus in the DOM by the popUpClassName */
+function allPopUps() {
+  return Array.from(
+    document.getElementsByClassName(stringConstants.popUpClassName)
   );
-
-  let unselectedItems = Array.from(
-    ul.querySelectorAll('a:not(.selected):not(.close-x):not(.close-text)')
-  ).sort(menuInfo.sortFunction);
-
-  // Remove the unselected items and re-add them in alphabetical order
-  unselectedItems.forEach((ea) => {
-    ul.removeChild(ea.parentNode);
-    ul.insertBefore(ea.parentNode, ul.firstChild);
-  });
-
-  // Remove the selected items and re-add them in alphabetical order above the unselected items
-  selectedItems.forEach((ea) => {
-    ul.removeChild(ea.parentNode);
-    ul.insertBefore(ea.parentNode, ul.firstChild);
-  });
-
-  // Make sure teh close menu item is at the very top
-  const closeMenuItem = ul.querySelector('#close-menu-list-item');
-  ul.removeChild(closeMenuItem);
-  ul.insertBefore(closeMenuItem, ul.firstChild);
-
-  // Check or uncheck the checkbox associated with this menu based on whether there
-  // are any selected items
-  menuInfo.checkbox().checked = selectedItems.length > 0;
-
-  // Add a separator line if needed
-  // First remove the old separator, if there is one
-  const separator = ul.querySelector('.separator');
-  if (separator) {
-    ul.removeChild(separator);
-  }
-
-  // Add a separator if there are any selected
-  if (selectedItems.length > 0) {
-    const lastSelectedItem = selectedItems[0]; //selectedItems are in reverse alphabetical order;
-    const nextListItem = lastSelectedItem.parentNode.nextElementSibling;
-
-    // if there are unselected items
-    if (nextListItem) {
-      // Add a separator line
-      const separator = document.createElement('li');
-      separator.className = 'separator';
-      ul.insertBefore(separator, nextListItem);
-    }
-  }
-
-  menuInfo.selected = selectedItems
-    .sort(menuInfo.sortFunction)
-    .reverse()
-    .map((ea) => ea.textContent);
-
-  const combiner = menuInfo.combiner;
-  if (combiner) {
-    const clarifier = combiner.querySelector('.clarifier');
-    clarifier.textContent =
-      '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
-    if (menuInfo.selected.length > 1) {
-      combiner.style.display = 'inline-block';
-    } else {
-      combiner.style.display = 'none';
-    }
-  }
-  const singleClarifier = menuInfo.singleClarifier;
-  if (singleClarifier) {
-    if (menuInfo.selected.length === 1) {
-      singleClarifier.textContent = '(' + menuInfo.selected[0] + ')';
-      singleClarifier.style.display = 'inline-block';
-    } else {
-      singleClarifier.style.display = 'none';
-    }
-  }
 }
 
-function closeMenu(menuInfo, event) {
-  event.preventDefault();
-  const popupMenu = menuInfo.popupMenu;
-  popupMenu.style.display = 'none';
-}
-
-function openPopupMenu(menuInfo) {
-  const popupMenu = menuInfo.popupMenu;
-  closeAllPopups(popupMenu);
-  popupMenu.style.display = 'block';
-}
-
-function textContentSort(a, b) {
-  if (a.textContent > b.textContent) {
-    return -1; // Return -1 to indicate 'a' should come before 'b'
-  }
-  if (a.textContent < b.textContent) {
-    return 1; // Return 1 to indicate 'b' should come before 'a'
-  }
-  return 0; // Return 0 if they are equal
-}
-function byOrderAddedSort(a, b) {
-  return 0;
-}
-function addMenuListenersTo(menuInfo) {
-  // Add a change listener to the checkbox
-  const filterCheckbox = menuInfo.checkbox();
-  filterCheckbox.addEventListener('change', function () {
-    if (!menuInfo.popupMenu) {
-      createAndPostionPopupMenu(menuInfo); // also shows the menu
-    } else {
-      openPopupMenu(menuInfo);
-      if (!filterCheckbox.checked) {
-        clearSelected(menuInfo);
-        setTimeout(closeAllPopups, 500);
-      }
-    }
-    if (!menuInfo.isExlcusive && !menuInfo.combiner) {
-      createCombinersFor(menuInfo);
-    }
-    if (!menuInfo.singleClarifier) {
-      createSingleClarifierFor(menuInfo);
-    }
-  });
-
-  // Add a click listener to the checkbox's label
-  menuInfo.label().addEventListener('click', function () {
-    if (!menuInfo.popupMenu) {
-      createAndPostionPopupMenu(menuInfo); // also shows the menu
-    } else {
-      togglePopupMenu(menuInfo);
-    }
-    if (!menuInfo.isExlcusive && !menuInfo.combiner) {
-      createCombinersFor(menuInfo);
-    }
-    if (!menuInfo.singleClarifier) {
-      createSingleClarifierFor(menuInfo);
-    }
+/* Close (hide) all of the popUpMenus in the DOM */
+function closeAllPopups() {
+  allPopUps().forEach((popUp) => {
+    hide(popUp);
   });
 }
 
-function closeAllPopups(exceptPopUp) {
-  const allPopups = document.querySelectorAll('.popup-menu');
-  allPopups.forEach((popup) => {
-    if (popup !== exceptPopUp) {
-      popup.style.display = 'none';
-    }
-  });
-}
-
-function createCombinersFor(menuInfo) {
-  const combiner = document.createElement('div');
-  combiner.classList.add('combiner');
-  if (!menuInfo.orOnly) {
-    combiner.textContent = '- combine using: ';
-    menuInfo.combineUsing = 'and';
-    const andChoice = document.createElement('input');
-    andChoice.type = 'radio';
-    andChoice.id = menuInfo.container().id + '-and';
-    andChoice.name = menuInfo.container().id + '-combine-using';
-    andChoice.value = 'and';
-    andChoice.checked = true;
-    andChoice.addEventListener('change', function (event) {
-      menuInfo.combineUsing = event.target.value;
-      clarification.textContent =
-        '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
-    });
-
-    const andLabel = document.createElement('label');
-    andLabel.for = andChoice.id;
-    andLabel.textContent = ' And ';
-
-    const orChoice = document.createElement('input');
-    orChoice.type = 'radio';
-    orChoice.id = menuInfo.container().id + '-or';
-    orChoice.name = menuInfo.container().id + '-combine-using';
-    orChoice.value = 'or';
-    orChoice.checked = false;
-    orChoice.addEventListener('change', function (event) {
-      menuInfo.combineUsing = event.target.value;
-      clarification.textContent =
-        '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
-    });
-    const orLabel = document.createElement('label');
-    orLabel.for = orChoice.id;
-    orLabel.textContent = ' Or ';
-
-    combiner.appendChild(andChoice);
-    combiner.appendChild(andLabel);
-    combiner.appendChild(orChoice);
-    combiner.appendChild(orLabel);
-  } else {
-    menuInfo.combineUsing = 'or';
-  }
-  const clarification = document.createElement('div');
-  clarification.id = menuInfo.container().id + '-clarification';
-  clarification.classList.add('clarifier');
-  clarification.textContent =
-    '(' + menuInfo.selected.join(' ' + menuInfo.combineUsing + ' ') + ')';
-  clarification.style.display = 'inline-block';
-
-  combiner.appendChild(clarification);
-
-  if (menuInfo.selected.length > 1) {
-    combiner.style.display = 'inline-block';
-  } else {
-    combiner.style.display = 'none';
-  }
-
-  menuInfo.container().appendChild(combiner);
-
-  menuInfo.combiner = combiner; // save the combiner in the menuInfo
-}
-function createSingleClarifierFor(menuInfo) {
-  const clarification = document.createElement('div');
-  clarification.id = menuInfo.container().id + '-single-clarification';
-  clarification.classList.add('single-clarifier');
-  clarification.textContent = '(' + menuInfo.selected[0] + ')';
-  if (menuInfo.selected.length === 1) {
-    clarification.style.display = 'inline-block';
-  } else {
-    clarification.style.display = 'none';
-  }
-  menuInfo.container().appendChild(clarification);
-
-  menuInfo.singleClarifier = clarification; // save the single clarifier in the menuInfo
-}
-
+/* Create and answer a Dictionary (Map) of all of the sort criteria. The keys
+   are the sort strings used by the API, and the values are the sort strings
+   friendly to the user, for use in displaying the menu and feedback strings. */
 function initSortByDictionary() {
   const dictionary = new ExtendedMap();
   dictionary.set('original_title.asc', 'Original Title, Ascending');

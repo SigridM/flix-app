@@ -487,10 +487,9 @@ export class KeywordSearchDetailReturnInfo extends SearchDetailReturnInfo {
       textContent += ', excluding adult content';
     }
 
-    textContent +=
-      this.sortBy.length === 0
-        ? ''
-        : '; sorted by ' + global.lists.sortCriteria.get(this.sortBy);
+    textContent += this.sortBy
+      ? '; sorted by ' + global.lists.sortCriteria.get(this.sortBy)
+      : '';
     h2.textContent = textContent;
     return h2;
   }

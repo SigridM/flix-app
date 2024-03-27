@@ -27,7 +27,7 @@ async function initSearchForm() {
 export function clearSearchResults() {
   document.querySelector('#search-results-heading').innerHTML = '';
   document.querySelector('#search-results').innerHTML = '';
-  Array.from(document.querySelectorAll('.page-button-container')).forEach(
+  Array.from(document.querySelectorAll('.pagination')).forEach(
     (ea) => (ea.innerHTML = '')
   );
 }
@@ -69,8 +69,8 @@ async function returnSearch(urlParams) {
   // title search and keyword search: searchSpace, searchType and searchTerm.
   // Page will be obtained from the global in the repeat search.
   const radioButtonPanel = document.querySelector('#search-radio-button-panel');
-  radioButtonPanel.querySelector('#tv').checked = isTV;
-  radioButtonPanel.querySelector('#movie').checked = !isTV;
+  radioButtonPanel.querySelector('#tv-radio-button').checked = isTV;
+  radioButtonPanel.querySelector('#movie-radio-button').checked = !isTV;
   radioButtonPanel.querySelector('#search-by-title').checked = !isKeyword;
   radioButtonPanel.querySelector('#search-by-keyword').checked = isKeyword;
 
@@ -79,7 +79,7 @@ async function returnSearch(urlParams) {
     : (document.querySelector('#filter-container').style.display = 'none');
 
   const textInput = document.querySelector('#search-term');
-  textInput.placeholder = searchTerm;
+  textInput.value = searchTerm;
 
   if (isKeyword) {
     initializeFilterCriteraInDOMFrom(isTV, urlParams);
@@ -109,7 +109,7 @@ async function firstSearch() {
   // Get search critera from the DOM
   const isTV = document
     .querySelector('#search-radio-button-panel')
-    .querySelector('#tv').checked;
+    .querySelector('#tv-radio-button').checked;
   global.search.space = isTV ? 'tv' : 'movie';
 
   const textInput = document.querySelector('#search-term');
@@ -150,7 +150,12 @@ function alertOnBlankSearchTerm(isTV) {
     showAlert('Please enter a word in the title');
     return true;
   }
-  if (!hasSelectedLanguages() && !hasSelectedGenres(isTV) && noSearchTerm) {
+  if (
+    !searchByTitle() &&
+    !hasSelectedLanguages() &&
+    !hasSelectedGenres(isTV) &&
+    noSearchTerm
+  ) {
     showAlert('Please enter a keyword, one or more genres, or a language');
     return true;
   }
