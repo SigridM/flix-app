@@ -456,11 +456,11 @@ export class KeywordSearchDetailReturnInfo extends SearchDetailReturnInfo {
     return (
       super.detailsHRef() +
       '&genres=' +
-      this.genres.join('+') +
+      this.genres.join('-') +
       '&genre-combine-using=' +
       this.genreCombineUsing +
       '&languages=' +
-      this.languages.join('+') +
+      this.languages.join('-') +
       '&exclude-adult=' +
       this.excludeAdult +
       '&sort-by=' +
@@ -487,10 +487,9 @@ export class KeywordSearchDetailReturnInfo extends SearchDetailReturnInfo {
       textContent += ', excluding adult content';
     }
 
-    textContent +=
-      this.sortBy.length === 0
-        ? ''
-        : '; sorted by ' + global.lists.sortCriteria.get(this.sortBy);
+    textContent += this.sortBy
+      ? '; sorted by ' + global.lists.sortCriteria.get(this.sortBy)
+      : '';
     h2.textContent = textContent;
     return h2;
   }
