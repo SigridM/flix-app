@@ -828,9 +828,27 @@ export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
     return this.combineUsing;
   }
 
+  getCombineUsingAnd() {
+    return document.getElementById(
+      this.baseID + '-' + this.stringConstants.combineUsingAnd
+    );
+  }
+
+  getCombineUsingOr() {
+    return document.getElementById(
+      this.baseID + '-' + this.stringConstants.combineUsingOr
+    );
+  }
+
   /* In response to a radio button selection, set how to combine the options when there is more than one selected in the popUpMenu*/
   setCombineUsing(aString) {
     this.combineUsing = aString;
+    if (aString === this.stringConstants.combineUsingAnd) {
+      this.getCombineUsingAnd().checked = true;
+    }
+    if (aString === this.stringConstants.combineUsingOr) {
+      this.getCombineUsingOr().checked = true;
+    }
     this.combinerClarifier().textContent = this.combinerClarifierText();
   }
 

@@ -332,53 +332,25 @@ function sortBy() {
    search. Replace the language filter with one that has selected the specific 
    languages last chosen by the user. */
 export function setSelectedLanguages(languages) {
-  allFilters.set(
-    stringConstants.languagesKey,
-    MultipleChoiceMenuFilter.withSelections(
-      stringConstants.languageBaseID,
-      global.lists.languages.map((ea) => ea.english_name),
-      languages
-    )
-  );
+  getLanguageFilter().setSelectedListItemAnchorTextFrom(languages);
 }
 
 /* The user has returned from a details page and we are restoring the last
    search. Replace the sort filter with one that has selected the specific 
    sort criteria last chosen by the user. */
 export function setSortBy(sortByString) {
-  allFilters.set(
-    stringConstants.sortKey,
-    SingleChoiceMenuFilter.withSelections(
-      stringConstants.sortBaseID,
-      global.lists.sortCriteria.values(),
-      [global.lists.sortCriteria.get(sortByString)] // get the user friendly string
-    )
-  );
+  getSortFilter().setSelectedListItemAnchorTextFrom([
+    global.lists.sortCriteria.get(sortByString),
+  ]);
 }
 
 /* The user has returned from a details page and we are restoring the last
    search. Replace the genre filter with one that has selected the specific 
    genres and combiner last chosen by the user. */
 export function setSelectedGenres(isTV, genres, genreCombiner) {
-  const key = isTV ? stringConstants.tvGenreKey : stringConstants.movieGenreKey;
-  const id = isTV
-    ? stringConstants.tvGenreBaseID
-    : stringConstants.movieGenreBaseID;
-  const options = isTV
-    ? global.lists.genres.tv.map((ea) => ea.name)
-    : global.lists.genres.movies.map((ea) => ea.name);
-
-  // @to-do: Do I need to create the one that is not showing?
-
-  allFilters.set(
-    key,
-    AndOrMultipleChoiceMenuFilter.withSelectionsAndCombiner(
-      id,
-      options,
-      genres,
-      genreCombiner
-    )
-  );
+  const genreFilter = getGenreFilter(isTV);
+  genreFilter.setSelectedListItemAnchorTextFrom(genres);
+  genreFilter.setCombineUsing(genreCombiner);
   hideUnusedGenreFilter(isTV); // make sure only TV genres or Movie genres are showing
 }
 

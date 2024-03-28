@@ -456,11 +456,11 @@ export class KeywordSearchDetailReturnInfo extends SearchDetailReturnInfo {
     return (
       super.detailsHRef() +
       '&genres=' +
-      this.genres.join('+') +
+      this.genres.join('-') +
       '&genre-combine-using=' +
       this.genreCombineUsing +
       '&languages=' +
-      this.languages.join('+') +
+      this.languages.join('-') +
       '&exclude-adult=' +
       this.excludeAdult +
       '&sort-by=' +

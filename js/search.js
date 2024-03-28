@@ -90,10 +90,10 @@ async function returnSearch(urlParams) {
 
 function initializeFilterCriteraInDOMFrom(isTV, urlParams) {
   let genres = urlParams.get('genres');
-  genres = genres.split(' ');
+  genres = genres.split('-');
   const genreCombiner = urlParams.get('genre-combine-using');
   setSelectedGenres(isTV, genres, genreCombiner);
-  const languages = urlParams.get('languages').split('+');
+  const languages = urlParams.get('languages').split('-');
   setSelectedLanguages(languages);
   const excludeAdult = urlParams.get('exclude-adult') === 'true';
   setExcludeAdult(excludeAdult);
