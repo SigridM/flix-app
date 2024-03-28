@@ -1,3 +1,5 @@
+import { getKeywordObjects } from './fetchData.js';
+import { global } from './globals.js';
 /* A simple Boolean filter with a Checkbox  */
 export class Filter {
   /* Create an instance of this class that sets its baseID (a String), used for identifying and creating elements
@@ -920,4 +922,60 @@ export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
   }
 
   /* End AndOrMultipleChoiceFilter */
+}
+
+export class DynamicAndOrMultipleChoiceMenuFilter extends AndOrMultipleChoiceMenuFilter {
+  constructor(name, baseID) {
+    super(name, baseID);
+    this.keyWordObjects = [];
+  }
+
+  addStringConstants() {
+    super.addStringConstants();
+
+    /* Add the character combinations that is used in the API to represent how options are joined */
+    this.addStringConstant('andJoinString', ',');
+    this.addStringConstant('orJoinString', '|');
+  }
+
+  async openPopUpMenu() {
+    const textInput = document.querySelector('#search-term');
+    global.search.term = textInput.value;
+    this.keyWordObjects = await getKeywordObjects();
+    this.options = this.keyWordObjects.map((ea) => ea.name);
+    this.repopulatePopUpMenu();
+    super.openPopUpMenu();
+  }
+
+  async setSelectedListItemAnchorTextFrom(selections) {
+    const textInput = document.querySelector('#search-term');
+    global.search.term = textInput.value;
+    this.keyWordObjects = await getKeywordObjects();
+    this.options = this.keyWordObjects.map((ea) => ea.name);
+    this.repopulatePopUpMenu();
+    super.setSelectedListItemAnchorTextFrom(selections);
+  }
+
+  /* */
+  repopulatePopUpMenu() {
+    const popUpMenu = this.popUpMenu();
+    popUpMenu.innerHTML = '';
+
+    const list = document.createElement(
+      this.stringConstants.unorderedListElementTag
+    );
+    const closeItem = this.newCloseMenuItem();
+    list.appendChild(closeItem);
+    this.options.forEach((option) => {
+      const item = this.newMenuItem(option);
+      list.appendChild(item);
+    });
+    popUpMenu.appendChild(list);
+  }
+
+  getSelectedCodes() {
+    return this.keyWordObjects
+      .filter((ea) => this.selected.includes(ea.name))
+      .map((ea) => ea.id);
+  }
 }
