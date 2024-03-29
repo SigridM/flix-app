@@ -105,6 +105,13 @@ export class Filter {
     });
   }
 
+  /* Close (hide) all of the popUpMenus in the DOM */
+  closeAllPopUps() {
+    this.allPopUps().forEach((popUp) => {
+      this.hideElement(popUp);
+    });
+  }
+
   /* Hide the DOM element by changing its style */
   hideElement(element) {
     element.style.display = this.stringConstants.hiddenStyle;
@@ -449,7 +456,7 @@ export class SingleChoiceMenuFilter extends Filter {
     const popUpMenu = this.popUpMenu();
     const wasHidden = this.isHidden(popUpMenu);
 
-    this.closeOtherPopUps();
+    this.closeAllPopUps();
 
     if (wasHidden) {
       this.positionPopUpMenu();
@@ -953,7 +960,7 @@ export class DynamicAndOrMultipleChoiceMenuFilter extends AndOrMultipleChoiceMen
     const popUpMenu = this.popUpMenu();
     const wasHidden = this.isHidden(popUpMenu);
 
-    this.closeOtherPopUps();
+    this.closeAllPopUps();
     await this.repopulatePopUpMenu();
     this.setSelectedListItemAnchorTextFrom(this.selected);
 
@@ -964,11 +971,20 @@ export class DynamicAndOrMultipleChoiceMenuFilter extends AndOrMultipleChoiceMen
   }
 
   /* */
-  async repopulatePopUpMenu() {
+  async repopulateOptions() {
     const textInput = document.querySelector('#search-term');
     global.search.term = textInput.value;
-    this.keyWordObjects = await getKeywordObjects();
-    this.options = this.keyWordObjects.map((ea) => ea.name); //.sort();
+    if (global.search.term.length > 0) {
+      this.keyWordObjects = await getKeywordObjects();
+      this.options = this.keyWordObjects
+        .map((ea) => ea.name)
+        .filter((ea) => ea[0] !== '#');
+    }
+    console.log(this.options);
+  }
+
+  async repopulatePopUpMenu() {
+    await this.repopulateOptions();
     const popUpMenu = this.popUpMenu();
     popUpMenu.innerHTML = '';
 
