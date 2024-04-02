@@ -40,11 +40,19 @@ export async function searchAPIData() {
   return data;
 }
 
-export async function discoverAPIData(filters) {
+export async function discoverAPIData(filters, filtersRefined = false) {
   showSpinner();
-  const keywords = await getKeywordCodes();
-  const keywordString = keywords.join('%7C');
-  const fetchString = `${global.api.apiURL}discover/${global.search.space}?api_key=${global.api.apiKey}&language=en-US&with_keywords=${keywordString}&page=${global.search.page}${filters}`;
+
+  let fetchString;
+  if (filtersRefined) {
+    // keywords will be in the filters
+    fetchString = `${global.api.apiURL}discover/${global.search.space}?api_key=${global.api.apiKey}&language=en-US&page=${global.search.page}${filters}`;
+  } else {
+    const keywords = await getKeywordCodes();
+    const keywordString = keywords.join('%7C');
+    fetchString = `${global.api.apiURL}discover/${global.search.space}?api_key=${global.api.apiKey}&language=en-US&with_keywords=${keywordString}&page=${global.search.page}${filters}`;
+  }
+  console.log(fetchString);
   const response = await fetch(fetchString);
 
   const data = await response.json();
@@ -69,6 +77,7 @@ async function getKeywordCodes() {
   const data = await response.json();
   const totalPages = data.total_pages;
   const allKeywordCodes = data.results.map((ea) => ea.id);
+  const allKeywordNames = data.results.map((ea) => ea.name);
   let nextPage = 2;
 
   while (nextPage <= totalPages) {
@@ -82,5 +91,32 @@ async function getKeywordCodes() {
 
   hideSpinner();
 
+  // console.log(allKeywordNames);
   return allKeywordCodes;
+}
+
+export async function getKeywordObjects() {
+  showSpinner();
+
+  const response = await fetch(
+    `${global.api.apiURL}search/keyword?api_key=${global.api.apiKey}&language=en-US&query=${global.search.term}&page=1` //,
+  );
+  const data = await response.json();
+  const totalPages = data.total_pages;
+  const allKeywordObjects = data.results;
+  let nextPage = 2;
+
+  while (nextPage <= totalPages) {
+    const response = await fetch(
+      `${global.api.apiURL}search/keyword?api_key=${global.api.apiKey}&language=en-US&query=${global.search.term}&page=${nextPage}` //,
+    );
+    const data = await response.json();
+    allKeywordObjects.push(...data.results);
+    nextPage++;
+  }
+
+  hideSpinner();
+
+  console.log(allKeywordObjects);
+  return allKeywordObjects;
 }

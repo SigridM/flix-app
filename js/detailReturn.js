@@ -21,9 +21,11 @@ export class DetailReturnInfo {
       return new SearchDetailReturnInfo(isTV, searchTerm, savedPage);
     }
 
-    const genres = urlParams.get('genres').split('+');
+    const keywords = urlParams.get('keywords').split('-');
+    const keywordCombineUsing = urlParams.get('keyword-combine-using');
+    const genres = urlParams.get('genres').split('-');
     const genreCombineUsing = urlParams.get('genre-combine-using');
-    const languages = urlParams.get('languages').split('+');
+    const languages = urlParams.get('languages').split('-');
     const excludeAdult = urlParams.get('exclude-adult');
     const sortBy = urlParams.get('sort-by');
 
@@ -31,6 +33,8 @@ export class DetailReturnInfo {
       isTV,
       searchTerm,
       savedPage,
+      keywords,
+      keywordCombineUsing,
       genres,
       genreCombineUsing,
       languages,
@@ -421,6 +425,8 @@ export class KeywordSearchDetailReturnInfo extends SearchDetailReturnInfo {
     isTV,
     searchTerm = '',
     originPage = 1,
+    keywords = [],
+    keywordCombineUsing = 'and',
     genres = [],
     genreCombineUsing = 'and',
     languages = [],
@@ -428,6 +434,8 @@ export class KeywordSearchDetailReturnInfo extends SearchDetailReturnInfo {
     sortBy = null
   ) {
     super(isTV, searchTerm, originPage);
+    this.keywords = keywords;
+    this.keywordCombineUsing = keywordCombineUsing;
     this.genres = genres;
     this.genreCombineUsing = genreCombineUsing;
     this.languages = languages;
@@ -440,12 +448,16 @@ export class KeywordSearchDetailReturnInfo extends SearchDetailReturnInfo {
   backButtonHRef() {
     return (
       super.backButtonHRef() +
+      '&keywords=' +
+      this.keywords.join('-') +
+      '&keyword-combine-using=' +
+      this.keywordCombineUsing +
       '&genres=' +
-      this.genres.join('+') +
+      this.genres.join('-') +
       '&genre-combine-using=' +
       this.genreCombineUsing +
       '&languages=' +
-      this.languages.join('+') +
+      this.languages.join('-') +
       '&exclude-adult=' +
       this.excludeAdult +
       '&sort-by=' +
@@ -455,6 +467,10 @@ export class KeywordSearchDetailReturnInfo extends SearchDetailReturnInfo {
   detailsHRef() {
     return (
       super.detailsHRef() +
+      '&keywords=' +
+      this.keywords.join('-') +
+      '&keyword-combine-using=' +
+      this.keywordCombineUsing +
       '&genres=' +
       this.genres.join('-') +
       '&genre-combine-using=' +
@@ -494,6 +510,14 @@ export class KeywordSearchDetailReturnInfo extends SearchDetailReturnInfo {
     return h2;
   }
 
+  quotedSearchTerm() {
+    if (this.keywords.length === 0) {
+      return super.quotedSearchTerm();
+    }
+    return (
+      '"' + this.keywords.join('" ' + this.keywordCombineUsing + ' "') + '"'
+    );
+  }
   async getResults() {
     // go to filter.js to get the results
     return await getFilterResults(this.isTV);

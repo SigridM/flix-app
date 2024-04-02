@@ -103,6 +103,13 @@ export class Filter {
     });
   }
 
+  /* Close (hide) all of the popUpMenus in the DOM */
+  closeAllPopUps() {
+    this.allPopUps().forEach((popUp) => {
+      this.hideElement(popUp);
+    });
+  }
+
   /* Hide the DOM element by changing its style */
   hideElement(element) {
     element.style.display = this.stringConstants.hiddenStyle;
@@ -447,7 +454,7 @@ export class SingleChoiceMenuFilter extends Filter {
     const popUpMenu = this.popUpMenu();
     const wasHidden = this.isHidden(popUpMenu);
 
-    this.closeOtherPopUps();
+    this.closeAllPopUps();
 
     if (wasHidden) {
       this.positionPopUpMenu();
@@ -777,9 +784,12 @@ export class MultipleChoiceMenuFilter extends SingleChoiceMenuFilter {
 /* A Filter that allows multiple choice selections in the popUpMenu and also allows those choices to be combined
    with either 'and' or 'or' */
 export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
-  /* Override the superclass constructor because this filter allows the combiner to be set by the user */
-  constructor(name, baseID) {
-    super(name, baseID);
+  /* Override the superclass constructor because this filter allows the combiner to be set by the user. Also,
+     how the joins are represented by the API may differ, depending on the filter; complex strings will be sent
+     with three-character strings starting with percent signs, wherease simple strings are either comma or pipe. */
+  constructor(baseID, options, useComplexJoinStrings = true) {
+    super(baseID, options);
+    this.useComplexJoinStrings = useComplexJoinStrings;
     this.combineUsing = 'or'; // default combiner choice
   }
 
@@ -788,8 +798,13 @@ export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
     super.addStringConstants();
 
     /* Add the character combinations that is used in the API to represent how options are joined */
-    this.addStringConstant('andJoinString', '%2C');
-    this.addStringConstant('orJoinString', '%7C');
+    if (this.useComplexJoinStrings) {
+      this.addStringConstant('andJoinString', '%2C');
+      this.addStringConstant('orJoinString', '%7C');
+    } else {
+      this.addStringConstant('andJoinString', ',');
+      this.addStringConstant('orJoinString', '|');
+    }
 
     /* Add the option for combining using and */
     this.addStringConstant('combineUsingAnd', 'and');
@@ -920,4 +935,70 @@ export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
   }
 
   /* End AndOrMultipleChoiceFilter */
+}
+/* A Filter that allows multiple choice selections in the popUpMenu, allows those choices to be combined
+   with either 'and' or 'or', and also allows the menu items to be populated dynamically */
+export class DynamicAndOrMultipleChoiceMenuFilter extends AndOrMultipleChoiceMenuFilter {
+  constructor(baseID, useComplexJoinStrings, repopulateFunction) {
+    super(baseID, [], useComplexJoinStrings);
+    this.repopulateFunction = repopulateFunction;
+  }
+
+  /* Open the popUpMenu. Override the superclass method to first repopulate the menu items
+   dynamically. This happens in setSelectedListItemAnchorTextFrom(), which also resets the 
+   selected items. */
+  async openPopUpMenu() {
+    // await this.repopulatePopUpMenu();
+    this.setSelectedListItemAnchorTextFrom(this.selected);
+    super.openPopUpMenu();
+  }
+
+  /* Set the items selected in the menu from the Array of strings in the selections
+     parameter. Override the superclass method to repopulate the menu first. */
+  async setSelectedListItemAnchorTextFrom(selections) {
+    await this.repopulatePopUpMenu();
+    super.setSelectedListItemAnchorTextFrom(selections);
+  }
+
+  /* Toggle the popUpMenu: if it is open, close it and vice versa. Override the superclass
+     method to repopulate the menu items dynamically before reopening the menu. This happens 
+     in setSelectedListItemAnchorTextFrom(), which also resets the selected items. */
+  async togglePopUpMenu() {
+    const popUpMenu = this.popUpMenu();
+    const wasHidden = this.isHidden(popUpMenu);
+
+    this.closeAllPopUps();
+    // await this.repopulatePopUpMenu();
+    this.setSelectedListItemAnchorTextFrom(this.selected);
+
+    if (wasHidden) {
+      this.positionPopUpMenu();
+      this.showElementAsBlock(popUpMenu);
+    }
+  }
+
+  /* Set the options in the popUpMenu to the Array of Strings in the newOptions parameter. */
+  setOptions(newOptions) {
+    this.options = newOptions;
+  }
+
+  /* Remove the contents of the popUpMenu and replace them according to
+    the repopulateFunction. This happens asynchronously since the
+    options are coming from the API. */
+  async repopulatePopUpMenu() {
+    this.options = await this.repopulateFunction();
+    const popUpMenu = this.popUpMenu();
+    popUpMenu.innerHTML = '';
+
+    const list = document.createElement(
+      this.stringConstants.unorderedListElementTag
+    );
+    const closeItem = this.newCloseMenuItem();
+    list.appendChild(closeItem);
+    this.options.forEach((option) => {
+      const item = this.newMenuItem(option);
+      list.appendChild(item);
+    });
+    popUpMenu.appendChild(list);
+  }
 }

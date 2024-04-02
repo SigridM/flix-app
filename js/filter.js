@@ -1,4 +1,8 @@
-import { discoverAPIData, fetchAPIData } from './fetchData.js';
+import {
+  discoverAPIData,
+  fetchAPIData,
+  getKeywordObjects,
+} from './fetchData.js';
 import { global } from './globals.js';
 import { KeywordSearchDetailReturnInfo } from './detailReturn.js';
 import { clearSearchResults } from './search.js';
@@ -8,6 +12,7 @@ import {
   MultipleChoiceMenuFilter,
   SingleChoiceMenuFilter,
   AndOrMultipleChoiceMenuFilter,
+  DynamicAndOrMultipleChoiceMenuFilter,
 } from './filterClasses.js';
 
 const allFilters = new ExtendedMap();
@@ -15,6 +20,7 @@ const allFilters = new ExtendedMap();
 /* Keep all the string constants in one place */
 const stringConstants = {
   // Keys into the allFilters dictionary (Map)
+  refineKeywordKey: 'refineKeyword',
   movieGenreKey: 'movieGenres',
   tvGenreKey: 'tvGenres',
   adultKey: 'adult',
@@ -22,6 +28,7 @@ const stringConstants = {
   sortKey: 'sort',
 
   // BaseIDs used when creating the filters, consistent with the html and css docs
+  refineKeywordBaseID: 'refine-keyword',
   movieGenreBaseID: 'movie-genre',
   tvGenreBaseID: 'tv-genre',
   adultBaseID: 'adult',
@@ -47,6 +54,7 @@ const stringConstants = {
   clickEvent: 'click',
 
   // Beginnings of parameters used in the API for fetching filtered data
+  keywordAPIParam: '&with_keywords=',
   genreAPIParam: '&with_genres=',
   languageAPIParam: '&with_original_language=',
   adultAPIParam: '&include_adult=',
@@ -69,6 +77,8 @@ export function keywordResultInfo(isTV) {
     isTV,
     global.search.term,
     global.search.page,
+    getSelectedKeywords(),
+    getKeywordCombineUsing(),
     getSelectedGenres(isTV),
     getGenreCombineUsing(isTV),
     getSelectedLanguages(),
@@ -80,6 +90,14 @@ export function keywordResultInfo(isTV) {
 /* Create and store the filter objects for all the different ways of filtering 
    a keyword search */
 function createFilters() {
+  allFilters.set(
+    stringConstants.refineKeywordKey,
+    new DynamicAndOrMultipleChoiceMenuFilter(
+      stringConstants.refineKeywordBaseID,
+      false, // use simple join strings
+      repopulatedKeywordOptions
+    )
+  );
   allFilters.set(
     stringConstants.movieGenreKey,
     new AndOrMultipleChoiceMenuFilter(
@@ -122,6 +140,13 @@ export function showFilters() {
   showAsBlock(filterList());
 }
 
+export function hideFilters() {
+  let container = filterContainer();
+  if (container) {
+    container.style.display = stringConstants.hiddenStyle;
+  }
+}
+
 /* Either show or hide the given element, depending on whether
    it was currently showing. */
 function toggleBlockVisibilityOf(element) {
@@ -130,7 +155,9 @@ function toggleBlockVisibilityOf(element) {
 
 /* Show the given element in the DOM using the block display style */
 function showAsBlock(element) {
-  element.style.display = stringConstants.blockStyle;
+  if (element) {
+    element.style.display = stringConstants.blockStyle;
+  }
 }
 
 /* Hide the given element in the DOM */
@@ -262,6 +289,10 @@ function hideUnusedGenreFilter(isTV) {
   getGenreFilter(!isTV).hide();
 }
 
+function getRefineKeywordFilter() {
+  return allFilters.get(stringConstants.refineKeywordKey);
+}
+
 /* Answer the correct genre filter, depending on whether the user is searching
    for TV shows or movies. */
 function getGenreFilter(isTV) {
@@ -299,6 +330,13 @@ async function doFilter(isTV) {
   // Build the filter parameters string
   let filters = '';
 
+  if (hasRefinedKeywords()) {
+    const keywordRefinements = getSelectedKeywordCodes();
+    filters +=
+      stringConstants.keywordAPIParam +
+      keywordRefinements.join(getRefineKeywordJoinString());
+  }
+
   if (hasSelectedGenres(isTV)) {
     const genreCodes = getSelectedGenreCodes(isTV);
     filters +=
@@ -310,15 +348,14 @@ async function doFilter(isTV) {
     filters += stringConstants.languageAPIParam + languages.join('|');
   }
 
-  if (filterAdult()) {
-    filters += stringConstants.adultAPIParam + includeAdult();
-  }
+  filters += stringConstants.adultAPIParam + includeAdult();
 
   if (hasSort()) {
     filters += stringConstants.sortAPIParam + sortBy();
   }
 
-  const results = await discoverAPIData(filters);
+  console.log(filters);
+  const results = await discoverAPIData(filters, hasRefinedKeywords());
   return results;
 }
 
@@ -332,35 +369,60 @@ function sortBy() {
    search. Replace the language filter with one that has selected the specific 
    languages last chosen by the user. */
 export function setSelectedLanguages(languages) {
-  getLanguageFilter().setSelectedListItemAnchorTextFrom(languages);
+  let languageFilter = getLanguageFilter();
+  if (languageFilter) {
+    languageFilter.setSelectedListItemAnchorTextFrom(languages);
+  }
 }
 
 /* The user has returned from a details page and we are restoring the last
    search. Replace the sort filter with one that has selected the specific 
    sort criteria last chosen by the user. */
 export function setSortBy(sortByString) {
-  getSortFilter().setSelectedListItemAnchorTextFrom([
-    global.lists.sortCriteria.get(sortByString),
-  ]);
+  let sortFilter = getSortFilter();
+  if (sortFilter) {
+    sortFilter.setSelectedListItemAnchorTextFrom([
+      global.lists.sortCriteria.get(sortByString),
+    ]);
+  }
 }
 
 /* The user has returned from a details page and we are restoring the last
    search. Replace the genre filter with one that has selected the specific 
    genres and combiner last chosen by the user. */
 export function setSelectedGenres(isTV, genres, genreCombiner) {
-  const genreFilter = getGenreFilter(isTV);
-  genreFilter.setSelectedListItemAnchorTextFrom(genres);
-  genreFilter.setCombineUsing(genreCombiner);
-  hideUnusedGenreFilter(isTV); // make sure only TV genres or Movie genres are showing
+  let genreFilter = getGenreFilter(isTV);
+  if (genreFilter) {
+    genreFilter.setSelectedListItemAnchorTextFrom(genres);
+    genreFilter.setCombineUsing(genreCombiner);
+    hideUnusedGenreFilter(isTV); // make sure only TV genres or Movie genres are showing
+  }
+}
+
+/* The user has returned from a details page and we are restoring the last
+   search. Replace the genre filter with one that has selected the specific 
+   genres and combiner last chosen by the user. */
+export async function setSelectedKeywords(keywords, keywordCombiner) {
+  let keywordFilter = getRefineKeywordFilter();
+  if (keywordFilter) {
+    await keywordFilter.setSelectedListItemAnchorTextFrom(keywords);
+    keywordFilter.setCombineUsing(keywordCombiner);
+  }
 }
 
 /* The user has returned from a details page and we are restoring the last
    search. Set the state of the excludeAdult filter to the state last 
    chosen by the user. */
 export function setExcludeAdult(excludeAdult) {
-  getAdultFilter().setFiltered(excludeAdult);
+  let adultFilter = getAdultFilter();
+  if (adultFilter) {
+    adultFilter.setFiltered(excludeAdult);
+  }
 }
 
+export function hasRefinedKeywords() {
+  return getRefineKeywordFilter().hasSelected();
+}
 /* Answer a Boolean: whether there are any genres to filter the search results by */
 export function hasSelectedGenres(isTV) {
   return getGenreFilter(isTV).hasSelected();
@@ -381,6 +443,16 @@ function hasSort() {
   return getSortFilter().hasSelected();
 }
 
+function getSelectedKeywords() {
+  return getRefineKeywordFilter().getSelected();
+}
+
+function getSelectedKeywordCodes() {
+  return global.lists.keywordObjects
+    .filter((ea) => getSelectedKeywords().includes(ea.name))
+    .map((ea) => ea.id);
+}
+
 /* Answer the selected genres for either TV or movies */
 function getSelectedGenres(isTV) {
   return getGenreFilter(isTV).getSelected();
@@ -391,11 +463,19 @@ function getGenreJoinString(isTV) {
   return getGenreFilter(isTV).getJoinString();
 }
 
+function getRefineKeywordJoinString() {
+  return getRefineKeywordFilter().getJoinString();
+}
+
 /* Answer the string the user sees ('and' or 'or') for joining selected genres;
    this is also the string sent to the details page for restoring the search on
    return from the details page. */
 function getGenreCombineUsing(isTV) {
   return getGenreFilter(isTV).getCombineUsing();
+}
+
+function getKeywordCombineUsing() {
+  return getRefineKeywordFilter().getCombineUsing();
 }
 
 /* Answer an Array of the API-defined genre codes for the selected genre strings, 
@@ -507,4 +587,20 @@ function initSortByDictionary() {
   dictionary.set('vote_count.desc', 'Vote count, Descending');
 
   return dictionary;
+}
+
+/* For the dynamically-popuplated keyword menu, this is the function it uses
+   to repopulate its menu options. Answer the Array of Strings it will use
+   in its menu. */
+async function repopulatedKeywordOptions() {
+  const textInput = document.querySelector('#search-term');
+  global.search.term = textInput.value;
+  let options = [];
+  if (global.search.term.length > 0) {
+    global.lists.keywordObjects = await getKeywordObjects();
+    options = global.lists.keywordObjects
+      .map((ea) => ea.name)
+      .filter((ea) => ea[0] !== '#');
+  }
+  return options;
 }
