@@ -36,7 +36,7 @@ const stringConstants = {
 
   // common UI strings
   outOfTen: ' / 10',
-  unavailable: 'Unavailable',
+  unavailable: 'Information unavailable',
 
   // targets
   blankAnchorTarget: '_blank',
