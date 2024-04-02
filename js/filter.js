@@ -339,9 +339,7 @@ async function doFilter(isTV) {
     filters += stringConstants.languageAPIParam + languages.join('|');
   }
 
-  if (filterAdult()) {
-    filters += stringConstants.adultAPIParam + includeAdult();
-  }
+  filters += stringConstants.adultAPIParam + includeAdult();
 
   if (hasSort()) {
     filters += stringConstants.sortAPIParam + sortBy();
@@ -582,6 +580,5 @@ async function repopulatedKeywordOptions() {
       .map((ea) => ea.name)
       .filter((ea) => ea[0] !== '#');
   }
-  console.log(options);
   return options;
 }
