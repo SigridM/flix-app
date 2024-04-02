@@ -355,7 +355,6 @@ async function doFilter(isTV) {
     filters += stringConstants.sortAPIParam + sortBy();
   }
 
-  console.log(filters);
   const results = await discoverAPIData(filters, hasRefinedKeywords());
   return results;
 }

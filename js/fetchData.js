@@ -52,7 +52,6 @@ export async function discoverAPIData(filters, filtersRefined = false) {
 
     fetchString = `${global.api.apiURL}discover/${global.search.space}?api_key=${global.api.apiKey}&language=en-US&with_keywords=${keywordString}&page=${global.search.page}${filters}`;
   }
-  console.log(fetchString);
   const response = await fetch(fetchString);
 
   const data = await response.json();
