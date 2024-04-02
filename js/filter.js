@@ -94,7 +94,7 @@ function createFilters() {
     stringConstants.refineKeywordKey,
     new DynamicAndOrMultipleChoiceMenuFilter(
       stringConstants.refineKeywordBaseID,
-      [],
+      false, // use simple join strings
       repopulatedKeywordOptions
     )
   );

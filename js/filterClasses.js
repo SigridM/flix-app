@@ -784,9 +784,12 @@ export class MultipleChoiceMenuFilter extends SingleChoiceMenuFilter {
 /* A Filter that allows multiple choice selections in the popUpMenu and also allows those choices to be combined
    with either 'and' or 'or' */
 export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
-  /* Override the superclass constructor because this filter allows the combiner to be set by the user */
-  constructor(baseID, options) {
+  /* Override the superclass constructor because this filter allows the combiner to be set by the user. Also,
+     how the joins are represented by the API may differ, depending on the filter; complex strings will be sent
+     with three-character strings starting with percent signs, wherease simple strings are either comma or pipe. */
+  constructor(baseID, options, useComplexJoinStrings = true) {
     super(baseID, options);
+    this.useComplexJoinStrings = useComplexJoinStrings;
     this.combineUsing = 'or'; // default combiner choice
   }
 
@@ -795,8 +798,13 @@ export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
     super.addStringConstants();
 
     /* Add the character combinations that is used in the API to represent how options are joined */
-    this.addStringConstant('andJoinString', '%2C');
-    this.addStringConstant('orJoinString', '%7C');
+    if (this.useComplexJoinStrings) {
+      this.addStringConstant('andJoinString', '%2C');
+      this.addStringConstant('orJoinString', '%7C');
+    } else {
+      this.addStringConstant('andJoinString', ',');
+      this.addStringConstant('orJoinString', '|');
+    }
 
     /* Add the option for combining using and */
     this.addStringConstant('combineUsingAnd', 'and');
@@ -931,20 +939,9 @@ export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
 /* A Filter that allows multiple choice selections in the popUpMenu, allows those choices to be combined
    with either 'and' or 'or', and also allows the menu items to be populated dynamically */
 export class DynamicAndOrMultipleChoiceMenuFilter extends AndOrMultipleChoiceMenuFilter {
-  constructor(baseID, options, repopulateFunction) {
-    super(baseID, options);
-    // this.keyWordObjects = [];
+  constructor(baseID, useComplexJoinStrings, repopulateFunction) {
+    super(baseID, [], useComplexJoinStrings);
     this.repopulateFunction = repopulateFunction;
-  }
-
-  addStringConstants() {
-    super.addStringConstants();
-
-    /* Add the character combinations that is used in the API to represent how options are joined */
-    // @to-do These should really be set from the outside, since they have more to do with the API
-    // than the class
-    this.addStringConstant('andJoinString', ',');
-    this.addStringConstant('orJoinString', '|');
   }
 
   /* Open the popUpMenu. Override the superclass method to first repopulate the menu items
