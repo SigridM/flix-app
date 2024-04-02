@@ -6,30 +6,73 @@ import {
 } from './imageManagement.js';
 import { DetailReturnInfo, PopularDetailReturnInfo } from './detailReturn.js';
 
+/* Keep all the string constants in one place */
+const stringConstants = {
+  // html elements that will be created or searched for
+  iconElement: 'i',
+  spanElement: 'span',
+  unorderedListElement: 'ul',
+  listItemElement: 'li',
+  paragraphElement: 'p',
+  anchorElement: 'a',
+  divElement: 'div',
+  heading2Element: 'h2',
+  heading4Element: 'h4',
+  heading5Element: 'h5',
+
+  // classes that will be added or seached for
+  ratingClasses: ['fas', 'fa-star', 'text-secondary'],
+  listGroupClass: 'list-group',
+  boldClass: 'text-secondary-bold',
+  plainTextClass: 'text-secondary',
+  buttonClass: 'btn',
+  detailsTopClass: 'details-top',
+  detailsBottomClass: 'details-bottom',
+  backClass: '.back',
+
+  // media types
+  tvType: 'tv',
+  movieType: 'movie',
+
+  // common UI strings
+  outOfTen: ' / 10',
+  unavailable: 'Unavailable',
+
+  // targets
+  blankAnchorTarget: '_blank',
+  tvDetailsTarget: '#tv-details',
+  movieDetailsTarget: '#movie-details',
+
+  // error strings
+  fetchError: 'A fetch error occurred:',
+};
+
 // Add the rating icon inside the wrapper element (a paragraph or h4)
 export function addRatingIcon(media, wrapper) {
-  const ratingIcon = document.createElement('i');
-  ['fas', 'fa-star', 'text-secondary'].forEach((ratingClass) => {
+  const ratingIcon = document.createElement(stringConstants.iconElement);
+  stringConstants.ratingClasses.forEach((ratingClass) => {
     ratingIcon.classList.add(ratingClass);
   });
   const vote = media.vote_average ? media.vote_average : 0;
-  wrapper.textContent = ` ${vote.toFixed(1)} / 10`;
+  wrapper.textContent = vote.toFixed(1) + stringConstants.outOfTen;
   wrapper.insertBefore(ratingIcon, wrapper.firstChild);
 }
 
 // Create and return a span element containing the given text.
 function spanFor(text) {
-  const span = document.createElement('span');
+  const span = document.createElement(stringConstants.spanElement);
   span.textContent = text;
   return span;
 }
 
 // Create and return a ul containing all the genres of movie as lis
 function genreList(media) {
-  const genreList = document.createElement('ul');
-  genreList.classList.add('list-group');
+  const genreList = document.createElement(
+    stringConstants.unorderedListElement
+  );
+  genreList.classList.add(stringConstants.listGroupClass);
   media.genres.forEach((genre) => {
-    const li = document.createElement('li');
+    const li = document.createElement(stringConstants.listItemElement);
     li.textContent = genre.name;
     genreList.appendChild(li);
   });
@@ -42,12 +85,12 @@ function genreList(media) {
 // 3) a semicolon-separated list of places where someone can buy a movie or TV show; and
 // 4) a semicolon-separated list of places where someone can stream a movie or TV show
 async function mediaProviders(mediaID, isTV) {
-  const type = isTV ? 'tv' : 'movie';
+  const type = isTV ? stringConstants.tvType : stringConstants.movieType;
   let mediaProviders;
   try {
     mediaProviders = await fetchAPIData(`${type}/${mediaID}/watch/providers`);
   } catch (error) {
-    console.error('A fetch error occurred:', error);
+    console.error(stringConstants.fetchError, error);
   }
 
   const providers = {
@@ -89,13 +132,13 @@ async function mediaProviders(mediaID, isTV) {
 // Create and return a paragraph (p) element that contains either the release date
 // (for movies) or the aired-from and aired-to dates (for TV), along with labels
 function dateParagraph(media, isTV) {
-  const date = document.createElement('p');
+  const date = document.createElement(stringConstants.paragraphElement);
   if (isTV) {
     const airedFrom = spanFor('Aired from: ');
-    airedFrom.classList.add('text-secondary-bold');
+    airedFrom.classList.add(stringConstants.boldClass);
     const fromDate = spanFor(formatDate(media.first_air_date));
     const airedTo = spanFor(' to ');
-    airedTo.classList.add('text-secondary-bold');
+    airedTo.classList.add(stringConstants.boldClass);
     const toDate = spanFor(formatDate(media.last_air_date));
     [airedFrom, fromDate, airedTo, toDate].forEach((el) =>
       date.appendChild(el)
@@ -104,7 +147,7 @@ function dateParagraph(media, isTV) {
   }
   // Movie
   const releaseTitle = spanFor('Release Date: ');
-  releaseTitle.classList.add('text-secondary-bold');
+  releaseTitle.classList.add(stringConstants.boldClass);
   const releaseDate = spanFor(formatDate(media.release_date));
   date.appendChild(releaseTitle);
   date.appendChild(releaseDate);
@@ -114,28 +157,28 @@ function dateParagraph(media, isTV) {
 // Create and return the div that is to the right of the poster image and
 // contains a number of details about the media
 function detailsTopRight(media, isTV) {
-  const div = document.createElement('div');
+  const div = document.createElement(stringConstants.divElement);
 
-  const title = document.createElement('h2');
+  const title = document.createElement(stringConstants.heading2Element);
   title.textContent = isTV ? media.name : media.title;
 
-  const tagline = document.createElement('h5');
+  const tagline = document.createElement(stringConstants.heading5Element);
   tagline.textContent = media.tagline;
 
-  const rating = document.createElement('p');
+  const rating = document.createElement(stringConstants.paragraphElement);
   addRatingIcon(media, rating);
 
-  const overview = document.createElement('p');
+  const overview = document.createElement(stringConstants.paragraphElement);
   overview.textContent = media.overview;
 
-  const genresTitle = document.createElement('h4');
-  genresTitle.classList.add('text-secondary');
+  const genresTitle = document.createElement(stringConstants.heading4Element);
+  genresTitle.classList.add(stringConstants.plainTextClass);
   genresTitle.textContent = 'Genres';
 
-  const anchor = document.createElement('a');
+  const anchor = document.createElement(stringConstants.anchorElement);
   anchor.href = media.homepage;
-  anchor.target = '_blank';
-  anchor.classList.add('btn');
+  anchor.target = stringConstants.blankAnchorTarget;
+  anchor.classList.add(stringConstants.buttonClass);
   anchor.textContent = isTV ? 'Visit Show Homepage' : 'Visit Movie Homepage';
   [
     title,
@@ -155,9 +198,9 @@ function detailsTopRight(media, isTV) {
 // Create and return the div that is in the top portion of the window
 // containing the movie poster image and other details
 function detailsTop(media, isTV) {
-  const div = document.createElement('div');
-  div.classList.add('details-top');
-  const posterPathDiv = document.createElement('div');
+  const div = document.createElement(stringConstants.divElement);
+  div.classList.add(stringConstants.detailsTopClass);
+  const posterPathDiv = document.createElement(stringConstants.divElement);
   posterPathDiv.appendChild(posterPathImageLink(media, isTV));
 
   div.appendChild(posterPathDiv);
@@ -168,10 +211,10 @@ function detailsTop(media, isTV) {
 //Create and return the div that should appear at the bottom of the details page
 async function detailsBottom(media, mediaID, isTV) {
   const providers = await mediaProviders(mediaID, isTV);
-  const div = document.createElement('div');
-  div.classList.add('details-bottom');
+  const div = document.createElement(stringConstants.divElement);
+  div.classList.add(stringConstants.detailsBottomClass);
 
-  const title = document.createElement('h2');
+  const title = document.createElement(stringConstants.heading2Element);
   title.textContent = isTV ? 'Show Info' : 'Movie Info';
 
   div.appendChild(title);
@@ -186,7 +229,7 @@ async function detailsBottom(media, mediaID, isTV) {
 function addBudget(media, details) {
   let detail = media.budget;
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   } else {
     detail = currencyFormatter.format(detail);
   }
@@ -200,7 +243,7 @@ function addBudget(media, details) {
 function addRevenue(media, details) {
   let detail = media.revenue;
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   } else {
     detail = currencyFormatter.format(detail);
   }
@@ -214,7 +257,7 @@ function addRevenue(media, details) {
 function addRuntime(media, details) {
   let detail = media.runtime;
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   } else {
     detail += ' minutes';
   }
@@ -228,7 +271,7 @@ function addRuntime(media, details) {
 function addNumEpisodes(media, details) {
   let detail = media.number_of_episodes;
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   }
   details.push({
     span: spanFor('Number of Episodes: '),
@@ -240,7 +283,7 @@ function addNumEpisodes(media, details) {
 function addNumSeasons(media, details) {
   let detail = media.number_of_seasons;
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   }
   details.push({
     span: spanFor('Number of Seasons: '),
@@ -252,7 +295,7 @@ function addNumSeasons(media, details) {
 function addLastEpisode(media, details) {
   let detail = media.last_episode_to_air;
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   }
   details.push({
     span: spanFor('Last Episode to Air: '),
@@ -264,9 +307,9 @@ function addLastEpisode(media, details) {
 function addEpisodeRuntime(media, details) {
   let detail = media.episode_run_time;
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   } else {
-    detail = detail[0] ? `${detail[0]} minutes` : 'Unavailable';
+    detail = detail[0] ? `${detail[0]} minutes` : stringConstants.unavailable;
   }
   const runtimeText = details.push({
     span: spanFor('Episode Runtime: '),
@@ -278,7 +321,7 @@ function addEpisodeRuntime(media, details) {
 function addStatus(media, details) {
   let detail = media.status;
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   }
   details.push({
     span: spanFor('Status: '),
@@ -300,7 +343,7 @@ function addProductionCompanies(media, details) {
   let detail = media.production_companies;
   let label = 'Production Company:';
   if (!detail || detail.length === 0) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   } else {
     label =
       detail.length > 1 ? 'Production Companies: ' : 'Production Company: ';
@@ -317,7 +360,7 @@ function addLanguages(media, details) {
   let detail = media.spoken_languages;
   let label = 'Spoken Language: ';
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   } else {
     label = detail.length > 1 ? 'Spoken Langages: ' : 'Spoken Language: ';
     detail = detail.map((language) => language.english_name).join(', ');
@@ -332,7 +375,7 @@ function addLanguages(media, details) {
 function addRentFrom(providers, details) {
   let detail = providers.rent;
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   }
   details.push({
     span: spanFor('Rent from: '),
@@ -344,7 +387,7 @@ function addRentFrom(providers, details) {
 function addFreeFrom(providers, details) {
   let detail = providers.free;
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   }
   details.push({
     span: spanFor('Free from: '),
@@ -368,7 +411,7 @@ function addBuyFrom(providers, details) {
 function addStreamFrom(providers, details) {
   let detail = providers.stream;
   if (!detail) {
-    detail = 'Unavailable';
+    detail = stringConstants.unavailable;
   }
   details.push({
     span: spanFor('Stream from: '),
@@ -398,10 +441,10 @@ function detailsBottomList(media, providers) {
   addProductionCompanies(media, details);
   addLanguages(media, details);
 
-  const list = document.createElement('ul');
+  const list = document.createElement(stringConstants.unorderedListElement);
   details.forEach((el) => {
-    el.span.classList.add('text-secondary');
-    const li = document.createElement('li');
+    el.span.classList.add(stringConstants.plainTextClass);
+    const li = document.createElement(stringConstants.listItemElement);
     li.textContent = el.listText;
     li.insertBefore(el.span, li.firstChild);
     list.appendChild(li);
@@ -415,34 +458,42 @@ export async function displayDetails(isTV = false) {
   const urlParams = new URLSearchParams(queryString);
 
   const mediaID = urlParams.get('id');
-  const searchType = isTV ? 'tv' : 'movie';
+  const searchType = isTV ? stringConstants.tvType : stringConstants.movieType;
   const endPoint = searchType + '/';
   const media = await fetchAPIData(endPoint + mediaID);
   const returnInfo = DetailReturnInfo.fromURL(urlParams, isTV);
 
   displayBackgroundImage(media.backdrop_path, isTV);
 
-  const div = document.createElement('div');
+  const div = document.createElement(stringConstants.divElement);
   const bottom = await detailsBottom(media, mediaID, isTV);
 
   div.appendChild(detailsTop(media, isTV));
   div.appendChild(bottom);
 
-  const selector = isTV ? '#tv-details' : '#movie-details';
+  const selector = isTV
+    ? stringConstants.tvDetailsTarget
+    : stringConstants.movieDetailsTarget;
 
-  const btn = document.createElement('a');
-  btn.classList.add('btn');
+  const btn = document.createElement(stringConstants.anchorElement);
+  btn.classList.add(stringConstants.buttonClass);
   btn.href = returnInfo.backButtonHRef();
   btn.textContent = returnInfo.backButtonTextContent();
 
-  document.querySelector('.back').innerHTML = '';
-  document.querySelector('.back').appendChild(btn);
+  backButton().innerHTML = '';
+  backButton().appendChild(btn);
   document.querySelector(selector).appendChild(div);
+}
+
+/* Answer the back button from the DOM */
+function backButton() {
+  return document.querySelector(stringConstants.backClass);
 }
 
 // Display the 20 most popular tv shows or movies
 export async function displayPopular(isTV = false) {
-  const endPoint = isTV ? 'tv/popular' : 'movie/popular';
+  let endPoint = isTV ? stringConstants.tvType : stringConstants.movieType;
+  endPoint += '/popular';
 
   const { results } = await fetchAPIData(endPoint);
 
