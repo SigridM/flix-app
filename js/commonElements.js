@@ -286,7 +286,7 @@ function addStatus(media, details) {
   });
 }
 
-// Add the status to the array of details, if that detail exists
+// Add the adult Boolean to the array of details
 function addAdult(media, details) {
   let detail = media.adult;
   details.push({
