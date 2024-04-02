@@ -15,6 +15,8 @@ import {
 } from './filter.js';
 import { SearchDetailReturnInfo } from './detailReturn.js';
 
+/* Initialize the search form by adding even listeners to 
+   the submit button. */
 async function initSearchForm() {
   const searchForm = document.querySelector('#search-form');
   if (searchForm) {
@@ -26,6 +28,7 @@ async function initSearchForm() {
   }
 }
 
+/* Clear any existing search results so a new search can be performed. */
 export function clearSearchResults() {
   document.querySelector('#search-results-heading').innerHTML = '';
   document.querySelector('#search-results').innerHTML = '';
@@ -92,6 +95,10 @@ async function returnSearch(urlParams) {
   await doSearch(isTV);
 }
 
+/* We have returned from a detail view back to the search form. All of the
+   information used to perform the last search was stored in the url on
+   return from the details page. Restore the search and filter parameters
+   in the DOM elements. */
 async function initializeFilterCriteraInDOMFrom(isTV, urlParams) {
   const keywords = urlParams.get('keywords').split('-');
   const keywordCombiner = urlParams.get('keyword-combine-using');
@@ -129,6 +136,12 @@ async function firstSearch() {
   doSearch(isTV);
 }
 
+/* Perform either a title or keyword search for either tv shows or 
+   movies. The heavy lifting will be done by a DetailReturnInfo object,
+   the specifics of which will be determined by parameters set in the
+   global variable. This search can occur either as a result of the
+   user clicking the search button, or as a 'return search' performed
+   when we return from a details page. */
 async function doSearch(isTV) {
   const returnInfo = getReturnInfo(isTV);
   const results = await returnInfo.getInitialResults();
@@ -142,15 +155,17 @@ async function doSearch(isTV) {
   returnInfo.displayResults(results);
 }
 
+/* Answser the DetailReturnInfo appropriate for doing a search, based
+   on settings in the global and in the DOM. */
 function getReturnInfo(isTV) {
   return searchByTitle()
     ? new SearchDetailReturnInfo(isTV, global.search.term, global.search.page)
     : keywordResultInfo(isTV);
 }
 
-// Check for unrestricted searches, alert the user if unrestricted, and answer
-// whether the search was unrestricted. Unrestricted means ablank search term for search-by-title
-// or blank search term and no filters for search-by-keyword.
+/* Check for unrestricted searches, alert the user if unrestricted, and answer
+   whether the search was unrestricted. Unrestricted means ablank search term for search-by-title
+   or blank search term and no filters for search-by-keyword. */
 function alertOnBlankSearchTerm(isTV) {
   const noSearchTerm = global.search.term === '' || global.search.term === null;
 
@@ -170,15 +185,18 @@ function alertOnBlankSearchTerm(isTV) {
   }
   return false;
 }
+
+/* Answer a Boolean, whether we are searching by title, based on what radio button
+   is checked in the DOM.  */
 function searchByTitle() {
   let radioButtonPanel = document.querySelector('#search-radio-button-panel');
   if (!radioButtonPanel) {
     return true;
   }
-  radioButtonPanel.querySelector('#search-by-title').checked;
+  return radioButtonPanel.querySelector('#search-by-title').checked;
 }
 
-// Show Alert
+// Show an alert to the user if there is not enough information to do a search
 function showAlert(message, className = 'alert-error') {
   const alertEl = document.createElement('div');
   alertEl.classList.add('alert', className);

@@ -1,5 +1,5 @@
 export class ExtendedMap extends Map {
-  /* Answer the unique key found at the first occurance of a given vowel. */
+  /* Answer the unique key found at the first occurance of a given value. */
   getKeyByValue(value) {
     for (let [key, val] of this.entries()) {
       if (val === value) {

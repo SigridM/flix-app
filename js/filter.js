@@ -15,6 +15,7 @@ import {
   DynamicAndOrMultipleChoiceMenuFilter,
 } from './filterClasses.js';
 
+/* Keep all the filters in a dictionary */
 const allFilters = new ExtendedMap();
 
 /* Keep all the string constants in one place */
@@ -354,7 +355,6 @@ async function doFilter(isTV) {
     filters += stringConstants.sortAPIParam + sortBy();
   }
 
-  console.log(filters);
   const results = await discoverAPIData(filters, hasRefinedKeywords());
   return results;
 }

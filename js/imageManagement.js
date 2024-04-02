@@ -1,6 +1,8 @@
 import { fetchAPIData } from './fetchData.js';
 import { SwiperDetailReturnInfo } from './detailReturn.js';
 
+/* Answer an image element that displays 'No Image' when the image is not 
+   provided by the API */
 function noImage(isTV = false) {
   const alt = isTV ? 'Show Title' : 'Movie Title';
   const img = document.createElement('img');
@@ -10,11 +12,14 @@ function noImage(isTV = false) {
   return img;
 }
 
+/* Set the two different image paths for getting different-sized images from the API */
 const imagePaths = {
   original: 'https:/image.tmdb.org/t/p/original/', // 'original' means original size
   width500: 'https://image.tmdb.org/t/p/w500', // 'w500' means width of 500
 };
 
+/* Answer an image element with the 500-pixel-width image provided by
+   the API */
 function imageLinkFrom(media, isTV = false) {
   const img = document.createElement('img');
   img.src = imagePaths.width500 + media.poster_path;
@@ -23,6 +28,9 @@ function imageLinkFrom(media, isTV = false) {
   return img;
 }
 
+/* Answer the image element that will display the poster path image
+   for this instance's media, if there is one; otherwise, answer the
+   no-image image element. */
 export function posterPathImageLink(media, isTV = false) {
   return media.poster_path // if not null
     ? imageLinkFrom(media, isTV)
@@ -37,8 +45,6 @@ export async function displaySlider(isTV = false) {
 
   const returnInfo = new SwiperDetailReturnInfo(isTV);
   returnInfo.displayResults(results);
-
-  // displayResults(results, 'swiper-slide', '.swiper-wrapper', isTV, true);
 }
 
 // Display Backdrop on Details Page

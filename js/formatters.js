@@ -7,7 +7,6 @@ export function formatDate(dateString) {
     month: 'short',
     day: 'numeric',
   });
-  //   console.log(months[date.getMonth()], date.getDate(), date.getFullYear());
 }
 
 // Create  number formatter
