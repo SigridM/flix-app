@@ -175,7 +175,7 @@ function searchByTitle() {
   if (!radioButtonPanel) {
     return true;
   }
-  radioButtonPanel.querySelector('#search-by-title').checked;
+  return radioButtonPanel.querySelector('#search-by-title').checked;
 }
 
 // Show Alert
