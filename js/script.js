@@ -3,38 +3,46 @@ import { displaySlider } from './imageManagement.js';
 import { displayDetails, displayPopular } from './commonElements.js';
 import { openSearchPage } from './search.js';
 
-// Highlight active link
+// Highlight active link (either Movies or TV Shows)
 function highlightActiveLink() {
   const links = document.querySelectorAll('.nav-link'); // all with class of nav-link
   links.forEach((link) => {
-    if (link.getAttribute('href') == global.currentPage) {
+    let href = link.getAttribute('href');
+    if (href === '/') {
+      href = '/index.html';
+    }
+    let page = global.currentPage;
+    if (page === '/') {
+      page = '/index.html';
+    }
+    if (href == page) {
       link.classList.add('active');
     }
   });
 }
 
 // Init App - runs on every page
-function init() {
+async function init() {
   switch (
     global.currentPage // Simple router
   ) {
     case '/':
     case '/index.html':
-      displaySlider();
-      displayPopular();
+      await displaySlider();
+      await displayPopular();
       break;
     case '/shows.html':
-      displaySlider(true);
-      displayPopular(true);
+      await displaySlider(true);
+      await displayPopular(true);
       break;
     case '/movie-details.html':
-      displayDetails();
+      await displayDetails();
       break;
     case '/tv-details.html':
-      displayDetails(true);
+      await displayDetails(true);
       break;
     case '/search.html':
-      openSearchPage();
+      await openSearchPage();
 
       break;
   }

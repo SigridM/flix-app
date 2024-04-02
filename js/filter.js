@@ -15,6 +15,7 @@ import {
   DynamicAndOrMultipleChoiceMenuFilter,
 } from './filterClasses.js';
 
+/* Keep all the filters in a dictionary */
 const allFilters = new ExtendedMap();
 
 /* Keep all the string constants in one place */

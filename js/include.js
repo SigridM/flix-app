@@ -1,3 +1,6 @@
+/* For modularizing the html pages, include the html page described in the file at path,
+   and put it in the parent element identified by elementID. If alsoDo is not null, 
+   perform that function after including the html in path. */
 function includeHTML(path, elementID, alsoDo = null) {
   fetch(path)
     .then((response) => {
