@@ -1,4 +1,8 @@
-import { discoverAPIData, fetchAPIData } from './fetchData.js';
+import {
+  discoverAPIData,
+  fetchAPIData,
+  getKeywordObjects,
+} from './fetchData.js';
 import { global } from './globals.js';
 import { KeywordSearchDetailReturnInfo } from './detailReturn.js';
 import { clearSearchResults } from './search.js';
@@ -90,7 +94,8 @@ function createFilters() {
     stringConstants.refineKeywordKey,
     new DynamicAndOrMultipleChoiceMenuFilter(
       stringConstants.refineKeywordBaseID,
-      []
+      [],
+      repopulatedKeywordOptions
     )
   );
   allFilters.set(
@@ -423,8 +428,11 @@ function getSelectedKeywords() {
 }
 
 function getSelectedKeywordCodes() {
-  return getRefineKeywordFilter().getSelectedCodes();
+  return global.lists.keywordObjects
+    .filter((ea) => getSelectedKeywords().includes(ea.name))
+    .map((ea) => ea.id);
 }
+
 /* Answer the selected genres for either TV or movies */
 function getSelectedGenres(isTV) {
   return getGenreFilter(isTV).getSelected();
@@ -559,4 +567,21 @@ function initSortByDictionary() {
   dictionary.set('vote_count.desc', 'Vote count, Descending');
 
   return dictionary;
+}
+
+/* For the dynamically-popuplated keyword menu, this is the function it uses
+   to repopulate its menu options. Answer the Array of Strings it will use
+   in its menu. */
+async function repopulatedKeywordOptions() {
+  const textInput = document.querySelector('#search-term');
+  global.search.term = textInput.value;
+  let options = [];
+  if (global.search.term.length > 0) {
+    global.lists.keywordObjects = await getKeywordObjects();
+    options = global.lists.keywordObjects
+      .map((ea) => ea.name)
+      .filter((ea) => ea[0] !== '#');
+  }
+  console.log(options);
+  return options;
 }

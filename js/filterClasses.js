@@ -1,5 +1,3 @@
-import { getKeywordObjects } from './fetchData.js';
-import { global } from './globals.js';
 /* A simple Boolean filter with a Checkbox  */
 export class Filter {
   /* Create an instance of this class that sets its baseID (a String), used for identifying and creating elements
@@ -787,8 +785,8 @@ export class MultipleChoiceMenuFilter extends SingleChoiceMenuFilter {
    with either 'and' or 'or' */
 export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
   /* Override the superclass constructor because this filter allows the combiner to be set by the user */
-  constructor(name, baseID) {
-    super(name, baseID);
+  constructor(baseID, options) {
+    super(baseID, options);
     this.combineUsing = 'or'; // default combiner choice
   }
 
@@ -930,38 +928,50 @@ export class AndOrMultipleChoiceMenuFilter extends MultipleChoiceMenuFilter {
 
   /* End AndOrMultipleChoiceFilter */
 }
-
+/* A Filter that allows multiple choice selections in the popUpMenu, allows those choices to be combined
+   with either 'and' or 'or', and also allows the menu items to be populated dynamically */
 export class DynamicAndOrMultipleChoiceMenuFilter extends AndOrMultipleChoiceMenuFilter {
-  constructor(name, baseID) {
-    super(name, baseID);
-    this.keyWordObjects = [];
+  constructor(baseID, options, repopulateFunction) {
+    super(baseID, options);
+    // this.keyWordObjects = [];
+    this.repopulateFunction = repopulateFunction;
   }
 
   addStringConstants() {
     super.addStringConstants();
 
     /* Add the character combinations that is used in the API to represent how options are joined */
+    // @to-do These should really be set from the outside, since they have more to do with the API
+    // than the class
     this.addStringConstant('andJoinString', ',');
     this.addStringConstant('orJoinString', '|');
   }
 
+  /* Open the popUpMenu. Override the superclass method to first repopulate the menu items
+   dynamically. This happens in setSelectedListItemAnchorTextFrom(), which also resets the 
+   selected items. */
   async openPopUpMenu() {
-    await this.repopulatePopUpMenu();
-    super.openPopUpMenu();
+    // await this.repopulatePopUpMenu();
     this.setSelectedListItemAnchorTextFrom(this.selected);
+    super.openPopUpMenu();
   }
 
+  /* Set the items selected in the menu from the Array of strings in the selections
+     parameter. Override the superclass method to repopulate the menu first. */
   async setSelectedListItemAnchorTextFrom(selections) {
     await this.repopulatePopUpMenu();
     super.setSelectedListItemAnchorTextFrom(selections);
   }
 
+  /* Toggle the popUpMenu: if it is open, close it and vice versa. Override the superclass
+     method to repopulate the menu items dynamically before reopening the menu. This happens 
+     in setSelectedListItemAnchorTextFrom(), which also resets the selected items. */
   async togglePopUpMenu() {
     const popUpMenu = this.popUpMenu();
     const wasHidden = this.isHidden(popUpMenu);
 
     this.closeAllPopUps();
-    await this.repopulatePopUpMenu();
+    // await this.repopulatePopUpMenu();
     this.setSelectedListItemAnchorTextFrom(this.selected);
 
     if (wasHidden) {
@@ -970,21 +980,16 @@ export class DynamicAndOrMultipleChoiceMenuFilter extends AndOrMultipleChoiceMen
     }
   }
 
-  /* */
-  async repopulateOptions() {
-    const textInput = document.querySelector('#search-term');
-    global.search.term = textInput.value;
-    if (global.search.term.length > 0) {
-      this.keyWordObjects = await getKeywordObjects();
-      this.options = this.keyWordObjects
-        .map((ea) => ea.name)
-        .filter((ea) => ea[0] !== '#');
-    }
-    console.log(this.options);
+  /* Set the options in the popUpMenu to the Array of Strings in the newOptions parameter. */
+  setOptions(newOptions) {
+    this.options = newOptions;
   }
 
+  /* Remove the contents of the popUpMenu and replace them according to
+    the repopulateFunction. This happens asynchronously since the
+    options are coming from the API. */
   async repopulatePopUpMenu() {
-    await this.repopulateOptions();
+    this.options = await this.repopulateFunction();
     const popUpMenu = this.popUpMenu();
     popUpMenu.innerHTML = '';
 
@@ -998,11 +1003,5 @@ export class DynamicAndOrMultipleChoiceMenuFilter extends AndOrMultipleChoiceMen
       list.appendChild(item);
     });
     popUpMenu.appendChild(list);
-  }
-
-  getSelectedCodes() {
-    return this.keyWordObjects
-      .filter((ea) => this.selected.includes(ea.name))
-      .map((ea) => ea.id);
   }
 }
