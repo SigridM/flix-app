@@ -140,6 +140,13 @@ export function showFilters() {
   showAsBlock(filterList());
 }
 
+export function hideFilters() {
+  let container = filterContainer();
+  if (container) {
+    container.style.display = stringConstants.hiddenStyle;
+  }
+}
+
 /* Either show or hide the given element, depending on whether
    it was currently showing. */
 function toggleBlockVisibilityOf(element) {
@@ -148,7 +155,9 @@ function toggleBlockVisibilityOf(element) {
 
 /* Show the given element in the DOM using the block display style */
 function showAsBlock(element) {
-  element.style.display = stringConstants.blockStyle;
+  if (element) {
+    element.style.display = stringConstants.blockStyle;
+  }
 }
 
 /* Hide the given element in the DOM */
@@ -360,42 +369,55 @@ function sortBy() {
    search. Replace the language filter with one that has selected the specific 
    languages last chosen by the user. */
 export function setSelectedLanguages(languages) {
-  getLanguageFilter().setSelectedListItemAnchorTextFrom(languages);
+  let languageFilter = getLanguageFilter();
+  if (languageFilter) {
+    languageFilter.setSelectedListItemAnchorTextFrom(languages);
+  }
 }
 
 /* The user has returned from a details page and we are restoring the last
    search. Replace the sort filter with one that has selected the specific 
    sort criteria last chosen by the user. */
 export function setSortBy(sortByString) {
-  getSortFilter().setSelectedListItemAnchorTextFrom([
-    global.lists.sortCriteria.get(sortByString),
-  ]);
+  let sortFilter = getSortFilter();
+  if (sortFilter) {
+    sortFilter.setSelectedListItemAnchorTextFrom([
+      global.lists.sortCriteria.get(sortByString),
+    ]);
+  }
 }
 
 /* The user has returned from a details page and we are restoring the last
    search. Replace the genre filter with one that has selected the specific 
    genres and combiner last chosen by the user. */
 export function setSelectedGenres(isTV, genres, genreCombiner) {
-  const genreFilter = getGenreFilter(isTV);
-  genreFilter.setSelectedListItemAnchorTextFrom(genres);
-  genreFilter.setCombineUsing(genreCombiner);
-  hideUnusedGenreFilter(isTV); // make sure only TV genres or Movie genres are showing
+  let genreFilter = getGenreFilter(isTV);
+  if (genreFilter) {
+    genreFilter.setSelectedListItemAnchorTextFrom(genres);
+    genreFilter.setCombineUsing(genreCombiner);
+    hideUnusedGenreFilter(isTV); // make sure only TV genres or Movie genres are showing
+  }
 }
 
 /* The user has returned from a details page and we are restoring the last
    search. Replace the genre filter with one that has selected the specific 
    genres and combiner last chosen by the user. */
 export async function setSelectedKeywords(keywords, keywordCombiner) {
-  const keywordFilter = getRefineKeywordFilter();
-  await keywordFilter.setSelectedListItemAnchorTextFrom(keywords);
-  keywordFilter.setCombineUsing(keywordCombiner);
+  let keywordFilter = getRefineKeywordFilter();
+  if (keywordFilter) {
+    await keywordFilter.setSelectedListItemAnchorTextFrom(keywords);
+    keywordFilter.setCombineUsing(keywordCombiner);
+  }
 }
 
 /* The user has returned from a details page and we are restoring the last
    search. Set the state of the excludeAdult filter to the state last 
    chosen by the user. */
 export function setExcludeAdult(excludeAdult) {
-  getAdultFilter().setFiltered(excludeAdult);
+  let adultFilter = getAdultFilter();
+  if (adultFilter) {
+    adultFilter.setFiltered(excludeAdult);
+  }
 }
 
 export function hasRefinedKeywords() {

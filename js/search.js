@@ -11,6 +11,7 @@ import {
   setSortBy,
   keywordResultInfo,
   showFilters,
+  hideFilters,
 } from './filter.js';
 import { SearchDetailReturnInfo } from './detailReturn.js';
 
@@ -69,18 +70,20 @@ async function returnSearch(urlParams) {
   // Set the three parameters that are visible in the DOM and common to both
   // title search and keyword search: searchSpace, searchType and searchTerm.
   // Page will be obtained from the global in the repeat search.
-  const radioButtonPanel = document.querySelector('#search-radio-button-panel');
-  radioButtonPanel.querySelector('#tv-radio-button').checked = isTV;
-  radioButtonPanel.querySelector('#movie-radio-button').checked = !isTV;
-  radioButtonPanel.querySelector('#search-by-title').checked = !isKeyword;
-  radioButtonPanel.querySelector('#search-by-keyword').checked = isKeyword;
+  let radioButtonPanel = document.querySelector('#search-radio-button-panel');
+  if (radioButtonPanel) {
+    radioButtonPanel.querySelector('#tv-radio-button').checked = isTV;
+    radioButtonPanel.querySelector('#movie-radio-button').checked = !isTV;
+    radioButtonPanel.querySelector('#search-by-title').checked = !isKeyword;
+    radioButtonPanel.querySelector('#search-by-keyword').checked = isKeyword;
+  }
 
-  isKeyword
-    ? showFilters()
-    : (document.querySelector('#filter-container').style.display = 'none');
+  isKeyword ? showFilters() : hideFilters();
 
-  const textInput = document.querySelector('#search-term');
-  textInput.value = searchTerm;
+  let textInput = document.querySelector('#search-term');
+  if (textInput) {
+    textInput.value = searchTerm;
+  }
 
   if (isKeyword) {
     await initializeFilterCriteraInDOMFrom(isTV, urlParams);
@@ -129,6 +132,9 @@ async function firstSearch() {
 async function doSearch(isTV) {
   const returnInfo = getReturnInfo(isTV);
   const results = await returnInfo.getInitialResults();
+  if (!results) {
+    return;
+  }
   if (results.length === 0) {
     clearSearchResults();
     return showAlert('No matches', 'alert-success');
@@ -165,9 +171,11 @@ function alertOnBlankSearchTerm(isTV) {
   return false;
 }
 function searchByTitle() {
-  return document
-    .querySelector('#search-radio-button-panel')
-    .querySelector('#search-by-title').checked;
+  let radioButtonPanel = document.querySelector('#search-radio-button-panel');
+  if (!radioButtonPanel) {
+    return true;
+  }
+  radioButtonPanel.querySelector('#search-by-title').checked;
 }
 
 // Show Alert
