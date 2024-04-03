@@ -11,37 +11,41 @@ function highlightActiveLink() {
     if (href === '/') {
       href = '/index.html';
     }
-    let page = global.currentPage;
-    if (page === '/') {
-      page = '/index.html';
-    }
-    if (href == page) {
+    if (href === '/' + currentPage()) {
       link.classList.add('active');
     }
   });
 }
 
+function currentPage() {
+  let page = global.currentPage.split('/').slice(-1)[0];
+  if (page === '') {
+    page = 'index.html';
+  }
+  return page;
+}
+
 // Init App - runs on every page
 async function init() {
   switch (
-    global.currentPage // Simple router
+    currentPage() // Simple router
   ) {
-    case '/':
-    case '/index.html':
+    case '':
+    case 'index.html':
       await displaySlider();
       await displayPopular();
       break;
-    case '/shows.html':
+    case 'shows.html':
       await displaySlider(true);
       await displayPopular(true);
       break;
-    case '/movie-details.html':
+    case 'movie-details.html':
       await displayDetails();
       break;
-    case '/tv-details.html':
+    case 'tv-details.html':
       await displayDetails(true);
       break;
-    case '/search.html':
+    case 'search.html':
       await openSearchPage();
 
       break;
