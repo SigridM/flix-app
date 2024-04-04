@@ -141,6 +141,8 @@ export function showFilters() {
   showAsBlock(filterList());
 }
 
+/* Hide in the DOM all of the filters; this requires hiding the container
+   the filters reside in */
 export function hideFilters() {
   let container = filterContainer();
   if (container) {
