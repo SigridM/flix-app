@@ -7,22 +7,31 @@ import { openSearchPage } from './search.js';
 function highlightActiveLink() {
   const links = document.querySelectorAll('.nav-link'); // all with class of nav-link
   links.forEach((link) => {
-    let href = link.getAttribute('href');
-    if (href === '/') {
-      href = '/index.html';
-    }
-    if (href === '/' + currentPage()) {
+    let href = relativeHref(link.getAttribute('href'));
+    if (href === currentPage()) {
       link.classList.add('active');
     }
   });
 }
 
+// Answer a String which indicates the last segment of the current web page stored in
+// the global. Compensate for a '/' page which redirects to index.html.
 function currentPage() {
   let page = global.currentPage.split('/').slice(-1)[0];
   if (page === '') {
     page = 'index.html';
   }
   return page;
+}
+
+// Answer a String which indicates the last segment of the given href string.
+// Compensate for a '/' page which redirects to index.html.
+function relativeHref(href) {
+  let relativeHref = href.split('/').slice(-1)[0];
+  if (relativeHref === '') {
+    relativeHref = 'index.html';
+  }
+  return relativeHref;
 }
 
 // Init App - runs on every page
