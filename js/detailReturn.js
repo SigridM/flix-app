@@ -74,7 +74,7 @@ export class DetailReturnInfo {
   noImage() {
     const alt = this.isTV ? 'Show Title' : 'Movie Title';
     const img = document.createElement('img');
-    img.src = '../images/no-image.jpg';
+    img.src = 'images/no-image.jpg';
     img.classList.add('card-img-top');
     img.alt = alt;
     return img;

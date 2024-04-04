@@ -6,7 +6,7 @@ import { SwiperDetailReturnInfo } from './detailReturn.js';
 function noImage(isTV = false) {
   const alt = isTV ? 'Show Title' : 'Movie Title';
   const img = document.createElement('img');
-  img.src = '../images/no-image.jpg';
+  img.src = 'images/no-image.jpg';
   img.classList.add('card-img-top');
   img.alt = alt;
   return img;
