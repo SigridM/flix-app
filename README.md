@@ -59,6 +59,7 @@ No backend, npm install, or build steps required!
 ## Screenshots
 <img width="1881" height="1377" alt="Screenshot 2025-11-19 at 8 31 31 AM" src="https://github.com/user-attachments/assets/2a803bef-4d66-4478-b082-81f4548792ed" />
 <img width="1881" height="1377" alt="Screenshot 2025-11-19 at 8 31 41 AM" src="https://github.com/user-attachments/assets/4ae6fd8e-4d0d-442a-8997-0b4077267642" />
+<img width="1881" height="1377" alt="Screenshot 2025-11-19 at 8 32 48 AM" src="https://github.com/user-attachments/assets/a307b611-bb2e-49f9-a98d-e498d67b15ff" />
 <img width="1881" height="1377" alt="Screenshot 2025-11-19 at 8 33 12 AM" src="https://github.com/user-attachments/assets/d1bf8a5f-19ee-4454-b58d-809685490ae8" />
 <img width="452" height="183" alt="Screenshot 2025-11-19 at 8 33 34 AM" src="https://github.com/user-attachments/assets/7863abab-ec88-4efa-a8fa-19b62e8e1487" />
 <img width="273" height="620" alt="Screenshot 2025-11-19 at 8 34 24 AM" src="https://github.com/user-attachments/assets/fe5f4925-ec24-4182-b57f-32f4153516af" />
